@@ -1,7 +1,9 @@
 ﻿<Solution>
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="App.Simulation.csproj" />
   <Project Path="App.Player.csproj" />
   <Project Path="App.Core.csproj" />
   <Project Path="App.UI.csproj" />
+  <Project Path="App.Editor.csproj" />
   <Project Path="App.Safety.csproj" />
 </Solution>
