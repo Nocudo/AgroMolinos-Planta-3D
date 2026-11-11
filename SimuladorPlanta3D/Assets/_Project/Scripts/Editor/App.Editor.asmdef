@@ -1,0 +1,24 @@
+{
+    "name": "App.Editor",
+    "rootNamespace": "IndustrialPlant.Editor",
+    "references": [
+        "App.Core",
+        "App.Simulation",
+        "App.Safety",
+        "App.Player",
+        "App.UI",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
