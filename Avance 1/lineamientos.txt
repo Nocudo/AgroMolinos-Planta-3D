@@ -1,0 +1,23 @@
+Planta Molino de Granos – Motor trifásico de inducción jaula de ardilla (10Hp460V). Monitoreo de corriente, temperatura y vibración.
+Implementar control de velocidad y alertas de sobrecarga.
+Realizar los planos en 3D.
+Objetivo del grupo: Modelar el motor en MATLAB/Simulink, implementar un
+sistema de alerta para sobrecargas y sobrecalentamiento, optimizar consumo
+energético con control de velocidad.
+
+NOTA: Lo anterior corresponde a los sectores, pero como tema central son las máquinas
+eléctricas (motores ya sea en DC o AC para el caso que aplique).
+
+Objetivos: 
+-Caracterizar el motor eléctrico AC del sector seleccionado previamente
+por el grupo de estudiantes y asignado por el docente titular del curso.
+-Adquirir datos reales o simulados de operación: Corriente, voltaje, temperatura,
+vibración.
+Modelar el motor en MATLAB/Simulink usando los parámetros técnicos
+
+En un documento de Word entregará una introducción sobre el sector
+seleccionado (la empresa que hace, sus procesos, ubicación y demás) cumpliendo lo
+indicado en la norma para trabajos escritos (IEEE, ICONTEC).
+Adicionalmente se entregará la caracterización del motor siguiendo la RETIE para
+motores eléctricos AC, los datos reales o simulados, el modelo del motor el
+MATLAB.

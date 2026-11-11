@@ -1,0 +1,470 @@
+UNIVERSIDAD DE LOS LLANOS
+PROYECTO FINAL MÁQUINAS ELÉCTRICAS (2026-2)
+DOCENTE TITULAR DEL CURSO:
+Ing. Lauren Genith Isaza
+Correo institucional: lisaza@unillanos.edu.co
+NOTA: Este producto es generado del trabajo de clase con derechos reservados, se prohíbe
+la replica de este documento y sus productos por parte de los estudiantes en sitios web, redes
+sociales o académicas, o repositorios públicos sin el previo consentimiento firmado por el
+docente titular de este curso.
+INTRODUCCIÓN.
+La corriente alterna tiene la característica de cambiar el sentido de la circulación de la
+corriente cada cierto tiempo, por tanto, la corriente puede ser positiva o negativa. A partir de
+la segunda revolución industrial nace la producción en masa conectada alimentada por la
+energía eléctrica trayendo consigo la transformación de la industria y el nacimiento de las
+máquinas eléctricas.
+Por tanto, la potencia de corriente alterna está expresada por el producto entre la tensión y la
+corriente, para el caso de corriente alterna la potencia se descompone en 3 potencias; activa,
+aparente y reactiva. Para estos sistemas es necesario hallar el factor de potencia, quien
+determina la optimización o el buen aprovechamiento del consumo de energía eléctrica. En
+la actualidad se tiene un sistema de consumo eléctrico ya sea de tipo domiciliario (sistema
+monofásico) e industrial (sistemas trifásicos), lo que ha impactado severamente el medio
+ambiente y nace la necesidad de trabajar en ideas que generen productos o servicios más
+eficientes en el área del consumo de energía eléctrica.
+Teniendo en cuenta lo anterior, se trabajar en el siguiente proyecto lo cual permitirá trabajar
+en temáticas de actualidad de acuerdo a los objetivos de desarrollo sostenible, misión de
+sabios, agenda 2030 para contribuir desde la academia en algunos aspectos relevantes de la
+actualidad con el curso en mención.
+TEMATICA ACTUAL DEL PROYECTO A TRABAJAR:
+Transición de Industria 4.0 a Industria 5.0
+Subtemática: Sistema Iot e Inteligencia Artificial.
+Lenguaje de programación: Phyton, Java, C#, Matlab.
+Entorno Interactivo: Matlab
+Sectores:
+a) Planta Molino de Granos – Motor trifásico de inducción jaula de ardilla (10Hp460V). Monitoreo de corriente, temperatura y vibración.
+Implementar control de velocidad y alertas de sobrecarga.
+
+Realizar los planos en 3D.
+Objetivo del grupo: Modelar el motor en MATLAB/Simulink, implementar un
+sistema de alerta para sobrecargas y sobrecalentamiento, optimizar consumo
+energético con control de velocidad.
+b) Planta Extractora de Aceite de Palma – Motor Síncrono trifásico de 20 Hp – 480V
+para prensas y bombas.
+Monitoreo de consumo energético, torque y temperatura.
+Optimización del factor de potencia.
+Realizar los planos en 3D.
+Objetivo del grupo: Simular el motor y su conexión con un transformador, diseñar
+un sistema de predicción de eficiencia y alertas de mantenimiento.
+c) Sistema de Bombeo en Central Hidroeléctrica – Motor de Inducción de 15 Hp –
+400V para bombeo auxiliar.
+Monitoreo de caudal, corriente y temperatura.
+Control PID para optimizar caudal y consumo.
+Realizar los planos en 3D.
+Objetivo del grupo: Modelar la operación y consumo, implementar un control PID
+para optimizar caudal, detectar anomalías en corriente de arranque.
+d) Planta de Procesamientos de Lácteos – Motor Monofásico de 3 Hp – 220V para
+agitadores y compresores.
+Monitoreo de ciclos, temperatura y vibración.
+Optimización de consumo según patrones de uso.
+Realizar los planos en 3D.
+Objetivo del grupo: Diseñar un sistema que optimice el uso energético mediante
+análisis de patrones de uso y control inteligente.
+NOTA: Lo anterior corresponde a los sectores, pero como tema central son las máquinas
+eléctricas (motores ya sea en DC o AC para el caso que aplique).
+LINEAMIENTOS DEL PROYECTO.
+Este proyecto final de curso se deberá entregar en grupo de 2 o máximo 3 personas.
+•
+
+Primer Corte (fecha de entrega avance 1: miércoles 09 de septiembre).
+Evaluación (60%): Evaluación escrita de los temas del primer corte.
+Proyecto (20%): Entrega de productos avance 1.
+Talleres (20%): Trabajos de clase, extraclase y laboratorios.
+
+PRODUCTOS A ENTREGAR:
+-Objetivo 1: Caracterizar el motor eléctrico AC del sector seleccionado previamente
+por el grupo de estudiantes y asignado por el docente titular del curso.
+Adquirir datos reales o simulados de operación: Corriente, voltaje, temperatura,
+vibración.
+Modelar el motor en MATLAB/Simulink usando los parámetros técnicos
+Producto 1: En un documento de Word entregará una introducción sobre el sector
+seleccionado (la empresa que hace, sus procesos, ubicación y demás) cumpliendo lo
+indicado en la norma para trabajos escritos (IEEE, ICONTEC).
+Adicionalmente se entregará la caracterización del motor siguiendo la RETIE para
+motores eléctricos AC, los datos reales o simulados, el modelo del motor el
+MATLAB.
+•
+
+Segundo Corte (fecha de entrega avance 2: Miercoles 14 de octubre).
+Evaluación (50%): Evaluación escrita de los temas del segundo corte.
+Proyecto (30%): Entrega de productos avance 2.
+Talleres (20%): Trabajos de clase, extraclase y laboratorio.
+PRODUCTOS A ENTREGAR:
+-Objetivo 1: Realizar la Ruta de mantenimiento contemple mantenimiento
+preventivo y predictivo (para este caso técnicas de IA) para los motores AC del sector
+escogido.
+Implementar un algoritmo de IA (por ejemplo una red o SVM) para clasificar estados
+de operación: sobrecalentamiento, falla eléctrica, falla mecánica, etc.
+Integrar el modelo con un panel de control en MATLAB App Designer.
+Producto 1: En un documento de Word seguirá con lo que ya había planteado en el
+avance 1, agregar un flujo del algoritmo + captura de interfaz + resultados de pruebas.
+Adicionalmente agregará una ruta de mantenimiento en un cuadro similar al siguiente
+ejemplo:
+
+•
+
+Tercer Corte (fecha de entrega informe y proyecto final: Miércoles 18 de
+Noviembre).
+Evaluación (40%): Evaluación escrita de los temas del tercer corte.
+Proyecto (40%): Entrega de informe y producto final.
+Talleres (20%): Trabajos de clase y extraclase.
+PRODUCTOS A ENTREGAR:
+-Objetivo 1: Diseñar el sistema del proceso que le correspondió a cada grupo.
+Producto 1: En un documento de Word seguirá con lo que ya había planteado en el
+avance 1, avance 2, adicionalmente deberá probar diferentes estrategias de
+optimización energética (variadores de frecuencia, control PID, ajustes de carga).
+Generar un dashboard interactivo con indicadores clave (consumo, eficiencia, estado
+de salud del motor).
+Producto Final: Informe IEEE con todo el desarrollo, códigos y simulaciones.
+
+NOTA: El grupo que no presente en el tiempo establecido el avance 1 del
+proyecto su nota será de cero, pero para recibirle el avance 2 del proyecto deberá
+presentar SI o SI lo que concernía los requisitos del avance 1 para poder recibir
+los productos del avance 2, así sucesivamente para la entrega del informe y
+proyecto final, por tanto para el tercer corte (el grupo debió haber entregado
+avance 1 y avance 2, en caso de que no lo haya hecho no se tendrá en cuenta la
+entrega de informe y proyecto final para la nota del tercer corte por tanto esta
+nota será de cero).
+PARÁMETROS DE ENTREGA FINAL.
+Una vez presentados el avance 1, avance 2 se procederá a elaborar un informe tipo articulo
+cumpliendo con la norma IEEE que contenga lo siguiente:
+-Integrantes.
+-Introducción (desde la temática trabajada abordando lo realizado en el proyecto de curso, a
+página).
+-Marco teórico (2 páginas).
+-Estado del arte con sus respectivas referencias bibliográficas (que identifique la
+problemática, estudios actuales 2019, 2020, 2021, 2022, 2023, 2024, 2025 y la solución de
+la misma), contenga 20 referencias.
+-Diseño del proyecto; aquí se coloca todos los productos elaborados en cada avance que no
+se quede ninguno por colocar.
+-Conclusiones con una breve discusión teniendo en cuenta la citación de otros autores.
+-Anexos si requiere por ejemplo los ejemplos reales tomados de empresas o de la búsqueda
+de información bibliográfica.
+-Referencias Bibliográficas: Mínimo 20 referencias.
+FECHA DE ENTREGA FINAL: Martes 24 de Noviembre de 2026.
+
+RUBRICA DE EVALUACIÓN PROYECTO FINAL (solo aplica para la entrega del
+informe final en formato IEEE junto con sus anexos ósea escenarios, códigos y demás).
+
+VALORA
+CIÓN /
+CRITERI
+O
+
+(4.9 - 5.0)
+Alto
+
+(4.0 - 4.8)
+Alto
+
+(3.0 – 3.9)
+Medio
+
+(2.0 - 2.9)
+Bajo
+
+(0.1 - 1.9)
+Bajo
+
+(0.0)
+
+Peso
+Relat
+ivo
+en el
+Punt
+o
+
+Entrega y
+Realiza la Entrega el Entrega el
+Entrega el
+Entrega el
+No entrega el
+cumplimie entrega del
+trabajo
+trabajo
+trabajo hasta trabajo hasta
+trabajo o lo
+nto de
+informe en hasta un día hasta dos
+tres días
+cuatro días
+entrega
+normativid el tiempo después del
+días
+después del
+después del
+después de
+20%
+ad
+establecido
+tiempo
+después del
+tiempo
+tiempo
+cinco días del
+RG 4, 5, 6, cumpliendo establecido
+tiempo
+establecido
+establecido
+tiempo
+7
+la norma cumpliendo establecido cumpliendo incumpliendo establecido
+RA 3
+IEEE para
+la norma cumpliendo parcialmente la norma IEEE sin cumplir lo
+
+presentación IEEE para parcialment
+la norma
+de informes. presentació e la norma
+IEEE para
+n de
+IEEE para presentación
+informes. presentació de informes.
+n de
+informes.
+
+para
+presentación
+de informes.
+
+indicado en la
+norma IEEE
+para
+presentación
+de informes.
+
+El diseño
+El diseño
+El diseño
+Se presenta Se presenta presentado
+presentado
+presentado no
+el diseño
+el diseño
+tiene el
+tiene el
+es claro,
+completo:
+parcial en fundamento fundamento
+cumple
+tiene el
+cuanto a; al
+teórico,
+teórico, no
+parcialmente
+fundamento fundamento tiene los
+tiene los
+con el
+teórico, los teórico, los respectivos respectivos
+fundamento
+No presenta
+diagramas diagramas diagramas, diagramas, los
+Diseño
+teórico y
+ningún diseño
+del diseño, del diseño, los cálculos
+cálculos
+RG 4, 5, 6,
+diagramas, no de acuerdo a 30%
+los
+los
+matemático matemáticos
+7
+se cumple con los criterios
+respectivos respectivos
+s están
+están
+RA 3
+los respectivos establecidos.
+cálculos
+cálculos incompletos incompletos,
+cálculos
+matemáticos matemático
+, y usan
+y usan
+matemáticos, y
+y usa los
+s y usa los parcialment parcialmente
+no usan los
+simuladores simuladores
+e los
+los
+simuladores
+correspondi correspondi simuladores simuladores
+correspondient
+entes.
+entes.
+correspondi correspondien
+es.
+entes.
+tes.
+Se
+evidencia
+Se
+un
+Se
+evidencia
+conocimien
+No profundiza
+evidencia
+un dominio
+to parcial
+en la temática
+un
+No profundiza
+y elementos
+en la
+trabajada para
+conocimien
+en la temática
+Implement innovadores
+implementa
+implementar el No presenta
+to en la
+trabajada para
+ación
+en la
+ción del
+prototipo y este
+la
+implementa
+implementar
+RG 4, 5, 6, implementa
+prototipo, y
+presenta
+implementaci 40%
+ción del
+el prototipo y
+7
+ción del
+este cumple
+problemas
+ón del
+prototipo, y
+este funciona
+RA 3
+prototipo, y
+parcialment
+estéticos y de
+prototipo.
+este
+de forma
+este
+e con los
+diseño que le
+funciona
+intermitente.
+funciona
+criterios del
+impiden
+correctame
+correctamen
+diseño, pero
+funcionar.
+nte.
+te.
+funciona
+correctame
+nte.
+El informe
+En el informe
+El informe
+El
+El informe
+En el informe
+presenta la
+no se presenta
+presenta
+documento presenta de No se refleja la
+argumentaci
+la
+una
+presenta
+forma
+pertinencia de
+ón teórica y
+argumentació
+argumentac
+una
+superficial la
+la
+Conclusion reflexiva, la
+n teórica y
+ión parcial argumentac argumentació argumentación
+es y
+revisión de
+reflexiva, la
+de la teoría, ión parcial
+n teórica y
+teórica y
+Análisis
+literatura
+revisión de
+se plantea en la teoría,
+reflexiva
+reflexiva junto
+10%
+RG 4, 5, 6, especializad
+literatura
+un análisis un análisis junto con la con la revisión
+7
+a y el
+especializada
+coherente a reflexivo
+revisión de
+de literatura,
+RA 3
+análisis
+y el análisis
+de acuerdo regular de
+literatura
+siendo
+acorde a la
+acorde a la
+a la revisión acuerdo a la especializada. inaceptable.
+temática, de
+temática, de
+de literatura revisión de El análisis no
+No se
+autoría
+autoría
+especializad literatura es acorde a la
+evidencia
+propia. Se
+propia.
+
+evidencia
+trabajo en
+equipo.
+
+a, de autoría especializad
+propia.
+a.
+
+temática
+trabajada.
+
+trabajo en
+equipo.
+
+100
+%
+
+Cordialmente;
+En constancia esto se entrega la segunda semana de clase Miercoles 12 de agosto del 2026 a
+las 10 am por tanto firman en constancia el docente titular del curso y el monitor de clase del
+curso de máquinas eléctricas.
+
+______________________________
+Ing. LAUREN G ISAZA
+Mg Gestión de la Tecnología
+Dra. Tecnologías Industriales.
+Dra Sostenibilidad
+Candidata a Doctora en Tecnologías Industriales
+
+________________________________
+Monitor de clase de máquinas eléctricas
+Nombre:
+Fecha:
+
+
