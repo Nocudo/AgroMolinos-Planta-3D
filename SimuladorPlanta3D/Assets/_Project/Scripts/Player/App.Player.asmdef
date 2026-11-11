@@ -1,0 +1,19 @@
+{
+    "name": "App.Player",
+    "rootNamespace": "IndustrialPlant.Player",
+    "references": [
+        "App.Core",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

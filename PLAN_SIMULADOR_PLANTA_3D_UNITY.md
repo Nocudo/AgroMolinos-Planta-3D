@@ -58,16 +58,18 @@ flowchart TD
 ---
 
 ### Bloque 2: Controlador del Operario y Sistema de Interacción
-- [ ] **2.1 Player Controller (Operario Industrial)**:
-  - Movimiento físico en primera persona con `CharacterController` (velocidad de caminata realista industrial: 1.4 m/s, aceleración y cabeceo suave de cámara).
-  - Detección de colisiones contra barandillas, máquinas y paredes.
-- [ ] **2.2 Sistema de Interacción por Raycast**:
-  - Detección de objetos interactuables en retícula central con rango de alcance de 2.0 metros.
-  - Interfaz unificada `IInteractable` para botones, manijas, palancas, candados, seccionadores y piezas de EPP.
-  - Retroalimentación visual: Resaltado / Outline del objeto enfocado y tooltip en pantalla (`[E] Abrir compuerta`, `[E] Colocar candado LOTO`).
-- [ ] **2.3 HUD Base del Operario**:
-  - Retícula central dinámica (cambia de forma/color al apuntar a un elemento accionable).
-  - Indicador de estado del operario (EPP activo, zona actual, nivel de exposición a ruido).
+- [x] **2.1 Player Controller (Operario Industrial)**:
+  - Movimiento físico con `CharacterController` (`PlayerController.cs`) con velocidades reglamentarias de planta (caminata 1.4 m/s, aceleración suave y cabeceo de cabeza / head bobbing).
+  - Manejo de entradas con New Input System (WASD, ratón, Shift para paso ligero) con fallback automático.
+  - Implementación de la Decisión Técnica **D1**: Perspectiva Híbrida (`CameraModeController.cs`) conmutable en tiempo real entre 1ª persona (FPS) y 3ª persona (TPS) con la tecla `[V]`, incluyendo sphere-cast anticolisión de cámara.
+- [x] **2.2 Sistema de Interacción por Raycast**:
+  - Detección precisa de objetos interactuables en retícula central con rango de alcance de 2.2 metros (`PlayerInteraction.cs`).
+  - Interfaz desacoplada `IInteractable` para cualquier objeto accionable de la planta.
+  - Componente genérico `InteractableTrigger.cs` para botones, manetas, interruptores y piezas de EPP con eventos y retroalimentación sonora/visual.
+- [x] **2.3 HUD Base del Operario**:
+  - Retícula central dinámica en `PlayerHUD.cs` (cambia de escala y color al enfocar elementos accionables).
+  - Notificación contextual de interacción en pantalla (`[E] Abrir compuerta`).
+  - Banner de alertas de seguridad animado (Toast) vinculado a `SafetyViolationEventChannelSO` para avisar de infracciones de normativas RETIE e ISO.
 
 ---
 
