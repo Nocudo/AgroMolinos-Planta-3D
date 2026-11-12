@@ -42,7 +42,7 @@ namespace IndustrialPlant.Safety
 
         private void OnTriggerStay(Collider other)
         {
-            if (!other.CompareTag("Player") && other.GetComponentInParent<Player.PlayerController>() == null)
+            if (!other.CompareTag("Player") && other.GetComponentInParent<OperatorPPEInventory>() == null)
                 return;
 
             if (Time.time - _lastViolationTime < _violationCooldown)
