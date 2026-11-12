@@ -1,0 +1,7 @@
+# Auto-detect text files and perform LF normalization for code
+* text=auto
+
+# Windows scripts MUST have CRLF line endings for cmd.exe
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
