@@ -202,21 +202,23 @@ export class ControlsManager {
       this.mode = 'INSPECTOR';
       this.pointerLock.unlock();
       this.orbit.enabled = true;
-      this.orbit.target.set(0, 1.2, 0);
-      this.camera.position.set(0, 6.0, 10.0);
-      this.camera.lookAt(0, 1.2, 0);
+      this.orbit.target.set(2.0, 2.5, 0.0);
+      this.camera.position.set(0.0, 16.0, 24.0);
+      this.camera.lookAt(2.0, 2.5, 0.0);
       if (this.eventBus) {
         this.eventBus.emit('ui:toast', {
           type: 'info',
-          title: 'Modo Inspector (Orbital)',
-          message: 'Cámara orbital activada. Use botón izquierdo para rotar y rueda para zoom.'
+          title: 'Modo Inspector (Orbital 360°)',
+          message: 'Cámara orbital panorámica de la planta activada. Click y arrastre para orbitar, rueda para zoom.'
         });
       }
     } else {
       this.mode = 'OPERATOR';
       this.orbit.enabled = false;
-      this.camera.position.set(-10.5, 1.7, 7.0);
-      this.pointerLock.lock();
+      this.camera.position.set(-18.5, 1.7, 0.0);
+      try {
+        this.pointerLock.lock();
+      } catch (e) {}
       if (this.eventBus) {
         this.eventBus.emit('ui:toast', {
           type: 'info',
@@ -310,21 +312,20 @@ export class ControlsManager {
     const pos = this.camera.position;
     pos.y = 1.7; // Altura estándar de ojos del operario
 
-    // Límites perimetrales del edificio
-    pos.x = Math.max(-12.2, Math.min(12.2, pos.x));
-    pos.z = Math.max(-9.2, Math.min(9.2, pos.z));
+    // Límites perimetrales del complejo industrial (48m x 30m)
+    pos.x = Math.max(-23.0, Math.min(23.0, pos.x));
+    pos.z = Math.max(-14.2, Math.min(14.2, pos.z));
 
-    // Muros de los vestidores:
-    // Muro divisorio X = -8.0 para Z entre 3.5 y 9.5
-    if (pos.z > 3.6 && pos.x > -8.2 && pos.x < -7.8) {
-      pos.x = -8.2;
+    // Muros de los vestidores en X = -14.0 para Z entre -3.25 y 3.25
+    if (pos.z > -3.2 && pos.z < 3.2 && pos.x > -14.3 && pos.x < -13.7) {
+      pos.x = -14.3;
     }
 
-    // Esclusa de paso en Z = 3.5 para X entre -10.0 y -8.0
-    // Si la esclusa está cerrada, impide cruzar hacia la nave de producción (Z < 3.5)
+    // Esclusa en Z = -3.25 para X entre -16.5 y -14.0
+    // Si la esclusa está cerrada, impide cruzar hacia la nave de producción (Z < -3.25)
     if (!this.isAirlockOpen) {
-      if (pos.x < -7.9 && pos.z > 3.0 && pos.z < 3.7) {
-        pos.z = 3.7; // Rebote hacia atrás en el vestidor
+      if (pos.x < -13.8 && pos.z > -3.5 && pos.z < -2.9) {
+        pos.z = -2.8; // Rebote hacia atrás en el vestidor
       }
     }
   }

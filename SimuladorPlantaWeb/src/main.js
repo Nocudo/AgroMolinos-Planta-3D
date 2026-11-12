@@ -16,6 +16,8 @@ import { WarehouseBuilder } from './world/WarehouseBuilder.js';
 import { MotorMillAssembly } from './world/MotorMillAssembly.js';
 import { CCMPanel } from './world/CCMPanel.js';
 import { DustParticleCloud } from './world/DustParticleCloud.js';
+import { PlantEquipmentBuilder } from './world/PlantEquipmentBuilder.js';
+import { GLTFAssetManager } from './world/GLTFAssetManager.js';
 
 import { SCADAInterface } from './ui/SCADAInterface.js';
 import { AndonVisualizer } from './ui/AndonVisualizer.js';
@@ -39,6 +41,9 @@ class IndustrialPlantSimulationApp {
     this.warehouse = new WarehouseBuilder(this.sceneManager.scene);
     this.warehouse.build();
 
+    this.equipment = new PlantEquipmentBuilder(this.sceneManager.scene, this.eventBus);
+    this.equipment.build();
+
     this.motorMill = new MotorMillAssembly(this.sceneManager.scene, this.eventBus);
     this.motorMill.build();
 
@@ -48,10 +53,15 @@ class IndustrialPlantSimulationApp {
     this.dustParticles = new DustParticleCloud(this.sceneManager.scene);
     this.dustParticles.build();
 
+    // 2.1 Carga asíncrona de modelos GLB industriales (Montacargas, estanterías, tolvas, cintas)
+    this.gltfManager = new GLTFAssetManager(this.sceneManager.scene, this.eventBus);
+    this.gltfManager.loadAllAssets();
+
     // 3. Controles y Raycast interactivo
     this.controls = new ControlsManager(this.sceneManager.camera, container, this.eventBus);
     const allInteractables = [
       ...this.warehouse.interactables,
+      ...this.equipment.interactables,
       ...this.motorMill.interactables,
       ...this.ccmPanel.interactables
     ];
