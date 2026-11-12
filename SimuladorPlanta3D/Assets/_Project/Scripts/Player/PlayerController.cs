@@ -85,8 +85,7 @@ namespace IndustrialPlant.Player
             Vector2 lookInput = GetLookInput();
 
             float mouseX = lookInput.x * _mouseSensitivity;
-            // Standard FPS convention: Moving mouse UP (positive Y) tilts camera UP (negative Euler pitch)
-            float mouseY = lookInput.y * _mouseSensitivity * (_invertY ? -1f : 1f);
+            float mouseY = lookInput.y * _mouseSensitivity * (_invertY ? 1f : -1f);
 
             // Rotate character body horizontally (Yaw)
             transform.Rotate(Vector3.up * mouseX);

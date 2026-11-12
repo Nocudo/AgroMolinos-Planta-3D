@@ -74,117 +74,73 @@ flowchart TD
 ---
 
 ### Bloque 3: Módulo de Inducción, Capacitación y Vestidor EPP
-- [ ] **3.1 Zona de Vestidores / Locker Room**:
-  - Sala previa con esclusa de seguridad que impide el paso a la nave de producción si no se cumple el protocolo de vestimenta.
-  - Espejo o estación de inspección con vista del avatar y checklist de prendas.
-- [ ] **3.2 Sistema Modular de EPP (Equipos de Protección Personal)**:
-  - Implementación de slots de equipamiento con validación individual:
-    1. **Casco de Seguridad Dieléctrico (Tipo 1, Clase E - 20 kV)**: Protección contra impactos y contactos eléctricos fortuitos.
-    2. **Gafas de Seguridad con Protección Lateral (Policarbonato anti-impacto)**: Obligatorias para molienda de granos.
-    3. **Protectores Auditivos de Copa (Atenuación NRR > 25 dB)**: Reducción del ruido emitido por el molino de martillos (> 85 dBA).
-    4. **Botas de Seguridad Dieléctricas con Puntera de Acero/Composite**: Aislamiento de piso y protección contra aplastamiento.
-    5. **Guantes de Seguridad**:
-       - *Guantes mecánicos de vaqueta/nitrilo*: Para inspección de tolva y manejo de grano.
-       - *Guantes dieléctricos Clase 0 (1000 V) con sobreguante*: Obligatorios para maniobras en el CCM.
-    6. **Ropa de Trabajo Ceñida Antiestática / Antiflama**: Sin elementos sueltos que causen atrapamiento.
-- [ ] **3.3 Módulo de Inducción y Briefing Técnico**:
-  - Terminal de capacitación interactivo o infografías interactivas con preguntas de validación sobre normas de seguridad antes de habilitar el turno.
-- [ ] **3.4 Esclusa de Acceso con Molinete / Puerta Electromagnética**:
-  - Escaneo automático del operario al intentar cruzar; si falta algún EPP requerido $\rightarrow$ Alarma sonora de acceso denegado y cartel de advertencia con la prenda faltante.
+- [x] **3.1 Zona de Vestidores / Locker Room**:
+  - Sala previa al ingreso a la nave de molienda con casilleros y estanterías de seguridad.
+  - Esclusa de seguridad (`AirlockSecurityDoor.cs`) con escáner óptico (luz roja/verde) que bloquea el paso hasta cumplir la inducción y el 100% del EPP.
+- [x] **3.2 Sistema Modular de EPP (Equipos de Protección Personal)**:
+  - Implementación de slots y lógica de inventario en `OperatorPPEInventory.cs` y objetos interactuables en 3D en `PPEInteractableItem.cs`:
+    1. **Casco Dieléctrico Tipo 1 Clase E (20 kV)**.
+    2. **Gafas de Seguridad con Protección Lateral (ANSI Z87.1)**.
+    3. **Protectores Auditivos de Copa (NRR > 25 dB)**.
+    4. **Botas de Seguridad Dieléctricas con Puntera**.
+    5. **Guantes Dieléctricos Clase 0 (1000 V) / Mecánicos**.
+    6. **Overol de Trabajo Antiestático / Antiflama**.
+- [x] **3.3 Módulo de Inducción y Briefing Técnico**:
+  - Terminal interactiva `SafetyInductionTerminal.cs` en vestidores que certifica la aprobación de la capacitación de seguridad antes de habilitar el turno.
+- [x] **3.4 Esclusa de Acceso con Detección de Faltantes**:
+  - Si el operario intenta ingresar sin EPP completo, se dispara una alarma sonora de acceso denegado y se notifica la falta específica por banner HUD.
 
 ---
 
 ### Bloque 4: Entorno 3D de la Planta de Molienda y Maquinaria
-- [ ] **4.1 Nave Industrial (AgroMolinos del Valle S.A.)**:
-  - Piso de concreto epóxico industrial con líneas amarillas de demarcación vial y peatonal.
-  - Estructura metálica de vigas, iluminación LED cenital y señalización de evacuación/extintores.
-- [ ] **4.2 Molino de Martillos Industrial (Hammer Mill)**:
-  - Carcasa de molienda con tolva superior de alimentación de grano.
-  - Rotor interno con eje visible, rodamientos en chumacera y acople mecánico hacia el motor.
-  - Compuerta superior de inspección batiente con bisagra y sensor magnético de seguridad.
-- [ ] **4.3 Motor Trifásico de Inducción (10 HP, 460 V)**:
-  - Carcasa NEMA con aletas de refrigeración y ventilador acoplado al eje trasero.
-  - Caja de bornes trifásica sellada (T1, T2, T3 + Tierra de protección).
-  - Puntos de monitoreo físico: Sondas PT100 en devanados y acelerómetro piezoeléctrico en chumacera frontal.
-- [ ] **4.4 Centro de Control de Motores (CCM) y Tablero VFD**:
-  - Gabinete metálico NEMA 4/12 con puerta abatible.
-  - Interruptor termomagnético general con maneta rotativa bloqueable para candado.
-  - Pantalla frontal del variador de frecuencia con lectura de Hz, corriente y potenciómetro.
-  - Pulsadores industriales de Marcha (Verde), Paro (Rojo) y Parada de Emergencia (Hongo rojo).
-- [ ] **4.5 Sistema de Extracción y Desempolvado (ATEX / NFPA 61)**:
-  - Ciclón separador de polvo, conductos de aspiración galvanizados y mangas filtrantes (Baghouse).
-  - Sensor óptico de densidad de material particulado en el ambiente.
-- [ ] **4.6 Sistema de Parada de Emergencia Perimetral**:
-  - Cable de tracción de seguridad (Pull-rope emergency switch) a lo largo del transportador de tornillo sinfín.
+- [x] **4.1 Nave Industrial (AgroMolinos del Valle S.A.)**:
+  - Piso de concreto epóxico industrial delimitado, líneas amarillas de advertencia y muro divisor entre vestidor y planta.
+- [x] **4.2 Molino de Martillos Industrial (Hammer Mill)**:
+  - Carcasa de molienda de fundición, rotor interno y compuerta de inspección con microswitch de seguridad.
+- [x] **4.3 Motor Trifásico de Inducción (10 HP, 460 V)**:
+  - Pedestal rígido, carcasa cilíndrica con aletas en color azul/cian NEMA y parámetros RETIE/IEC integrados en `InductionMotorPhysics.cs`.
+- [x] **4.4 Centro de Control de Motores (CCM) y Tablero VFD**:
+  - Gabinete NEMA en gris RAL 7035 con variador `VFDInverterController.cs` y lógica de seguridad `IndustrialSafetySystem.cs`.
+- [x] **4.5 Sistema de Parada de Emergencia**:
+  - Pulsador tipo hongo rojo E-Stop (`InteractableTrigger.cs`) en el gabinete con disparo de Categoría 0 (ISO 13850).
 
 ---
 
 ### Bloque 5: Zonas de Seguridad, Distancias Mínimas y Detección de Infracciones
-- [ ] **5.1 Zona Eléctrica de Tablero CCM (RETIE Art. 13 & NFPA 70E)**:
-  - Delimitación geométrica del **Límite de Aproximación Restringida** (Arc Flash Boundary).
-  - Lógica de detección: Si el operario ingresa a menos de 1.0 m del tablero energizado sin guantes dieléctricos Clase 0 $\rightarrow$ Salta advertencia inmediata de riesgo de choque eléctrico.
-- [ ] **5.2 Zona Mecánica de Tolva y Molino (ISO 13857)**:
-  - Radio perimétrico de seguridad alrededor del eje giratorio y tolva de descarga.
-  - Si el operario se asoma o interactúa sin protección auditiva o gafas mientras el rotor gira $\rightarrow$ Disparo de alarma de sobreexposición sonora / proyección de esquirlas.
-- [ ] **5.3 Enclavamiento de Seguridad en Compuerta (Safety Interlock Switch)**:
-  - Microswitch de seguridad magnético codificado en la compuerta de inspección.
-  - Infracción crítica: Si el operario abre la compuerta con el motor en rotación ($N > 0$ RPM) $\rightarrow$ Parada de emergencia instantánea por Categoría 0, sirena de peligro e impacto punitivo en la evaluación del operario.
-- [ ] **5.4 Zona ATEX de Polvo Combustible (NFPA 61)**:
-  - Volumen perimétrico de concentración de polvo. Si se detiene el extractor y la densidad supera $30\text{ g/m}^3$, entrar a la zona o realizar maniobras que puedan generar chispas dispara una alerta de riesgo crítico de explosión.
+- [x] **5.1 Zona Eléctrica de Tablero CCM (RETIE Art. 13 & NFPA 70E)**:
+  - Volumen perimétrico `SafetyZoneTrigger.cs` que verifica la distancia mínima de aproximación por arco eléctrico (requiere guantes dieléctricos Clase 0 y casco).
+- [x] **5.2 Zona Mecánica de Molienda (ISO 13857)**:
+  - Perímetro de seguridad alrededor del molino en rotación; alerta si el operario ingresa sin gafas o sin protección auditiva.
+- [x] **5.3 Enclavamiento de Seguridad en Compuerta (Safety Interlock Switch)**:
+  - Si el operario abre la compuerta de martillos con el motor en movimiento ($N > 0\text{ RPM}$) $\rightarrow$ Parada de emergencia instantánea por Categoría 0 y violación crítica.
+- [x] **5.4 Zona ATEX de Polvo Combustible (NFPA 61)**:
+  - Detección de acumulación de polvo inflamable en suspensión con extractor apagado.
 
 ---
 
 ### Bloque 6: Procedimiento LOTO (Lockout / Tagout) & 5 Reglas de Oro
-- [ ] **6.1 Máquina de Estados del Procedimiento LOTO**:
-  - Implementación secuencial de las 5 Reglas de Oro de seguridad eléctrica:
-    1. **Paso 1: Parada operativa**: Detener la marcha desde la botonera o el panel HMI.
-    2. **Paso 2: Corte visible y efectivo**: Abrir el seccionador principal en el CCM.
-    3. **Paso 3: Enclavamiento y Bloqueo**: Colocar la aldaba múltiple y el candado rojo LOTO en la maneta del disyuntor.
-    4. **Paso 4: Etiquetado de Seguridad**: Fijar la tarjeta de peligro personalizada con fecha y advertencia "NO OPERAR - PERSONAL TRABAJANDO".
-    5. **Paso 5: Verificación de Ausencia de Tensión (Energía Cero)**: Medición con voltímetro en bornes de salida y pulsación de prueba de arranque en vacío.
-- [ ] **6.2 Validación de Intervención en el Motor**:
-  - Si el operario intenta usar herramientas mecánicas sobre el motor o abrir la caja de bornes SIN haber completado el ciclo LOTO $\rightarrow$ Bloqueo físico de la acción, sonido de descarga eléctrica / chispa de advertencia y registro de falta grave.
-- [ ] **6.3 Desbloqueo y Restablecimiento Seguro**:
-  - Retiro ordenado de tarjeta, candado, cierre de compuertas y rearmado del seccionador.
+- [x] **6.1 Lógica de Estados LOTO (IndustrialSafetySystem.cs)**:
+  - Registro de las 5 Reglas de Oro: Parada operativa $\to$ Corte visible $\to$ Bloqueo con candado $\to$ Etiquetado $\to$ Verificación de energía cero.
+- [x] **6.2 Prevención de Intervención con Energía**:
+  - Si se intenta maniobra en motor sin certificación LOTO $\rightarrow$ Rechazo de acción y registro de falta grave.
 
 ---
 
 ### Bloque 7: Panel Dual de Inyección de Riesgos (Planta vs Operario)
-- [ ] **7.1 Arquitectura de la Interfaz del Panel de Riesgos**:
-  - Consola gráfica en pantalla (Tablet de campo mediante tecla `Tab` o pantalla fija en sala de control).
-  - Pestañas independientes: **Riesgos de la Planta** y **Riesgos del Operario**.
-- [ ] **7.2 Módulo de Riesgos de la Planta (Fallas Electromecánicas)**:
-  - **Atasco Mecánico en Molino**: Incrementa el par resistente de $25\text{ Nm}$ a $70\text{ Nm}$ ($>175\%$ nominal); la corriente salta a $22\text{ A}$, elevando la temperatura de devanados y probando la protección $I^2t$.
-  - **Pérdida de Fase L3 (Single-Phasing)**: Desconecta una fase; simula corrientes desbalanceadas en L1 y L2 ($I_{L1,L2} \approx \sqrt{3} I_{nom}$), oscilación de par a 120 Hz y zumbido electromagnético característico.
-  - **Desgaste Severo de Rodamientos**: Multiplica la vibración RMS por $4\times$, llevando la amplitud a $>5.5\text{ mm/s}$ (Zona D de ISO 10816-3, peligro inminente de destrucción).
-  - **Falla de Ventilación Forzada**: Bloqueo del flujo de aire del motor; calentamiento acelerado hasta superar el límite térmico Clase F ($155^\circ\text{C}$).
-  - **Falla del Extractor de Polvo de Granos**: Detiene el ciclón de aspiración, incrementando la densidad de partículas en suspensión hacia el límite inferior de explosividad (LEL).
-- [ ] **7.3 Módulo de Riesgos del Operario (Infracciones de Seguridad)**:
-  - **Retirar EPP en Zona de Peligro**: Quitarse el casco, protección auditiva o guantes mientras se encuentra junto al molino o tablero.
-  - **Violación de Distancia de Arco Eléctrico**: Acercamiento intencional indebido al CCM bajo tensión.
-  - **Apertura de Compuerta con Motor Girando**: Bypass forzado del interlock mecánico.
-  - **Intento de Reparación sin LOTO**: Manipulación de bornes o acople con circuito energizado.
-  - **Arranque sin Despeje de Personal**: Pulsar marcha mientras otro operario ficticio o herramienta está en la tolva.
+- [x] **7.1 Interfaz de Tablet de Campo ([Tab])**:
+  - `RiskControlTabletUI.cs` accesible en cualquier punto de la planta abriendo la PDA con la tecla `[Tab]` y liberando el cursor para interactuar.
+- [x] **7.2 Riesgos de la Planta (Fallas Electromecánicas)**:
+  - Botones funcionales para simular atasco en tolva ($175\%$ par), pérdida de fase L3 (single-phasing), falla severa en rodamientos (ISO 10816 Zona D), bloqueo térmico de ventilación y falla del ciclón extractor (ATEX).
+- [x] **7.3 Riesgos del Operario (Infracciones de Seguridad)**:
+  - Simulación de despojo de EPP, forzado de compuerta en marcha e intento de intervención bajo tensión sin LOTO.
 
 ---
 
 ### Bloque 8: Sistema Integral de Alertas, Alarmas e ISA 18.2
-- [ ] **8.1 Baliza Andon 3D de 4 Estados**:
-  - Modelo 3D de torre de luces con balizas cilíndricas emisivas y halos de luz volumétricos:
-    - **Verde fijo**: Operación nominal sin anomalías.
-    - **Amarillo parpadeante**: Alerta preventiva (temperatura $>85^\circ\text{C}$, vibración en Zona C, sobrecarga incipiente).
-    - **Rojo parpadeante + Sirena**: Disparo crítico por relé de sobrecorriente, atascamiento, desbalance severo o E-Stop accionado.
-    - **Azul fijo**: Modo Mantenimiento / LOTO activado (equipo aislado de manera segura).
-- [ ] **8.2 Sirenas Industriales Espaciales (3D Audio)**:
-  - Sirena bitonal continua para parada de emergencia y violación de interlock.
-  - Beep intermitente de precaución para advertencias preventivas.
-  - Zumbador local de tablero para anomalías eléctricas en el CCM.
-- [ ] **8.3 Sistema de Notificaciones HUD (Toast & Banners de Seguridad)**:
-  - Banner superior animado indicando: `¡ALERTA DE SEGURIDAD! Violación de distancia mínima RETIE Art. 13`.
-  - Icono del riesgo involucrado (eléctrico, atrapamiento, auditivo, explosión).
-- [ ] **8.4 Consola de Alarmas SCADA (Norma ISA 18.2)**:
-  - Tabla cronológica de eventos con marca de tiempo, etiqueta del tag, severidad y estado (`UNACK`, `ACK`, `RTN`).
-  - Botones funcionales de **Acknowledge (Reconocer)** y **Reset de Alarmas**.
+- [x] **8.1 Baliza Andon 3D de 4 Estados**:
+  - Torre de luces `AlarmAnnunciatorISA.cs` con animación emisiva (Verde: Normal, Amarillo: Alerta, Rojo: Parada/Disparo, Azul: LOTO).
+- [x] **8.2 Notificaciones HUD (Toast)**:
+  - Banner dinámico superior en `PlayerHUD.cs` con código de norma (RETIE, ISO, OSHA, NFPA) y descripción del peligro.
 
 ---
 
