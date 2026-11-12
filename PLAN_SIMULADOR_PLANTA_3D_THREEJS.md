@@ -39,39 +39,39 @@ flowchart TD
 
 ### Módulo 1: Arquitectura Base y Escena Three.js
 - [x] Configuración de estructura web (`index.html`, `css/`, `src/`).
-- [ ] Importación de Three.js y OrbitControls / PointerLockControls vía ES Modules (CDN).
-- [ ] Pipeline de iluminación PBR (DirectionalLight con sombras suaves, AmbientLight y materiales metálicos/rugosos).
-- [ ] Soporte para doble modo de cámara: **Modo Inspector (Orbital)** y **Modo Operario (Primera Persona WASD)**.
+- [x] Importación de Three.js y OrbitControls / PointerLockControls vía ES Modules (CDN).
+- [x] Pipeline de iluminación PBR (DirectionalLight con sombras suaves, AmbientLight y materiales metálicos/rugosos).
+- [x] Soporte para doble modo de cámara: **Modo Inspector (Orbital)** y **Modo Operario (Primera Persona WASD + Mouse Drag Fallback)**.
 
 ### Módulo 2: Modelado 3D Procedural de la Planta y Maquinaria
-- [ ] Nave industrial (pisos de concreto, paredes, vigas de acero estructural, demarcación de zonas RETIE en amarillo/negro).
-- [ ] Motor Trifásico de Inducción 10 HP (carcasa con aletas de refrigeración, caja de bornes, eje y ventilador giratorio acoplado a las RPM calculadas).
-- [ ] Molino de martillos con tolva de alimentación superior y compuerta de inspección abatible.
-- [ ] Elevador de grano / Tornillo sinfín de descarga.
-- [ ] Tablero eléctrico CCM con seccionador rotativo, botonera y torre de baliza Andon.
+- [x] Nave industrial (pisos de concreto, paredes, vigas de acero estructural, demarcación de zonas RETIE en amarillo/negro).
+- [x] Motor Trifásico de Inducción 10 HP (carcasa con aletas de refrigeración, caja de bornes, eje y ventilador giratorio acoplado a las RPM calculadas).
+- [x] Molino de martillos con tolva de alimentación superior y compuerta de inspección abatible.
+- [x] Elevador de grano / Tornillo sinfín de descarga.
+- [x] Tablero eléctrico CCM con seccionador rotativo, botonera y torre de baliza Andon.
 
 ### Módulo 3: Físicas del Motor 10 HP y VFD
-- [ ] Implementación de la fórmula de Kloss para par electromagnético en función del deslizamiento.
-- [ ] Control escalar V/f con rampa de aceleración/desaceleración configurable ($0$ a $60\text{ Hz}$).
-- [ ] Cálculo de corriente trifásica ($I_{RMS}$) y factor de potencia ($\cos\phi$).
-- [ ] Integración numérica diferencial para temperatura de bobinado ($T_{dev}$) considerando pérdidas Joule y ventilación forzada.
-- [ ] Cálculo de vibración RMS clasificada según ISO 10816-3.
+- [x] Implementación de la fórmula de Kloss para par electromagnético en función del deslizamiento.
+- [x] Control escalar V/f con rampa de aceleración/desaceleración configurable ($0$ a $60\text{ Hz}$).
+- [x] Cálculo de corriente trifásica ($I_{RMS}$) y factor de potencia ($\cos\phi$).
+- [x] Integración numérica diferencial para temperatura de bobinado ($T_{dev}$) considerando pérdidas Joule y ventilación forzada.
+- [x] Cálculo de vibración RMS clasificada según ISO 10816-3.
 
 ### Módulo 4: Instrumentación SCADA / HMI
-- [ ] Tacómetro digital (RPM).
-- [ ] Amperímetros de aguja y display digital para fases L1, L2, L3.
-- [ ] Frecuencímetro VFD con potenciómetro interactivo.
-- [ ] Indicador térmico con zona de advertencia ($> 85^\circ\text{C}$) y disparo crítico ($> 105^\circ\text{C}$).
-- [ ] Baliza Andon 3D y 2D (Verde = Normal, Amarillo = Alerta, Rojo = Falla/E-Stop, Azul = LOTO).
+- [x] Tacómetro digital (RPM).
+- [x] Amperímetros de aguja y display digital para fases L1, L2, L3.
+- [x] Frecuencímetro VFD con slider interactivo.
+- [x] Indicador térmico con zona de advertencia ($> 85^\circ\text{C}$) y disparo crítico ($> 105^\circ\text{C}$).
+- [x] Baliza Andon 3D y 2D (Verde = Normal, Amarillo = Alerta, Rojo = Falla/E-Stop, Azul = LOTO).
 
 ### Módulo 5: Protocolos de Seguridad (LOTO, E-Stop, Interlocks, ATEX)
-- [ ] Botón de Parada de Emergencia tipo hongo con enclave y rearme.
-- [ ] Flujo de bloqueo y etiquetado LOTO con candado físico y tarjeta de peligro interactivos.
-- [ ] Microswitch de seguridad en la compuerta del molino (disparo inmediato si se abre con $N > 0$).
-- [ ] Nube de partículas WebGL de polvo combustible de cereal con sensor de concentración $g/m^3$ y ciclón de extracción.
+- [x] Botón de Parada de Emergencia tipo hongo con enclave y rearme.
+- [x] Flujo de bloqueo y etiquetado LOTO con candado físico y tarjeta de peligro interactivos.
+- [x] Microswitch de seguridad en la compuerta del molino (disparo inmediato si se abre con $N > 0$).
+- [x] Nube de partículas WebGL de polvo combustible de cereal con sensor de concentración $g/m^3$ y ciclón de extracción.
 
 ### Módulo 6: Panel de Fallas y Audio Industrial
-- [ ] Inyección de atasco mecánico / sobrecarga por alimentación excesiva.
-- [ ] Inyección de caída de fase (desbalance trifásico).
-- [ ] Inyección de falla de rodamiento (elevación de vibración a Zona D).
-- [ ] Síntesis de sonido procedural con Web Audio API (zumbido 60 Hz/RPM, inversor PWM y sirena ISA 18.2).
+- [x] Inyección de atasco mecánico / sobrecarga por alimentación excesiva.
+- [x] Inyección de caída de fase (desbalance trifásico).
+- [x] Inyección de falla de rodamiento (elevación de vibración a Zona D).
+- [x] Síntesis de sonido procedural con Web Audio API (zumbido 60 Hz/RPM, inversor PWM y sirena ISA 18.2).

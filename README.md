@@ -12,7 +12,7 @@
 
 ## 🏭 Descripción General del Proyecto
 
-Plataforma integral de accionamiento electromecánico, monitoreo predictivo de fallas con Inteligencia Artificial y simulación interactiva en 3D (Serious Game en Unity) para la **Planta Molino de Granos** de la empresa **AgroMolinos del Valle S.A.**.
+Plataforma integral de accionamiento electromecánico, monitoreo predictivo de fallas con Inteligencia Artificial y simulación interactiva 3D en tiempo real (WebGL / Three.js) para la **Planta Molino de Granos** de la empresa **AgroMolinos del Valle S.A.**.
 
 ### Especificaciones Técnicas del Accionamiento Crítico
 - **Máquina Eléctrica:** Motor Trifásico de Inducción Jaula de Ardilla (Clase IE3 Premium Efficiency)
@@ -20,7 +20,7 @@ Plataforma integral de accionamiento electromecánico, monitoreo predictivo de f
 - **Tensión / Frecuencia:** $460\text{ V AC}$, trifásico, $60\text{ Hz}$
 - **Velocidad Nominal:** $1750\text{ RPM}$ ($p = 4$ polos, velocidad sincrónica $1800\text{ RPM}$)
 - **Corriente Nominal a Plena Carga ($I_{FLA}$):** $\approx 13.5\text{ A}$ por fase
-- **Sistema de Control:** Variador de Frecuencia (VFD) con Control Directo de Par (DTC) y rampa suave
+- **Sistema de Control:** Variador de Frecuencia (VFD) con control escalar V/f constante y rampas de aceleración/deceleración
 - **Normativa de Seguridad y Mantenimiento:** RETIE (Art. 13 y 20), ISO 13857, NFPA 70E, NFPA 61 / ATEX, ISO 10816-1/3 (Vibraciones), OSHA 1910.147 / 5 Reglas de Oro (LOTO).
 
 ---
@@ -35,39 +35,58 @@ Plataforma integral de accionamiento electromecánico, monitoreo predictivo de f
 │   ├── abrir_panel.m               # Script maestro de lanzamiento del panel MATLAB
 │   ├── Informe/IA/                 # Red neuronal (MLP), SVM RBF y dataset de fallas
 │   └── Informe/simulaciones/       # Modelos DTC actualizados y telemetría de fallas
-├── SimuladorPlanta3D/              # Proyecto de Unity (Serious Game 3D con URP)
-│   ├── Assets/_Project/            # Scripts (.asmdef), Scenes, Prefabs, Materials y UI
-│   ├── Packages/manifest.json      # Configuración de dependencias URP e Input System
-│   └── ProjectSettings/            # Configuración de versión y motor de físicas
-├── PLAN_SIMULADOR_PLANTA_3D_UNITY.md # Plan maestro modular de 10 bloques de desarrollo
-└── .gitignore                      # Reglas de exclusión para Unity, MATLAB y LaTeX
+├── SimuladorPlantaWeb/              # Simulador 3D Web interactivo (Three.js / WebGL sin compilación)
+│   ├── index.html                  # Contenedor Canvas 3D + HUD / SCADA superpuesto en HTML5
+│   ├── css/
+│   │   └── scada-style.css         # Estilos SCADA industriales oscuros y tablet de riesgos
+│   └── src/
+│       ├── core/                   # EventBus, SceneManager PBR, ControlsManager (WASD + Orbital)
+│       ├── physics/                # InductionMotor (Kloss), VFDController, ThermalModel, MechanicalLoad
+│       ├── safety/                 # IndustrialSafety (E-Stop, LOTO 5 Reglas), OperatorPPEInventory, SafetyZones
+│       ├── world/                  # WarehouseBuilder, MotorMillAssembly, CCMPanel, DustParticleCloud
+│       ├── ui/                     # SCADAInterface, AndonVisualizer (ISA 18.2), FaultInjectorUI
+│       ├── audio/                  # IndustrialAudio (Síntesis procedural con Web Audio API)
+│       └── main.js                 # Bucle principal de animación a 60 FPS
+├── PLAN_SIMULADOR_PLANTA_3D_THREEJS.md # Plan maestro y mapa modular del simulador Three.js
+└── .gitignore                      # Reglas de exclusión para entornos Web, MATLAB y LaTeX
 ```
 
 ---
 
-## 🎮 Simulador 3D en Unity (`SimuladorPlanta3D/`)
+## 🌐 Cómo Ejecutar el Simulador 3D (`SimuladorPlantaWeb/`)
 
-El simulador pone al usuario en el rol de un **operario industrial** dentro de la planta de molienda:
-1. **Fase de Inducción y Vestidor:** Obligación de equipar el EPP adecuado (casco clase E, gafas policarbonato, copas auditivas NRR > 25 dB, botas dieléctricas y guantes) antes de que la esclusa permita acceder a la nave.
-2. **Respeto de Distancias y Zonas Críticas:** Alertas automáticas ante proximidad excesiva al CCM bajo carga (RETIE / Arc Flash) o a piezas móviles (ISO 13857).
-3. **Procedimiento LOTO:** Ejecución secuencial de las 5 Reglas de Oro para intervención segura.
-4. **Panel Dual de Simulación de Riesgos:** Inyección de riesgos de planta (atasco en tolva, pérdida de fase L3, vibración severa en rodamientos, fallo térmico y riesgo de explosión por polvo ATEX) e infracciones del operario.
-5. **Señalización Industrial:** Baliza Andon 3D de 4 estados, sirenas espaciales y panel de alarmas según norma ISA 18.2.
-
----
-
-## 👥 Guía Rápida de Colaboración (Git)
+El simulador está diseñado bajo la filosofía **Zero-Compilation**: no requiere instalar Unity Hub, Node.js ni paquetes pesados. Funciona directamente en cualquier navegador moderno:
 
 ```bash
-# 1. Clonar el repositorio
-git clone <URL_DEL_REPOSITORIO>
-cd "Proyecto final"
+# Opción 1: Servidor local ligero con Python
+cd SimuladorPlantaWeb
+python -m http.server 8000
 
-# 2. Crear una rama de trabajo para tu tarea
-git checkout -b feature/bloque-X-nombre
-
-# 3. Guardar cambios y subir
-git add .
-git commit -m "feat: implementado Bloque X"
-git push origin feature/bloque-X-nombre
+# Abrir en el navegador:
+# http://localhost:8000
 ```
+
+### Controles de Navegación e Interacción:
+- **WASD / Flechas:** Caminar por la nave industrial y vestidores.
+- **Mouse:** Orientar la vista en primera persona (o arrastrar con click izquierdo).
+- **[E] o Click Izquierdo:** Interactuar con el equipo al que apuntas (seccionador, pulsadores, EPP, compuertas).
+- **[Tab]:** Abrir / Cerrar la Tablet Industrial de Seguridad y Control de Riesgos.
+- **[Shift]:** Correr / Desplazamiento acelerado.
+- **[C]:** Alternar entre Modo Operario (Primera Persona) y Modo Inspector (Cámara Orbital 360°).
+
+---
+
+## 🦺 Características de Seguridad y Físicas Implementadas
+
+1. **Física del Motor 10 HP:** Ecuación de par-deslizamiento de Kloss, corrientes trifásicas ($I_{L1}, I_{L2}, I_{L3}$), factor de potencia y balance de potencias activa/reactiva.
+2. **Modelo Térmico de 1er Orden:** Calentamiento estatórico diferencial $\frac{dT}{dt}$ con convección forzada dependiente de las RPM del ventilador y disparo por relé térmico ($> 105^\circ\text{C}$).
+3. **Severidad de Vibración (ISO 10816-3):** Diagnóstico en tiempo real por zonas (Zona A/B óptima, Zona C alerta, Zona D parada destructiva).
+4. **Protocolo LOTO (5 Reglas de Oro):**
+   - 1. Corte visible en seccionador CCM.
+   - 2. Enclavamiento físico con candado rojo y tarjeta de peligro.
+   - 3. Verificación de ausencia de tensión (0.0 V).
+   - 4. Puesta a tierra y cortocircuito.
+   - 5. Señalización de zona segura con baliza Andon Azul.
+5. **Esclusa y Dotación EPP (RETIE Art. 20):** Casco dieléctrico clase E, gafas ANSI Z87.1, copas auditivas NRR 27 dB, botas dieléctricas ASTM F2413, guantes clase 00 y overol ignífugo NFPA 70E.
+6. **Riesgo ATEX / NFPA 61:** Simulación de nube de polvo de cereal en suspensión con sensor óptico de densidad ($g/m^3$) y extractor centrífugo ciclónico.
+7. **Audio Procedural (Web Audio API):** Zumbido 60 Hz armónico, silbido PWM de 4 kHz del inversor y sirena de emergencia ISA 18.2 generados en tiempo real.

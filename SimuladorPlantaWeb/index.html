@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador 3D Planta Molino de Granos | Máquinas Eléctricas (Three.js)</title>
+  <link rel="stylesheet" href="./css/scada-style.css">
+
+  <!-- Three.js ES Modules Import Map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Contenedor 3D WebGL -->
+  <div id="canvas-container"></div>
+
+  <!-- Retícula de Interacción Central -->
+  <div id="hud-crosshair-container">
+    <div class="crosshair-dot"></div>
+    <div id="hud-interaction-tooltip">[E] Interactuar</div>
+  </div>
+
+  <!-- Barra Superior de Estado SCADA -->
+  <header id="hud-top-bar">
+    <div class="top-brand">
+      <span class="brand-icon">⚙️</span>
+      <div>
+        <div class="brand-title">AGROMOLINOS DEL VALLE S.A.</div>
+        <div class="brand-subtitle">Simulador 3D - Accionamiento Motor 10 HP / VFD</div>
+      </div>
+    </div>
+
+    <div class="top-status-group">
+      <div id="scada-andon-badge" class="andon-pill andon-yellow">ALERTA / ESPERA</div>
+      <div id="scada-vfd-status" class="status-pill status-stopped">STOPPED</div>
+    </div>
+
+    <div class="top-actions-group">
+      <button id="btn-open-tablet" class="btn-header">📱 Tablet Riesgos [Tab]</button>
+      <button id="btn-scada-start" class="btn-header" style="background:#1b5e20; border-color:#2e7d32;">▶ Marcha</button>
+      <button id="btn-scada-stop" class="btn-header" style="background:#b71c1c; border-color:#c62828;">⏹ Parada</button>
+      <button id="btn-scada-estop" class="btn-header btn-header-danger">🚨 E-STOP</button>
+      <button id="btn-scada-reset" class="btn-header" style="background:#0d47a1; border-color:#1976d2;">🔄 Rearme</button>
+    </div>
+  </header>
+
+  <!-- Panel Izquierdo: Telemetría Eléctrica & VFD -->
+  <aside id="scada-left-panel" class="scada-panel">
+    <div class="panel-title">
+      <span>Telemetría Eléctrica</span>
+      <span style="color:var(--text-muted); font-size:0.75rem;">CCM-01</span>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Tensión Barras (V_LL):</span>
+      <div class="metric-value-box"><span id="val-vfd-volt">0</span><span class="metric-unit">V</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Frecuencia VFD:</span>
+      <div class="metric-value-box"><span id="val-vfd-freq">0.0</span><span class="metric-unit">Hz</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Velocidad Rotor (Nr):</span>
+      <div class="metric-value-box" style="color:var(--accent-cyan);"><span id="val-motor-rpm">0</span><span class="metric-unit">RPM</span></div>
+    </div>
+
+    <!-- Corrientes Trifásicas -->
+    <div class="current-phases-container">
+      <div class="phase-row">
+        <span class="phase-tag" style="color:#ef5350;">L1</span>
+        <div class="phase-bar-track"><div id="bar-current-l1" class="phase-bar-fill"></div></div>
+        <span class="phase-val"><span id="val-current-l1">0.0</span> A</span>
+      </div>
+      <div class="phase-row">
+        <span class="phase-tag" style="color:#ffee58;">L2</span>
+        <div class="phase-bar-track"><div id="bar-current-l2" class="phase-bar-fill"></div></div>
+        <span class="phase-val"><span id="val-current-l2">0.0</span> A</span>
+      </div>
+      <div class="phase-row">
+        <span class="phase-tag" style="color:#42a5f5;">L3</span>
+        <div class="phase-bar-track"><div id="bar-current-l3" class="phase-bar-fill"></div></div>
+        <span class="phase-val"><span id="val-current-l3">0.0</span> A</span>
+      </div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Potencia Activa:</span>
+      <div class="metric-value-box"><span id="val-power-kw">0.00</span><span class="metric-unit">kW</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Factor Potencia (cos φ):</span>
+      <div class="metric-value-box"><span id="val-power-factor">0.85</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Energía Acumulada:</span>
+      <div class="metric-value-box"><span id="val-energy-kwh">0.000</span><span class="metric-unit">kWh</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Par Electromag. (Te):</span>
+      <div class="metric-value-box"><span id="val-torque-elec">0.0</span><span class="metric-unit">Nm</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Par Resistente (Tl):</span>
+      <div class="metric-value-box"><span id="val-torque-load">0.0</span><span class="metric-unit">Nm</span></div>
+    </div>
+
+    <!-- Consigna Frecuencia Slider -->
+    <div class="scada-slider-group">
+      <div class="slider-header">
+        <span>Consigna Frecuencia VFD</span>
+        <span>0 - 60 Hz</span>
+      </div>
+      <input type="range" id="slider-vfd-freq" min="0" max="60" step="1" value="60">
+    </div>
+  </aside>
+
+  <!-- Panel Derecho: Condiciones de Operación & Molino -->
+  <aside id="scada-right-panel" class="scada-panel">
+    <div class="panel-title">
+      <span>Molino & Maquinaria</span>
+      <span style="color:var(--text-muted); font-size:0.75rem;">10 HP / 460V</span>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Temp. Devanado:</span>
+      <div class="metric-value-box"><span id="val-temp-winding">25.0</span><span class="metric-unit">°C</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Temp. Rodamientos:</span>
+      <div class="metric-value-box"><span id="val-temp-bearing">25.0</span><span class="metric-unit">°C</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Vibración RMS:</span>
+      <div class="metric-value-box"><span id="val-vibration-rms">0.60</span><span class="metric-unit">mm/s</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Norma ISO 10816-3:</span>
+      <span id="badge-vibration-zone" class="zone-badge zone-a-b">Zona A/B</span>
+    </div>
+
+    <div class="scada-metric-row" style="margin-top:10px;">
+      <span class="metric-label">Nivel Tolva Granos:</span>
+      <div class="metric-value-box"><span id="val-hopper-level">380</span><span class="metric-unit">kg</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Harina Producida:</span>
+      <div class="metric-value-box" style="color:var(--accent-cyan);"><span id="val-flour-kg">0.0</span><span class="metric-unit">kg</span></div>
+    </div>
+
+    <div class="scada-metric-row">
+      <span class="metric-label">Polvo ATEX (g/m³):</span>
+      <div class="metric-value-box"><span id="val-dust-conc">4.5</span><span class="metric-unit">g/m³</span></div>
+    </div>
+
+    <!-- Tasa de Alimentación de Cereal Slider -->
+    <div class="scada-slider-group">
+      <div class="slider-header">
+        <span>Alimentación Cereal</span>
+        <span id="val-feed-rate">65%</span>
+      </div>
+      <input type="range" id="slider-feed-rate" min="0" max="100" step="5" value="65">
+    </div>
+
+    <button id="btn-toggle-cyclone" class="btn-scada-action" style="width:100%; margin-top:8px;">🌪️ Conmutar Ciclón ATEX</button>
+  </aside>
+
+  <!-- Pila de Notificaciones Toast Flotantes -->
+  <div id="hud-toast-container"></div>
+
+  <!-- Overlay de Instrucciones Inicial (Click to Play) -->
+  <div id="instructions-overlay">
+    <div class="intro-card">
+      <h1>SIMULADOR 3D: PLANTA MOLINO DE GRANOS</h1>
+      <h2>Accionamiento Motor Trifásico de Inducción 10 HP / VFD & Seguridad RETIE / OSHA</h2>
+
+      <div class="intro-controls-grid">
+        <div class="intro-key-item"><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> Caminar por la planta</div>
+        <div class="intro-key-item"><kbd>Mouse</kbd> Orientar la vista / cámara</div>
+        <div class="intro-key-item"><kbd>E</kbd> o <kbd>Click</kbd> Interactuar con equipos</div>
+        <div class="intro-key-item"><kbd>Tab</kbd> Abrir Tablet de Riesgos y EPP</div>
+        <div class="intro-key-item"><kbd>Shift</kbd> Correr / Desplazamiento rápido</div>
+        <div class="intro-key-item"><kbd>C</kbd> Alternar Modo Inspector / Orbital</div>
+      </div>
+
+      <div style="font-size:0.85rem; color:#90a4ae; margin-top:10px;">
+        ⚠️ <strong>Protocolo de Inicio:</strong> Equípese con el EPP reglamentario en los vestidores y complete la inducción antes de cruzar la esclusa hacia la nave de producción.
+      </div>
+
+      <div class="intro-cta-pulse">CLICK AQUÍ PARA ENTRAR A LA PLANTA</div>
+    </div>
+  </div>
+
+  <!-- Modal: Tablet Industrial de Control de Riesgos [Tab] -->
+  <div id="risk-tablet-modal">
+    <div class="tablet-bezel">
+      <div class="tablet-top-bar">
+        <div class="tablet-title">
+          <span>📋 TABLET INDUSTRIAL DE SEGURIDAD Y CONTROL DE RIESGOS</span>
+        </div>
+        <button id="btn-close-tablet" class="btn-header" style="background:#c62828;">✖ Cerrar [Tab]</button>
+      </div>
+
+      <div class="tablet-tabs-bar">
+        <button class="tablet-tab-btn active" data-tab="faults">⚡ Inyección de Fallas</button>
+        <button class="tablet-tab-btn" data-tab="ppe">🦺 Dotación EPP & LOTO</button>
+        <button class="tablet-tab-btn" data-tab="norms">📜 Normas & Ecuaciones</button>
+      </div>
+
+      <div class="tablet-body">
+        <!-- Pestaña 1: Inyección de Fallas -->
+        <div id="tab-pane-faults" class="tablet-tab-pane active">
+          <div class="fault-grid">
+            <div class="fault-card">
+              <div class="fault-header">
+                <span class="fault-name">Atasco Mecánico / Sobrecarga</span>
+                <label class="switch"><input type="checkbox" id="sw-fault-jam"><span class="slider"></span></label>
+              </div>
+              <div class="fault-desc">Sobrecarga severa en martillos que eleva el par resistente por encima de 80 Nm y la corriente a >28 A, induciendo calentamiento rápido y posible disparo por sobrecorriente.</div>
+            </div>
+
+            <div class="fault-card">
+              <div class="fault-header">
+                <span class="fault-name">Pérdida de Fase L3 (Monofásico)</span>
+                <label class="switch"><input type="checkbox" id="sw-fault-phase"><span class="slider"></span></label>
+              </div>
+              <div class="fault-desc">Apertura accidental de la fase L3. Produce fuerte desbalance trifásico (IL3=0, IL1 e IL2 suben a ~22 A), pérdida de 55% de par y zumbido electromagnético a 120 Hz.</div>
+            </div>
+
+            <div class="fault-card">
+              <div class="fault-header">
+                <span class="fault-name">Falla de Rodamientos (ISO 10816-3)</span>
+                <label class="switch"><input type="checkbox" id="sw-fault-bearing"><span class="slider"></span></label>
+              </div>
+              <div class="fault-desc">Picaduras en pista y degradación de rodillos. Dispara la vibración mecánica a Zona D (>4.8 mm/s) con elevación de temperatura por fricción en las tapas porta-rodamientos.</div>
+            </div>
+
+            <div class="fault-card">
+              <div class="fault-header">
+                <span class="fault-name">Falla de Ventilación Forzada</span>
+                <label class="switch"><input type="checkbox" id="sw-fault-fan"><span class="slider"></span></label>
+              </div>
+              <div class="fault-desc">Rotura de aspas del ventilador acoplado al eje. La convección forzada cae a régimen natural (18%), provocando embalamiento térmico hasta disparo a 105 °C.</div>
+            </div>
+          </div>
+
+          <button id="btn-reset-faults" class="btn-scada-action" style="margin-top:20px; width:100%; background:#2e7d32;">
+            ✅ Restablecer Todas las Fallas a Condición Nominal
+          </button>
+        </div>
+
+        <!-- Pestaña 2: EPP & LOTO -->
+        <div id="tab-pane-ppe" class="tablet-tab-pane">
+          <div style="font-weight:bold; margin-bottom:8px; color:var(--accent-cyan);">Checklist de EPP Normativo (RETIE Art. 20 / OSHA 1910):</div>
+          <div class="ppe-list-grid">
+            <label class="ppe-item-row">
+              <input type="checkbox" class="ppe-checkbox" data-item="helmet">
+              <div><div class="ppe-item-label">Casco Dieléctrico Tipo I Clase E</div><div class="ppe-sub-rule">RETIE Art. 20 (Protección hasta 20 kV)</div></div>
+            </label>
+            <label class="ppe-item-row">
+              <input type="checkbox" class="ppe-checkbox" data-item="glasses">
+              <div><div class="ppe-item-label">Gafas de Seguridad Anti-Impacto</div><div class="ppe-sub-rule">ANSI Z87.1 (Policarbonato resistente a proyecciones)</div></div>
+            </label>
+            <label class="ppe-item-row">
+              <input type="checkbox" class="ppe-checkbox" data-item="earmuffs">
+              <div><div class="ppe-item-label">Copas Auditivas NRR 27 dB</div><div class="ppe-sub-rule">OSHA 1910.95 (Ruido de molino > 85 dBA)</div></div>
+            </label>
+            <label class="ppe-item-row">
+              <input type="checkbox" class="ppe-checkbox" data-item="boots">
+              <div><div class="ppe-item-label">Botas de Seguridad Dieléctricas</div><div class="ppe-sub-rule">ASTM F2413 (Puntera polimérica no metálica)</div></div>
+            </label>
+            <label class="ppe-item-row">
+              <input type="checkbox" class="ppe-checkbox" data-item="gloves">
+              <div><div class="ppe-item-label">Guantes Dieléctricos Clase 00</div><div class="ppe-sub-rule">NFPA 70E / RETIE (Hasta 500 V AC con badana)</div></div>
+            </label>
+            <label class="ppe-item-row">
+              <input type="checkbox" class="ppe-checkbox" data-item="suit">
+              <div><div class="ppe-item-label">Overol Ignífugo y Antiestático</div><div class="ppe-sub-rule">NFPA 70E Cat 2 / NFPA 61 (Descargas electrostáticas)</div></div>
+            </label>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:14px;">
+            <button id="btn-equip-all-ppe" class="btn-scada-action" style="flex:1; background:#0277bd;">Equipar Todo el EPP</button>
+            <button id="btn-pass-induction" class="btn-scada-action" style="flex:1; background:#388e3c;">Completar Inducción</button>
+            <button id="btn-pass-airlock" class="btn-scada-action" style="flex:1; background:#f57c00;">Franquear Esclusa</button>
+          </div>
+
+          <div style="margin-top:20px; padding:12px; background:rgba(0,0,0,0.3); border-radius:6px; font-size:0.85rem;">
+            <div style="font-weight:bold; color:var(--accent-cyan); margin-bottom:6px;">Las 5 Reglas de Oro LOTO (OSHA 1910.147):</div>
+            <div>1. <strong>Corte Visible:</strong> Abrir seccionador de cuchillas en el CCM.</div>
+            <div>2. <strong>Enclavamiento y Bloqueo:</strong> Instalar candado rojo y tarjeta de peligro.</div>
+            <div>3. <strong>Ausencia de Tensión:</strong> Verificar 0.0 V con voltímetro en barras.</div>
+            <div>4. <strong>Puesta a Tierra:</strong> Conectar cables de puesta a tierra temporal.</div>
+            <div>5. <strong>Señalización:</strong> Delimitar zona segura de trabajo con baliza Azul.</div>
+          </div>
+        </div>
+
+        <!-- Pestaña 3: Marco Normativo y Ecuaciones -->
+        <div id="tab-pane-norms" class="tablet-tab-pane">
+          <div style="font-size:0.85rem; line-height:1.6; color:#cfd8dc;">
+            <h3 style="color:var(--accent-cyan); margin-bottom:6px;">1. Ecuación de Par Electromagnético de Kloss</h3>
+            <p>$$T_e(s) = \frac{2 T_{max}}{\frac{s}{s_{max}} + \frac{s_{max}}{s}} \cdot \left(\frac{V}{V_{nom}}\right)^2$$</p>
+            <p>Donde $s = \frac{N_s - N_r}{N_s}$, con $N_s = \frac{120 f}{p} = 1800\text{ RPM}$ a 60 Hz, $s_{max} = 0.15$ y $T_{max} = 2.4 \times T_{nom} \approx 97.7\text{ Nm}$.</p>
+
+            <h3 style="color:var(--accent-cyan); margin:14px 0 6px 0;">2. Ecuación Diferencial Térmica (Euler 1er Orden)</h3>
+            <p>$$C_{th} \frac{dT}{dt} = 3 I_{RMS}^2 R_s + P_{Fe} - k_{cool}(N_r)(T - T_{amb})$$</p>
+            <p>El coeficiente convectivo $k_{cool}$ es proporcional a las RPM del ventilador en el eje ($k_{cool} = k_{base}(0.18 + 0.82 \frac{N_r}{N_s})$).</p>
+
+            <h3 style="color:var(--accent-cyan); margin:14px 0 6px 0;">3. Severidad de Vibración ISO 10816-3 (Máquinas Clase II)</h3>
+            <ul>
+              <li><strong>Zona A/B (&lt; 2.3 mm/s):</strong> Operación óptima y balanceada (Verde).</li>
+              <li><strong>Zona C (2.3 - 4.5 mm/s):</strong> Advertencia por desalineación o soltura mecánica (Amarillo).</li>
+              <li><strong>Zona D (&ge; 4.5 mm/s):</strong> Daño destructivo inminente en rodamientos (Rojo - Parada obligatoria).</li>
+            </ul>
+
+            <h3 style="color:var(--accent-cyan); margin:14px 0 6px 0;">4. Marco RETIE & ATEX</h3>
+            <p><strong>RETIE Art. 13:</strong> Distancia de aproximación restringida de arco eléctrico en tableros a 460 V (1.0 m sin EPP).</p>
+            <p><strong>NFPA 61 / ATEX:</strong> Umbral de concentración mínima explosible (MEC) para polvo de cereales en suspensión: $30\text{ g/m}^3$.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Principal de Entrada -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
