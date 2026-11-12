@@ -47,6 +47,8 @@ Plataforma integral de accionamiento electromecánico, monitoreo predictivo de f
 │       ├── ui/                     # SCADAInterface, AndonVisualizer (ISA 18.2), FaultInjectorUI
 │       ├── audio/                  # IndustrialAudio (Síntesis procedural con Web Audio API)
 │       └── main.js                 # Bucle principal de animación a 60 FPS
+├── INICIAR_SIMULADOR.bat           # Lanzador automático con 1 solo click para Windows
+├── INICIAR_SIMULADOR.ps1           # Lanzador para PowerShell
 ├── PLAN_SIMULADOR_PLANTA_3D_THREEJS.md # Plan maestro y mapa modular del simulador Three.js
 └── .gitignore                      # Reglas de exclusión para entornos Web, MATLAB y LaTeX
 ```
@@ -57,13 +59,21 @@ Plataforma integral de accionamiento electromecánico, monitoreo predictivo de f
 
 El simulador está diseñado bajo la filosofía **Zero-Compilation**: no requiere instalar Unity Hub, Node.js ni paquetes pesados. Funciona directamente en cualquier navegador moderno:
 
+### 🚀 Opción 1: Lanzador de 1 Click (Recomendado)
+- Simplemente haz doble clic sobre el archivo **`INICIAR_SIMULADOR.bat`** en la carpeta principal.
+- El script iniciará el servidor multihilo optimizado y **abrirá automáticamente tu navegador web** en `http://localhost:8085`.
+
+### 💻 Opción 2: Desde la Terminal (PowerShell / CMD)
 ```bash
-# Opción 1: Servidor local ligero con Python
+# Ejecutar el servidor multihilo con apertura automática de navegador
+cd SimuladorPlantaWeb
+python serve.py
+```
+O con el servidor básico de Python:
+```bash
 cd SimuladorPlantaWeb
 python -m http.server 8000
-
-# Abrir en el navegador:
-# http://localhost:8000
+# Abrir en el navegador: http://localhost:8000
 ```
 
 ### Controles de Navegación e Interacción:
