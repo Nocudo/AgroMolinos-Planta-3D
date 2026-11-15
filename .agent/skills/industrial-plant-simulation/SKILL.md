@@ -7,6 +7,7 @@ description: Specialized Serious Game & Simulation Engine for the 'Máquinas El�
 
 Esta skill es la guía maestra de arquitectura, física electromecánica en GDScript 2.0, montaje espacial del modelo 3D descargado, suelo físico y colisiones, demarcación vial/zonificación de seguridad, iluminación fotorrealista PBR, **Modo Tutorial Interactivo (Spawn en portería, dotación EPP RETIE y 5 Reglas de Oro)**, **Cadena de Producción Secuencial Animada con Camiones de Carga**, **Optimización Energética (VFD vs DOL y Reducción de Huella de Carbono $\text{CO}_2\text{e}$)**, **Analítica IA (MLP 8-16-8-4, SVM RBF, MHI, RUL)**, **Telemetría 100% In-Game y Dashboard de IA en Tablet Industrial interactiva con la tecla [TAB] (Estrictamente SIN páginas web externas)**, **Terminal de Capacitación con Rúbrica Académica (0.0 a 5.0)**, interacción física diegética en 3D para el **Proyecto Final de Máquinas Eléctricas (Universidad de los Llanos - 2026-2)**:
 **Sector Asignado: Planta Molino de Granos** con **Motor Trifásico de Inducción Jaula de Ardilla (10 HP, 460 V, IE3)** accionado por VFD, transformado en un **Juego Serio Interactivo en Primera/Tercera Persona** bajo el paradigma de **Transición de Industria 4.0 a Industria 5.0**.
+**Repositorio Oficial en GitHub:** `https://github.com/Nocudo/AgroMolinos-Planta-3D`
 
 ---
 

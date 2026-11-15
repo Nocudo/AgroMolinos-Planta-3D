@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://main_plant_scene_001"]
+[gd_scene load_steps=19 format=3 uid="uid://main_plant_scene_001"]
 
 [ext_resource type="Script" path="res://scripts/core/MainPlantScene.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/PlayerOperator.tscn" id="2_player"]
@@ -9,6 +9,10 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/IndustrialTablet.tscn" id="7_tablet"]
 [ext_resource type="PackedScene" path="res://scenes/infrastructure/FactoryEntranceAndLockers.tscn" id="8_entrance_lockers"]
 [ext_resource type="PackedScene" path="res://assets/models/planta_completa.glb" id="9_planta_glb"]
+[ext_resource type="PackedScene" path="res://scenes/workers/WorkerElectrician.tscn" id="10_electrician"]
+[ext_resource type="PackedScene" path="res://scenes/workers/WorkerSafetyAuditor.tscn" id="11_safety"]
+[ext_resource type="PackedScene" path="res://scenes/workers/WorkerLogistics.tscn" id="12_logistics"]
+[ext_resource type="PackedScene" path="res://scenes/workers/WorkerPlantManager.tscn" id="13_manager"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_env"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -101,6 +105,20 @@ transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, 2.8, 0.3
 
 [node name="GrainBag3" parent="GrainBagsGroup" instance=ExtResource("5_bag")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.7, 0.6)
+
+[node name="PlantStaff" type="Node3D" parent="."]
+
+[node name="WorkerElectrician" parent="PlantStaff" instance=ExtResource("10_electrician")]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, -2.8, 0, -1.8)
+
+[node name="WorkerSafetyAuditor" parent="PlantStaff" instance=ExtResource("11_safety")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -7.5, 0, 14.8)
+
+[node name="WorkerLogistics" parent="PlantStaff" instance=ExtResource("12_logistics")]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, 0, -0.5, 3.6, 0, 1.2)
+
+[node name="WorkerPlantManager" parent="PlantStaff" instance=ExtResource("13_manager")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, 5.5, 0, -4.5)
 
 [node name="PlayerOperator" parent="." instance=ExtResource("2_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.0, 0.1, 16.5)

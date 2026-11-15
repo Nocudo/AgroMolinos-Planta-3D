@@ -1,0 +1,34 @@
+[gd_scene load_steps=4 format=3 uid="uid://worker_safety_auditor_001"]
+
+[ext_resource type="Script" path="res://scripts/interactive/WorkerNPC.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/trabajador_sst.glb" id="2_model"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_npc"]
+radius = 0.4
+height = 1.8
+
+[node name="WorkerSafetyAuditor" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+worker_role_name = "Supervisor SST (RETIE / OSHA)"
+worker_dialogue = "Auditoría de seguridad: Recuerda equipar tu dotación completa de EPP en los casilleros antes de intervenir el molino o tablero eléctrico."
+primary_animation = "inspect"
+secondary_animation = "idle"
+animation_switch_time = 8.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_npc")
+
+[node name="ModelInstance" parent="." instance=ExtResource("2_model")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="RoleLabel3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.05, 0)
+billboard = 1
+double_sided = false
+text = "Supervisor SST"
+font_size = 20
+outline_size = 6
+modulate = Color(0.3, 1, 0.3, 1)
