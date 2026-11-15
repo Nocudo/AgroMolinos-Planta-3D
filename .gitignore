@@ -69,3 +69,9 @@ slprj/
 *.tmp
 temp/
 scratch/
+
+# ==========================================
+# Godot 4.x Ignore Rules
+# ==========================================
+.godot/
+*.translation

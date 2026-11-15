@@ -1,0 +1,67 @@
+[gd_scene load_steps=8 format=3 uid="uid://hopper_feeder_001"]
+
+[ext_resource type="Script" path="res://scripts/interactive/PhysicalHopperFeeder.gd" id="1_hopper"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_SteelGalv"]
+albedo_color = Color(0.65, 0.68, 0.72, 1)
+metallic = 0.85
+roughness = 0.35
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_hopper"]
+material = SubResource("Mat_SteelGalv")
+top_radius = 0.9
+bottom_radius = 0.25
+height = 1.4
+
+[sub_resource type="TorusMesh" id="TorusMesh_wheel"]
+material = SubResource("Mat_SteelGalv")
+inner_radius = 0.12
+outer_radius = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_reception"]
+size = Vector3(1.8, 1.6, 1.8)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_dust"]
+emission_shape = 1
+emission_sphere_radius = 0.4
+direction = Vector3(0, 1, 0)
+spread = 35.0
+initial_velocity_min = 1.0
+initial_velocity_max = 2.0
+gravity = Vector3(0, -2, 0)
+scale_min = 0.05
+scale_max = 0.15
+
+[sub_resource type="SphereMesh" id="SphereMesh_dust"]
+radius = 0.05
+height = 0.1
+
+[node name="PhysicalHopperFeeder" type="Node3D"]
+script = ExtResource("1_hopper")
+
+[node name="HopperBodyMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("CylinderMesh_hopper")
+
+[node name="GateWheelMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.45, 0)
+mesh = SubResource("TorusMesh_wheel")
+
+[node name="ReceptionArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+collision_layer = 1
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ReceptionArea"]
+shape = SubResource("BoxShape3D_reception")
+
+[node name="DustParticles" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+emitting = false
+amount = 32
+lifetime = 1.2
+process_material = SubResource("ParticleProcessMaterial_dust")
+draw_pass_1 = SubResource("SphereMesh_dust")
+
+[node name="AudioFeed" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)

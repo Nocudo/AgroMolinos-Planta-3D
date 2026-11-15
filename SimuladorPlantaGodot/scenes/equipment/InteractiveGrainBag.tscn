@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://grain_bag_001"]
+
+[ext_resource type="Script" path="res://scripts/interactive/InteractiveGrainBag.gd" id="1_bag"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_Burlap"]
+albedo_color = Color(0.72, 0.62, 0.46, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_bag"]
+material = SubResource("Mat_Burlap")
+size = Vector3(0.5, 0.35, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bag_col"]
+size = Vector3(0.5, 0.35, 0.8)
+
+[node name="GrainBag" type="RigidBody3D" groups=["grain_bag", "interactable"]]
+mass = 50.0
+script = ExtResource("1_bag")
+
+[node name="VisualMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_bag")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_bag_col")

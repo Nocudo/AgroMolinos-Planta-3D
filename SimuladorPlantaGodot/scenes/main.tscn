@@ -1,0 +1,110 @@
+[gd_scene load_steps=15 format=3 uid="uid://main_plant_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/core/MainPlantScene.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/player/PlayerOperator.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/equipment/MotorMillUnit.tscn" id="3_motormill"]
+[ext_resource type="PackedScene" path="res://scenes/equipment/PhysicalBreakerPanel.tscn" id="4_breaker"]
+[ext_resource type="PackedScene" path="res://scenes/equipment/InteractiveGrainBag.tscn" id="5_bag"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IndustrialTablet.tscn" id="7_tablet"]
+[ext_resource type="PackedScene" path="res://scenes/infrastructure/FactoryEntranceAndLockers.tscn" id="8_entrance_lockers"]
+[ext_resource type="PackedScene" path="res://assets/models/planta_completa.glb" id="9_planta_glb"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_env"]
+sky_top_color = Color(0.35, 0.55, 0.85, 1)
+sky_horizon_color = Color(0.65, 0.75, 0.85, 1)
+ground_bottom_color = Color(0.2, 0.22, 0.25, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_env")
+
+[sub_resource type="Environment" id="Environment_plant"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 3
+ambient_light_color = Color(0.7, 0.75, 0.85, 1)
+ambient_light_energy = 0.6
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="Mat_ConcreteFloor"]
+albedo_color = Color(0.38, 0.4, 0.42, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("Mat_ConcreteFloor")
+size = Vector3(180, 0.4, 180)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(180, 0.4, 180)
+
+[node name="MainPlantScene" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_plant")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 10, 20, 10)
+light_color = Color(1, 0.95, 0.88, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Architecture" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Architecture/Floor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Architecture/Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="PlantaCompletaSketchUp" parent="Architecture" instance=ExtResource("9_planta_glb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -83.6, 0.9, 80.0)
+
+[node name="FactoryEntranceAndLockers" parent="Architecture" instance=ExtResource("8_entrance_lockers")]
+
+[node name="PlantLights" type="Node3D" parent="."]
+
+[node name="LightCenter" type="OmniLight3D" parent="PlantLights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+light_color = Color(1, 0.98, 0.9, 1)
+light_energy = 1.0
+omni_range = 18.0
+
+[node name="LightWest" type="OmniLight3D" parent="PlantLights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 6, 0)
+light_color = Color(1, 0.98, 0.9, 1)
+light_energy = 0.9
+omni_range = 16.0
+
+[node name="LightEast" type="OmniLight3D" parent="PlantLights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 6, 0)
+light_color = Color(1, 0.98, 0.9, 1)
+light_energy = 0.9
+omni_range = 16.0
+
+[node name="MotorMillUnit" parent="." instance=ExtResource("3_motormill")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="PhysicalBreakerPanel" parent="." instance=ExtResource("4_breaker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, -2.5)
+
+[node name="GrainBagsGroup" type="Node3D" parent="."]
+
+[node name="GrainBag1" parent="GrainBagsGroup" instance=ExtResource("5_bag")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0.3, 0.8)
+
+[node name="GrainBag2" parent="GrainBagsGroup" instance=ExtResource("5_bag")]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, 2.8, 0.3, 0.5)
+
+[node name="GrainBag3" parent="GrainBagsGroup" instance=ExtResource("5_bag")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.7, 0.6)
+
+[node name="PlayerOperator" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.0, 0.1, 16.5)
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
+
+[node name="IndustrialTablet" parent="." instance=ExtResource("7_tablet")]
