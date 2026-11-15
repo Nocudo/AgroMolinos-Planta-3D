@@ -107,12 +107,13 @@ Al presionar la tecla **`[TAB]`**, el operario despliega o guarda en pantalla su
 │   ├── abrir_panel.m                   # Lanzador del panel de diagnóstico en MATLAB App Designer
 │   ├── Informe/IA/                     # Entrenamiento de MLP, SVM RBF y generador de dataset
 │   └── Informe/simulaciones/           # Modelos de inyección de fallas en Simulink
-├── Modelos descargados/                # Activos 3D originales descargados (planta_completa.glb, .skp, trabajadores.glb)
+├── Modelos descargados/                # Activos 3D originales descargados (.glb): planta_completa y trabajadores
 ├── SimuladorPlantaGodot/               # PROYECTO MAESTRO DEL SERIOUS GAME EN GODOT 4.7
-│   ├── assets/models/                  # Modelo 3D de la planta importado con texturas PBR
-│   ├── scenes/                         # Escenas modulares (.tscn): Planta, Operario, Motor, CCM, Cables, Tablet
-│   ├── scripts/                        # Física de Kloss, fallas físicas diegéticas, Tablet in-game y pruebas
+│   ├── assets/models/                  # Modelo 3D de la planta y trabajadores importados con texturas PBR
+│   ├── scenes/                         # Escenas modulares (.tscn): environment, equipment, infrastructure, player, production, ui, workers
+│   ├── scripts/                        # Módulos GDScript 2.0: ai, core, environment, interactive, physics, production, tests, tutorial, ui
 │   └── project.godot                   # Configuración de Godot 4.7 e Input Map (WASD, E, TAB, 1-5)
+├── PLAN_EJECUCION_ARGON.md             # Plan maestro en 8 bloques optimizado para ejecución agéntica con Orchestrator (Argon)
 ├── INICIAR_SIMULADOR_GODOT.bat         # Lanzador 1-clic del juego interactivo en pantalla completa
 ├── ABRIR_EDITOR_GODOT.bat              # Lanzador 1-clic para abrir el proyecto en el editor de Godot 4.7
 ├── PROYECTO FINAL_MAQUINAS 20262.pdf   # Guía oficial y rúbrica de evaluación de la asignatura
