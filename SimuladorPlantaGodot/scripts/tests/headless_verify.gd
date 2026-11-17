@@ -1413,6 +1413,62 @@ func _qa_10_main_scene_integration() -> void:
 
 				hover_cam.queue_free()
 
+				# Regresión: Visibilidad completa de máquinas al abrir pestaña Cámaras + rueda del mouse invertida y bloqueada en tablet
+				var vis_opt := inst.find_child("PlantVisibilityOptimizer", true, false)
+				var tablet_root := inst.find_child("TabletRoot", true, false)
+				if vis_opt != null and tablet_root != null and player != null:
+					var cam_fps := player.find_child("CameraFPS", true, false) as Camera3D
+					if cam_fps != null:
+						cam_fps.current = true
+					var saved_ppos: Vector3 = player.global_position
+					player.global_position = Vector3(25.0, 1.0, 35.0) # Sector administrativo lejos de la nave
+					vis_opt._setup_optimizer()
+					if mill_unit_n != null:
+						ok = _assert_true(not mill_unit_n.visible,
+							"Fuera de pestaña Cámaras en oficinas, MotorMillUnit debe estar oculto por culling de sector") and ok
+					# Abrir tablet y entrar en pestaña Cámaras (tab 1, grupo G1)
+					if not tablet_root.visible:
+						tablet_root.toggle_tablet()
+					tablet_root._select_tab(1)
+					tablet_root._select_3d_group("G1")
+					var all_lod_vis := true
+					for l_item in vis_opt._lod_mesh_items:
+						var l_mi := l_item["node"] as MeshInstance3D
+						if l_mi != null and is_instance_valid(l_mi) and (not l_mi.visible or l_mi.visibility_range_end != 0.0):
+							all_lod_vis = false
+							break
+					ok = _assert_true(bool(vis_opt._cctv_override_active) and (mill_unit_n == null or mill_unit_n.visible) and all_lod_vis,
+						"Al abrir pestaña Cámaras de la tablet todas las máquinas y mallas LOD deben quedar visibles sin descargarse") and ok
+
+					# Rueda del mouse NO debe cambiar herramienta mientras la tablet está abierta
+					player._select_tool(2)
+					var ev_down := InputEventMouseButton.new()
+					ev_down.button_index = MOUSE_BUTTON_WHEEL_DOWN
+					ev_down.pressed = true
+					var ev_up := InputEventMouseButton.new()
+					ev_up.button_index = MOUSE_BUTTON_WHEEL_UP
+					ev_up.pressed = true
+					player._input(ev_down)
+					player._input(ev_up)
+					ok = _assert_true(int(player.active_tool_id) == 2,
+						"Rueda del mouse dentro de la tablet NO debe cambiar el ítem equipado (actual=%d)" % int(player.active_tool_id)) and ok
+
+					# Cerrar tablet: restaurar culling de rendimiento y validar giro invertido de rueda en juego
+					tablet_root._close_tablet()
+					ok = _assert_true(not bool(vis_opt._cctv_override_active),
+						"Al cerrar la tablet debe desactivarse el override de visibilidad de cámaras") and ok
+					player._select_tool(1)
+					player._input(ev_down)
+					var after_down := int(player.active_tool_id)
+					player._input(ev_up)
+					var after_up := int(player.active_tool_id)
+					player._input(ev_up)
+					var after_up_wrap := int(player.active_tool_id)
+					ok = _assert_true(after_down == 2 and after_up == 1 and after_up_wrap == 5,
+						"Rueda invertida: abajo debe aumentar (1->%d) y arriba disminuir (%d->%d->%d)" % [after_down, after_down, after_up, after_up_wrap]) and ok
+					player._select_tool(1)
+					player.global_position = saved_ppos
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

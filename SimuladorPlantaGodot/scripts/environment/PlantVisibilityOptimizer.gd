@@ -26,6 +26,7 @@ var _lod_mesh_items: Array[Dictionary] = []
 var _current_sector: String = "INIT"
 var _timer: float = 0.0
 var _camera_ref: Camera3D = null
+var _cctv_override_active: bool = false
 
 func _ready() -> void:
 	call_deferred("_setup_optimizer")
@@ -37,7 +38,10 @@ func _setup_optimizer() -> void:
 	
 	_apply_lod_and_shadow_bands(scene_root)
 	_collect_sectors(scene_root)
-	_update_sector_visibility(true)
+	if _cctv_override_active:
+		_apply_cctv_override_visible()
+	else:
+		_update_sector_visibility(true)
 
 func _is_dynamic_or_truck_node(node: Node) -> bool:
 	var cur := node
@@ -98,21 +102,30 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 				mi.visibility_range_end_margin = 3.0
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				_lod_mesh_items.append({"node": mi, "pos": world_center, "max_d2": DIST_MICRO * DIST_MICRO})
+				_lod_mesh_items.append({
+					"node": mi, "pos": world_center, "max_d2": DIST_MICRO * DIST_MICRO,
+					"orig_range": DIST_MICRO, "orig_fade": GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				})
 			elif world_diag < LOD_SMALL_DIAG:
 				# Tramos de ducto, peldaños, barandillas, pequeños motores
 				mi.visibility_range_end = DIST_SMALL
 				mi.visibility_range_end_margin = 5.0
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				_lod_mesh_items.append({"node": mi, "pos": world_center, "max_d2": DIST_SMALL * DIST_SMALL})
+				_lod_mesh_items.append({
+					"node": mi, "pos": world_center, "max_d2": DIST_SMALL * DIST_SMALL,
+					"orig_range": DIST_SMALL, "orig_fade": GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				})
 			elif world_diag < LOD_MEDIUM_DIAG:
 				# Tolvas intermedias, ciclones, carcasas de maquinaria interior
 				mi.visibility_range_end = DIST_MEDIUM
 				mi.visibility_range_end_margin = 8.0
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				_lod_mesh_items.append({"node": mi, "pos": world_center, "max_d2": DIST_MEDIUM * DIST_MEDIUM})
+				_lod_mesh_items.append({
+					"node": mi, "pos": world_center, "max_d2": DIST_MEDIUM * DIST_MEDIUM,
+					"orig_range": DIST_MEDIUM, "orig_fade": GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				})
 			else:
 				# Estructuras maestras, muros exteriores, techos, losas de piso y silos
 				mi.visibility_range_end = 0.0
@@ -179,7 +192,42 @@ func _calc_node_aabb(n: Node) -> AABB:
 			b = b.merge(mb)
 	return b
 
+func set_cctv_full_visibility(active: bool) -> void:
+	if _cctv_override_active == active:
+		return
+	_cctv_override_active = active
+	if active:
+		_apply_cctv_override_visible()
+	else:
+		for item in _lod_mesh_items:
+			var mi := item["node"] as MeshInstance3D
+			if mi == null or not is_instance_valid(mi):
+				continue
+			mi.visibility_range_end = float(item.get("orig_range", DIST_MEDIUM))
+			mi.visibility_range_fade_mode = int(item.get("orig_fade", GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF)) as GeometryInstance3D.VisibilityRangeFadeMode
+		_current_sector = "INIT"
+		var cam := _get_active_camera()
+		_update_sector_visibility(true, cam)
+		_update_mesh_distance_culling(cam)
+
+func _apply_cctv_override_visible() -> void:
+	_current_sector = "CCTV_OVERRIDE"
+	_set_nodes_visible(_admin_nodes, true)
+	_set_nodes_visible(_nave_nodes, true)
+	_set_nodes_visible(_exterior_trucks, true)
+	for item in _lod_mesh_items:
+		var mi := item["node"] as MeshInstance3D
+		if mi == null or not is_instance_valid(mi):
+			continue
+		if not mi.visible:
+			mi.visible = true
+		if mi.visibility_range_end != 0.0:
+			mi.visibility_range_end = 0.0
+			mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+
 func _process(delta: float) -> void:
+	if _cctv_override_active:
+		return
 	_timer += delta
 	if _timer < 0.20:
 		return

@@ -920,6 +920,11 @@ func _update_active_3d_rendering() -> void:
 		var active_grp: bool = on_cam_tab and (_active_3d_group == str(gid))
 		for c in (_cards_by_3d_group[gid] as Array):
 			c.set_rendering_active(active_grp)
+	if is_inside_tree() and get_tree() != null:
+		var vis_opt := get_tree().root.find_child("PlantVisibilityOptimizer", true, false)
+		if vis_opt != null and vis_opt.has_method("set_cctv_full_visibility"):
+			var need_world_vis := on_cam_tab and (_active_3d_group != "WORKERS")
+			vis_opt.set_cctv_full_visibility(need_world_vis)
 
 func _process(delta: float) -> void:
 	if not visible:

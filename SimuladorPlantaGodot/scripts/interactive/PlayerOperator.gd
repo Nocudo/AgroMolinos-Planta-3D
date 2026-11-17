@@ -270,19 +270,22 @@ func _input(event: InputEvent) -> void:
 		head.rotate_x(-event.relative.y * mouse_sensitivity)
 		head.rotation.x = clampf(head.rotation.x, -deg_to_rad(85.0), deg_to_rad(85.0))
 
-	# 5. Cambio de herramienta con teclas 1-5 o rueda del mouse
-	if event.is_action_pressed("tool_1"): _select_tool(1)
-	elif event.is_action_pressed("tool_2"): _select_tool(2)
-	elif event.is_action_pressed("tool_3"): _select_tool(3)
-	elif event.is_action_pressed("tool_4"): _select_tool(4)
-	elif event.is_action_pressed("tool_5"): _select_tool(5)
-	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			var next_id = (active_tool_id % 5) + 1
-			_select_tool(next_id)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			var prev_id = active_tool_id - 1 if active_tool_id > 1 else 5
-			_select_tool(prev_id)
+	# 5. Cambio de herramienta con teclas 1-5 o rueda del mouse (bloqueado cuando se navega la tablet/menús)
+	var ui_blocks_tools := _is_ui_blocking_tool_input()
+	if not ui_blocks_tools:
+		if event.is_action_pressed("tool_1"): _select_tool(1)
+		elif event.is_action_pressed("tool_2"): _select_tool(2)
+		elif event.is_action_pressed("tool_3"): _select_tool(3)
+		elif event.is_action_pressed("tool_4"): _select_tool(4)
+		elif event.is_action_pressed("tool_5"): _select_tool(5)
+		elif event is InputEventMouseButton and event.pressed:
+			# Rueda hacia abajo aumenta slot (1->2->3->4->5), hacia arriba disminuye (5->4->3->2->1)
+			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				var next_id: int = (active_tool_id % 5) + 1
+				_select_tool(next_id)
+			elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				var prev_id: int = active_tool_id - 1 if active_tool_id > 1 else 5
+				_select_tool(prev_id)
 
 	# 6. Interacción física (E siempre en juego activo; Clic Izquierdo cuando el mouse está capturado)
 	if event.is_action_pressed("interact") and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not (event is InputEventMouseButton)):
@@ -307,6 +310,23 @@ func _is_tablet_open() -> bool:
 		return false
 	var tablet := get_tree().root.find_child("TabletRoot", true, false)
 	return tablet != null and bool(tablet.visible)
+
+func _is_ui_blocking_tool_input() -> bool:
+	if not is_inside_tree() or get_tree() == null:
+		return false
+	if get_tree().paused or _is_tablet_open():
+		return true
+	var root := get_tree().root
+	var pause_menu := root.find_child("PauseMenuController", true, false)
+	if pause_menu != null and pause_menu.has_method("is_pause_open") and bool(pause_menu.is_pause_open()):
+		return true
+	var c_modal := root.find_child("RetieCourseModal", true, false)
+	if c_modal != null and bool(c_modal.visible):
+		return true
+	var hud := root.find_child("HUDController", true, false)
+	if hud != null and hud.has_method("is_briefing_visible") and bool(hud.is_briefing_visible()):
+		return true
+	return false
 
 func _get_aim_screen_position() -> Vector2:
 	var vp := get_viewport()
