@@ -930,6 +930,13 @@ func _ensure_shells_for_group(group_key: String, meshes: Array) -> void:
 		var mi := item as MeshInstance3D
 		if mi == null or not is_instance_valid(mi) or mi.mesh == null:
 			continue
+		if group_key == "locker":
+			# Contorno únicamente en los gabinetes externos principales (14 mallas en lugar de 114):
+			# evita ruido interno, elimina ~100 draw calls y mantiene el borde nítido alrededor de los lockers.
+			if mi.get_meta("merged_into_batch", false) or str(mi.name).begins_with("MergedLocker"):
+				continue
+			if not str(mi.name).begins_with("Geom3D_3_WZSLOT"):
+				continue
 		var shell := mi.get_node_or_null("GlowOutlineShell") as MeshInstance3D
 		if shell == null:
 			shell = MeshInstance3D.new()

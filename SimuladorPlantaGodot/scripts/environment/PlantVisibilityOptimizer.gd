@@ -27,6 +27,8 @@ var _current_sector: String = "INIT"
 var _timer: float = 0.0
 var _camera_ref: Camera3D = null
 var _cctv_override_active: bool = false
+var _locker_mesh_opaque_mat: StandardMaterial3D = null
+var _materials_optimized: bool = false
 
 func _ready() -> void:
 	call_deferred("_setup_optimizer")
@@ -36,12 +38,197 @@ func _setup_optimizer() -> void:
 	if scene_root == null:
 		return
 	
+	_optimize_plant_materials_and_lockers(scene_root)
 	_apply_lod_and_shadow_bands(scene_root)
 	_collect_sectors(scene_root)
 	if _cctv_override_active:
 		_apply_cctv_override_visible()
 	else:
 		_update_sector_visibility(true)
+
+func _build_locker_opaque_mesh_material(src_mat: StandardMaterial3D) -> StandardMaterial3D:
+	if _locker_mesh_opaque_mat != null:
+		return _locker_mesh_opaque_mat
+	var mat := StandardMaterial3D.new()
+	mat.resource_name = "LockerDiamondMeshOpaqueOpt"
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.metallic = 0.28
+	mat.roughness = 0.56
+	# Escala UV equilibrada: malla metálica industrial nítida sin moiré ni thrashing de caché (vs 91x982 original)
+	mat.uv1_scale = Vector3(0.28, 0.28, 1.0)
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+
+	var bg_col := Color(0.09, 0.27, 0.11, 1.0)
+	var wire_tint := Color(0.26, 0.58, 0.28, 1.0)
+	var src_tex: Texture2D = src_mat.albedo_texture if src_mat != null else null
+	var src_img: Image = src_tex.get_image() if src_tex != null else null
+	if src_img != null and not src_img.is_empty():
+		var work := src_img.duplicate() as Image
+		if work.is_compressed():
+			work.decompress()
+		work.convert(Image.FORMAT_RGBA8)
+		work.resize(128, 64, Image.INTERPOLATE_BILINEAR)
+		var out_img := Image.create(128, 64, false, Image.FORMAT_RGB8)
+		for y in range(64):
+			for x in range(128):
+				var px: Color = work.get_pixel(x, y)
+				var a: float = clampf(px.a, 0.0, 1.0)
+				var lum: float = clampf((px.r + px.g + px.b) / 3.0 * 1.40 + 0.24, 0.25, 1.0)
+				var fg := Color(wire_tint.r * lum, wire_tint.g * lum, wire_tint.b * lum, 1.0)
+				var blended := bg_col.lerp(fg, a)
+				out_img.set_pixel(x, y, Color(blended.r, blended.g, blended.b, 1.0))
+		out_img.generate_mipmaps()
+		mat.albedo_texture = ImageTexture.create_from_image(out_img)
+		mat.albedo_color = Color.WHITE
+	else:
+		mat.albedo_color = Color(0.14, 0.36, 0.15, 1.0)
+
+	_locker_mesh_opaque_mat = mat
+	return _locker_mesh_opaque_mat
+
+func _merge_static_meshes_under(root_node: Node3D, sources: Array[MeshInstance3D], merged_name: String, mat: Material) -> void:
+	if root_node == null or sources.size() < 2:
+		return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var inv_root: Transform3D = root_node.global_transform.affine_inverse()
+	var added_any := false
+	for mi in sources:
+		if mi == null or not is_instance_valid(mi) or mi.mesh == null:
+			continue
+		var rel_xf: Transform3D = inv_root * mi.global_transform
+		var normal_basis: Basis = rel_xf.basis.inverse().transposed()
+		for s in range(mi.mesh.get_surface_count()):
+			var arr := mi.mesh.surface_get_arrays(s)
+			if arr.is_empty():
+				continue
+			var verts := arr[Mesh.ARRAY_VERTEX] as PackedVector3Array
+			if verts == null or verts.is_empty():
+				continue
+			var norms := arr[Mesh.ARRAY_NORMAL] as PackedVector3Array if arr[Mesh.ARRAY_NORMAL] is PackedVector3Array else PackedVector3Array()
+			var uvs := arr[Mesh.ARRAY_TEX_UV] as PackedVector2Array if arr[Mesh.ARRAY_TEX_UV] is PackedVector2Array else PackedVector2Array()
+			var idxs := arr[Mesh.ARRAY_INDEX] as PackedInt32Array if arr[Mesh.ARRAY_INDEX] is PackedInt32Array else PackedInt32Array()
+			var has_n: bool = norms.size() == verts.size()
+			var has_uv: bool = uvs.size() == verts.size()
+			if not idxs.is_empty():
+				for idx in idxs:
+					if has_n:
+						st.set_normal((normal_basis * norms[idx]).normalized())
+					if has_uv:
+						st.set_uv(uvs[idx])
+					st.add_vertex(rel_xf * verts[idx])
+					added_any = true
+			else:
+				for vi in range(verts.size()):
+					if has_n:
+						st.set_normal((normal_basis * norms[vi]).normalized())
+					if has_uv:
+						st.set_uv(uvs[vi])
+					st.add_vertex(rel_xf * verts[vi])
+					added_any = true
+	if not added_any:
+		return
+	var merged_mesh := st.commit()
+	if merged_mesh == null:
+		return
+	var merged_mi := MeshInstance3D.new()
+	merged_mi.name = merged_name
+	merged_mi.mesh = merged_mesh
+	if mat != null:
+		merged_mi.set_surface_override_material(0, mat)
+	merged_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root_node.add_child(merged_mi)
+	for mi in sources:
+		if mi != null and is_instance_valid(mi):
+			mi.visible = false
+			mi.set_meta("merged_into_batch", true)
+			var g_sh := mi.get_node_or_null("GlowOutlineShell") as MeshInstance3D
+			if g_sh != null:
+				g_sh.visible = false
+
+func _optimize_plant_materials_and_lockers(scene_root: Node) -> void:
+	if _materials_optimized:
+		return
+	var plant := scene_root.find_child("PlantaCompletaSketchUp", true, false)
+	if plant == null:
+		return
+	_materials_optimized = true
+
+	var visited_mats: Dictionary = {}
+	var locker_roots: Array[Node3D] = []
+	for ch in plant.find_children("*", "MeshInstance3D", true, false):
+		var mi := ch as MeshInstance3D
+		if mi == null or not is_instance_valid(mi) or mi.mesh == null:
+			continue
+		if mi.name == "GlowOutlineShell" or mi.mesh is ImmediateMesh:
+			continue
+
+		var is_locker_mesh := false
+		var cur: Node = mi
+		while cur != null and cur != plant:
+			if str(cur.name).begins_with("Watson Zone Slot Lockers"):
+				is_locker_mesh = true
+				if cur is Node3D and not locker_roots.has(cur):
+					locker_roots.append(cur as Node3D)
+				break
+			cur = cur.get_parent()
+
+		var surf_cnt := mi.mesh.get_surface_count()
+		for s in range(surf_cnt):
+			var mat := mi.get_active_material(s)
+			if not (mat is StandardMaterial3D):
+				continue
+			var sm := mat as StandardMaterial3D
+			var mname_l := sm.resource_name.to_lower()
+
+			# 1. En lockers: sustituir la malla de alambre ALPHA_SCISSOR (91x982 tiling + 14 capas sobrepuestas)
+			#    por un material opaco POT 128x64 con mipmaps que habilita Early-Z y elimina el drop de FPS
+			if is_locker_mesh and ("fencing" in mname_l or "diamond_mesh" in mname_l):
+				mi.set_surface_override_material(s, _build_locker_opaque_mesh_material(sm))
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				continue
+
+			# 2. En toda la planta: SketchUp exporta 146 materiales sólidos con alphaMode=MASK (1.24M triángulos)
+			#    que inhabilitan Early-Z en GPU integrada. Convertimos a opaco real todos los que no son rejilla/malla.
+			var mid := sm.get_instance_id()
+			if not visited_mats.has(mid):
+				visited_mats[mid] = true
+				if sm.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR or sm.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_HASH:
+					var keep_cutout := (sm.albedo_texture != null) and ("fencing" in mname_l or "diamond_mesh" in mname_l or "mesh_blue" in mname_l)
+					if not keep_cutout and sm.albedo_color.a >= 0.99:
+						sm.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+
+	# 3. Fusionar sub-mallas estáticas repetitivas de cada bloque de lockers (115 tiradores Pulls + 23 paneles de malla
+	#    + 23 divisiones internas -> 3 draw calls por bloque, preservando colisionadores StaticBody3D y gabinetes externos para glow)
+	for lroot in locker_roots:
+		var pulls_list: Array[MeshInstance3D] = []
+		var fence_list: Array[MeshInstance3D] = []
+		var inner_list: Array[MeshInstance3D] = []
+		var pulls_mat: Material = null
+		var fence_mat: Material = null
+		var inner_mat: Material = null
+		for ch in lroot.find_children("*", "MeshInstance3D", true, false):
+			var mi := ch as MeshInstance3D
+			if mi == null or not is_instance_valid(mi) or mi.mesh == null or mi.name == "GlowOutlineShell":
+				continue
+			if str(mi.name).begins_with("MergedLocker"):
+				continue
+			var m0 := mi.get_active_material(0)
+			var m0_l := m0.resource_name.to_lower() if m0 != null else ""
+			var p_nm := str(mi.get_parent().name) if mi.get_parent() != null else ""
+			if "ZoSideHandle" in p_nm or str(mi.name) == "Geom3D_ZoSideHandle" or "pulls" in m0_l:
+				pulls_list.append(mi)
+				if pulls_mat == null: pulls_mat = m0
+			elif "lockerdiamondmesh" in m0_l or "fencing" in m0_l or "diamond_mesh" in m0_l:
+				fence_list.append(mi)
+				if fence_mat == null: fence_mat = m0
+			elif str(mi.name) == "Geom3D" and "verde" in m0_l:
+				inner_list.append(mi)
+				if inner_mat == null: inner_mat = m0
+		_merge_static_meshes_under(lroot, pulls_list, "MergedLockerPulls", pulls_mat)
+		_merge_static_meshes_under(lroot, fence_list, "MergedLockerMeshPanels", fence_mat)
+		_merge_static_meshes_under(lroot, inner_list, "MergedLockerInnerDividers", inner_mat)
 
 func _is_dynamic_or_truck_node(node: Node) -> bool:
 	var cur := node
@@ -80,6 +267,9 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 			if mi == null or not is_instance_valid(mi) or mi.mesh == null:
 				continue
 			if mi.name == "GlowOutlineShell" or mi.mesh is ImmediateMesh:
+				continue
+			if mi.get_meta("merged_into_batch", false):
+				mi.visible = false
 				continue
 			
 			var aabb := mi.mesh.get_aabb()
@@ -155,8 +345,8 @@ func _collect_sectors(scene_root: Node) -> void:
 			# Sector Administrativo: bloque de oficinas, salas, cubículos (X > 12.0)
 			if c.x > 12.0 and d < 55.0:
 				_admin_nodes.append(n3d)
-			# Sector Nave de Producción: maquinaria, tolvas, molinos (X < -13.0, Z en [18, 52])
-			elif c.x < -13.0 and c.z > 18.0 and c.z < 52.0 and d < 35.0:
+			# Sector Nave de Producción: maquinaria, tolvas, molinos al oeste del muro de vestidores (X < -18.2, Z en [18, 52])
+			elif c.x < -18.2 and c.z > 18.0 and c.z < 52.0 and d < 35.0 and not str(n3d.name).begins_with("Watson Zone Slot Lockers"):
 				_nave_nodes.append(n3d)
 	
 	var mill_unit := scene_root.find_child("MotorMillUnit", true, false) as Node3D
@@ -268,7 +458,10 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 	var new_sector := "EXTERIOR"
 	
 	# Delimitación geométrica de sectores de la planta
-	if p.x <= -13.5 and p.z >= 18.0 and p.z <= 52.0:
+	if p.x >= -17.9 and p.x <= -13.0 and p.z >= 44.8 and p.z <= 50.2:
+		# Vestidores cerrados (muros de concreto/azulejo separan tanto la nave como oficinas)
+		new_sector = "VESTIDORES"
+	elif p.x <= -13.5 and p.z >= 18.0 and p.z <= 52.0:
 		new_sector = "NAVE_PRODUCCION"
 	elif p.x >= 12.0 and p.z >= 20.0 and p.z <= 52.0:
 		new_sector = "SECTOR_ADMIN"
@@ -283,6 +476,10 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 	_current_sector = new_sector
 	
 	match _current_sector:
+		"VESTIDORES":
+			# Cuarto de lockers cerrado: ocultar tanto oficinas como nave pesada tras muros macizos
+			_set_nodes_visible(_admin_nodes, false)
+			_set_nodes_visible(_nave_nodes, false)
 		"NAVE_PRODUCCION":
 			# Ocultar oficinas administrativas (tras muros macizos a >30m)
 			_set_nodes_visible(_admin_nodes, false)
@@ -310,7 +507,7 @@ func _update_trucks_visibility(cam_pos: Vector3) -> void:
 		if trk == null or not is_instance_valid(trk):
 			continue
 		var want_vis: bool = true
-		if _current_sector == "NAVE_PRODUCCION" or _current_sector == "SECTOR_ADMIN":
+		if _current_sector == "NAVE_PRODUCCION" or _current_sector == "SECTOR_ADMIN" or _current_sector == "VESTIDORES":
 			want_vis = (cam_pos.distance_to(trk.global_position) <= 48.0)
 		if trk.visible != want_vis:
 			trk.visible = want_vis

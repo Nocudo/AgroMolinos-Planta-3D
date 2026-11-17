@@ -1469,6 +1469,29 @@ func _qa_10_main_scene_integration() -> void:
 					player._select_tool(1)
 					player.global_position = saved_ppos
 
+					# Regresión: Optimización de textura/malla de lockers (opaca POT sin ALPHA_SCISSOR, batching de sub-mallas y <=16 GlowOutlineShells)
+					var watson_opt := inst.find_child("Watson Zone Slot Lockers 20-Pack", true, false)
+					if watson_opt != null:
+						var has_merged_mesh := watson_opt.find_child("MergedLockerMeshPanels", true, false) != null
+						var has_merged_pulls := watson_opt.find_child("MergedLockerPulls", true, false) != null
+						var locker_alpha_scissor_cnt := 0
+						var locker_shell_cnt := 0
+						for l_ch in watson_opt.find_children("*", "MeshInstance3D", true, false):
+							var l_mi := l_ch as MeshInstance3D
+							if l_mi == null or l_mi.mesh == null or not l_mi.visible:
+								continue
+							if l_mi.name == "GlowOutlineShell":
+								locker_shell_cnt += 1
+								continue
+							for ls in range(l_mi.mesh.get_surface_count()):
+								var lm := l_mi.get_active_material(ls)
+								if lm is StandardMaterial3D and (lm as StandardMaterial3D).transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR:
+									locker_alpha_scissor_cnt += 1
+						ok = _assert_true(has_merged_mesh and has_merged_pulls and locker_alpha_scissor_cnt == 0 and locker_shell_cnt <= 8,
+							"Lockers deben tener malla opaca sin ALPHA_SCISSOR (%d), sub-mallas fusionadas (%s/%s) y shells reducidos (%d<=8)" % [
+								locker_alpha_scissor_cnt, str(has_merged_mesh), str(has_merged_pulls), locker_shell_cnt
+							]) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()
