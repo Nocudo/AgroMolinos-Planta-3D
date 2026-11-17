@@ -1,10 +1,6 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
-; since the parameters that go here are not all obvious.
-;
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
+; but it is also a plain text file.
 
 config_version=5
 
@@ -29,6 +25,7 @@ window/size/viewport_height=1080
 window/size/mode="fullscreen"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/vsync/vsync_mode=0
 
 [input]
 
@@ -116,5 +113,11 @@ toggle_camera={
 
 [rendering]
 
+scaling_3d/mode=0
+scaling_3d/scale=0.82
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+lights_and_shadows/directional_shadow/size=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=0
+lights_and_shadows/positional_shadow/size=1024
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=0

@@ -3,7 +3,10 @@ extends Node3D
 
 # ==============================================================================
 # TOLVA RECEPTORA Y SOBREALIMENTACIÓN MECÁNICA DE CEREAL EN 3D
+# Permite inducir atasco arrojando bultos de 50 kg o abriendo compuerta al 160%
 # ==============================================================================
+
+const SoundSynth = preload("res://scripts/core/IndustrialSoundSynthesizer.gd")
 
 @export var max_nominal_feed_rate: float = 1.0     # kg/s nominal
 @export var current_feed_rate: float = 0.8         # kg/s actual
@@ -14,53 +17,93 @@ extends Node3D
 @onready var dust_particles: GPUParticles3D = $DustParticles
 @onready var audio_feed: AudioStreamPlayer3D = $AudioFeed
 
+var bags_thrown_count: int = 0
+var is_jammed: bool = false
+
 func _ready() -> void:
 	if reception_area != null:
-		reception_area.body_entered.connect(_on_grain_body_entered)
+		if not reception_area.body_entered.is_connected(_on_grain_body_entered):
+			reception_area.body_entered.connect(_on_grain_body_entered)
 		reception_area.add_to_group("interactable")
+	if audio_feed != null:
+		if audio_feed.stream == null:
+			audio_feed.stream = SoundSynth.create_hopper_grain_loop()
+		audio_feed.volume_db = -3.0
+		audio_feed.unit_size = 10.0
+		audio_feed.max_distance = 45.0
+		audio_feed.play()
 
-func interact(_tool_id: int) -> String:
-	# Al interactuar directamente, se gira la compuerta manual alternando entre 80% y 150% (sobrealimentación masiva)
-	if manual_gate_opening_pct <= 80.0:
-		set_gate_opening(160.0)
-		return "Has abierto la compuerta manual al 160%. ¡Sobrealimentación masiva de cereal!"
+func interact(tool_id: int) -> String:
+	if tool_id != 3:
+		return "Tolva de Recepción T-301. Equipa [3] Llave 3/4\" (tecla 3) para intervenir compuerta o desatascar."
+	if is_jammed or manual_gate_opening_pct > 120.0:
+		clear_jam()
+		return "Has desatascado físicamente la tolva con Llave 3/4\" y ajustado compuerta al 80% (0.8 kg/s nominal)."
 	else:
-		set_gate_opening(80.0)
-		return "Has ajustado la compuerta manual al 80% (caudal nominal de molienda)."
+		set_gate_opening(160.0)
+		return "Has forzado la compuerta manual al 160% con Llave 3/4\". ¡Sobrealimentación masiva (4.5 kg/s)!"
+
+func throw_bag_into_hopper() -> void:
+	bags_thrown_count += 1
+	if bags_thrown_count >= 2:
+		set_gate_opening(160.0)
+	else:
+		set_gate_opening(110.0)
+
+func clear_jam() -> void:
+	bags_thrown_count = 0
+	is_jammed = false
+	set_gate_opening(80.0)
+	var bus = get_node_or_null("/root/EventBus")
+	if bus != null and bus.has_signal("fault_resolved"):
+		bus.fault_resolved.emit("SOBRECARGA_TOLVA")
 
 func set_gate_opening(pct: float) -> void:
 	manual_gate_opening_pct = pct
-	if gate_wheel != null:
+	if gate_wheel != null and is_inside_tree():
 		var target_rot: float = deg_to_rad(manual_gate_opening_pct * 1.8)
 		var t = create_tween()
 		t.tween_property(gate_wheel, "rotation:z", target_rot, 0.3)
 
 	current_feed_rate = (manual_gate_opening_pct / 100.0) * max_nominal_feed_rate
 	if manual_gate_opening_pct > 120.0:
-		current_feed_rate = 4.2 # Salto masivo de par resistente
+		current_feed_rate = 4.5 # Salto masivo > Tmax de Kloss
+		is_jammed = true
 		if dust_particles != null:
 			dust_particles.emitting = true
 	else:
+		is_jammed = false
 		if dust_particles != null:
 			dust_particles.emitting = false
+
+	if audio_feed != null:
+		audio_feed.pitch_scale = 0.72 if is_jammed else 1.0
+		audio_feed.volume_db = 1.0 if is_jammed else -3.0
+		if not audio_feed.playing:
+			audio_feed.play()
 
 	var bus = get_node_or_null("/root/EventBus")
 	if bus != null:
 		bus.hopper_overfed.emit(current_feed_rate)
-		if manual_gate_opening_pct > 120.0:
+		if is_jammed:
 			bus.notification_posted.emit(
-				"SOBREALIMENTACIÓN MASIVA DE GRANO",
-				"Flujo másico supera 4.0 kg/s. Par resistente excede el par crítico de Kloss.",
+				"SOBREALIMENTACIÓN MASIVA Y ATASCO EN TOLVA",
+				"Flujo másico supera 4.0 kg/s. Par resistente excede Tmax de Kloss (101.75 Nm). Polvo ATEX elevado.",
 				"error"
 			)
 		else:
 			bus.notification_posted.emit(
 				"FLUJO NORMALIZADO EN TOLVA",
-				"Compuerta en 80%. Caudal de cereal dosificado a 0.8 kg/s.",
+				"Compuerta en %.0f%%. Caudal de cereal dosificado a %.2f kg/s." % [manual_gate_opening_pct, current_feed_rate],
 				"info"
 			)
 
 func _on_grain_body_entered(body: Node3D) -> void:
 	if body is RigidBody3D and (body.is_in_group("grain_bag") or body.name.begins_with("GrainBag")):
-		body.queue_free() # Grano consumido por la boca trituradora
-		set_gate_opening(160.0)
+		body.queue_free()
+		throw_bag_into_hopper()
+
+func _exit_tree() -> void:
+	if audio_feed != null:
+		audio_feed.stop()
+		audio_feed.stream = null

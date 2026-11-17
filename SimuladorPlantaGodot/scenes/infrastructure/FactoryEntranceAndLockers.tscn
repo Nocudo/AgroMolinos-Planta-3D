@@ -1,229 +1,20 @@
-[gd_scene load_steps=22 format=3 uid="uid://factory_entrance_lockers_001"]
+[gd_scene load_steps=4 format=3 uid="uid://factory_entrance_lockers_001"]
 
 [ext_resource type="Script" path="res://scripts/interactive/LockerEPPStation.gd" id="1_locker"]
 
-[sub_resource type="StandardMaterial3D" id="Mat_YellowSafety"]
-albedo_color = Color(0.92, 0.72, 0.1, 1)
-metallic = 0.5
-roughness = 0.4
-
-[sub_resource type="StandardMaterial3D" id="Mat_BlackPillar"]
-albedo_color = Color(0.12, 0.14, 0.16, 1)
-roughness = 0.6
-
-[sub_resource type="BoxMesh" id="BoxMesh_pillar"]
-material = SubResource("Mat_YellowSafety")
-size = Vector3(0.3, 3.2, 0.3)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_pillar"]
-size = Vector3(0.3, 3.2, 0.3)
-
-[sub_resource type="BoxMesh" id="BoxMesh_beam"]
-material = SubResource("Mat_YellowSafety")
-size = Vector3(3.6, 0.4, 0.35)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_beam"]
-size = Vector3(3.6, 0.4, 0.35)
-
-[sub_resource type="StandardMaterial3D" id="Mat_GreenWalkway"]
-albedo_color = Color(0.1, 0.42, 0.22, 1)
-roughness = 0.7
-
-[sub_resource type="BoxMesh" id="BoxMesh_walkway_straight"]
-material = SubResource("Mat_GreenWalkway")
-size = Vector3(1.8, 0.02, 12.0)
-
-[sub_resource type="BoxMesh" id="BoxMesh_walkway_branch"]
-material = SubResource("Mat_GreenWalkway")
-size = Vector3(6.0, 0.02, 1.8)
-
-[sub_resource type="StandardMaterial3D" id="Mat_RailingYellow"]
-albedo_color = Color(0.95, 0.75, 0.08, 1)
-metallic = 0.6
-roughness = 0.3
-
-[sub_resource type="BoxMesh" id="BoxMesh_railing_long"]
-material = SubResource("Mat_RailingYellow")
-size = Vector3(0.08, 1.0, 11.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_railing_long"]
-size = Vector3(0.15, 1.0, 11.5)
-
-[sub_resource type="StandardMaterial3D" id="Mat_WallLocker"]
-albedo_color = Color(0.72, 0.75, 0.78, 1)
-roughness = 0.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall_back"]
-material = SubResource("Mat_WallLocker")
-size = Vector3(4.8, 3.0, 0.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_back"]
-size = Vector3(4.8, 3.0, 0.2)
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall_side"]
-material = SubResource("Mat_WallLocker")
-size = Vector3(0.2, 3.0, 3.6)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_side"]
-size = Vector3(0.2, 3.0, 3.6)
-
-[sub_resource type="StandardMaterial3D" id="Mat_LockerBlue"]
-albedo_color = Color(0.15, 0.32, 0.55, 1)
-metallic = 0.7
-roughness = 0.35
-
-[sub_resource type="BoxMesh" id="BoxMesh_locker"]
-material = SubResource("Mat_LockerBlue")
-size = Vector3(0.65, 2.0, 0.55)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_locker"]
-size = Vector3(0.65, 2.0, 0.55)
+[sub_resource type="BoxShape3D" id="BoxShape3D_interlock"]
+size = Vector3(0.4, 3.0, 2.6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_locker_interact"]
-size = Vector3(1.2, 2.0, 1.2)
-
-[sub_resource type="StandardMaterial3D" id="Mat_WoodBench"]
-albedo_color = Color(0.55, 0.38, 0.22, 1)
-roughness = 0.6
-
-[sub_resource type="BoxMesh" id="BoxMesh_bench"]
-material = SubResource("Mat_WoodBench")
-size = Vector3(2.4, 0.45, 0.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_bench"]
-size = Vector3(2.4, 0.45, 0.5)
+size = Vector3(2.25, 1.85, 0.85)
 
 [node name="FactoryEntranceAndLockers" type="Node3D"]
 
-[node name="EntranceGate" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 16)
-
-[node name="PillarLeft" type="MeshInstance3D" parent="EntranceGate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.6, 0)
-mesh = SubResource("BoxMesh_pillar")
-
-[node name="ColLeft" type="CollisionShape3D" parent="EntranceGate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.6, 0)
-shape = SubResource("BoxShape3D_pillar")
-
-[node name="PillarRight" type="MeshInstance3D" parent="EntranceGate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.6, 0)
-mesh = SubResource("BoxMesh_pillar")
-
-[node name="ColRight" type="CollisionShape3D" parent="EntranceGate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.6, 0)
-shape = SubResource("BoxShape3D_pillar")
-
-[node name="BeamTop" type="MeshInstance3D" parent="EntranceGate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
-mesh = SubResource("BoxMesh_beam")
-
-[node name="ColBeam" type="CollisionShape3D" parent="EntranceGate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
-shape = SubResource("BoxShape3D_beam")
-
-[node name="GreenWalkwayStraight" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.01, 10)
-mesh = SubResource("BoxMesh_walkway_straight")
-
-[node name="GreenWalkwayBranch" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.01, 3.8)
-mesh = SubResource("BoxMesh_walkway_branch")
-
-[node name="Railings" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 10)
-
-[node name="RailingLeft" type="MeshInstance3D" parent="Railings"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0.5, 0)
-mesh = SubResource("BoxMesh_railing_long")
-
-[node name="ColRailingLeft" type="CollisionShape3D" parent="Railings"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0.5, 0)
-shape = SubResource("BoxShape3D_railing_long")
-
-[node name="RailingRight" type="MeshInstance3D" parent="Railings"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0.5, 1.5)
-mesh = SubResource("BoxMesh_railing_long")
-
-[node name="ColRailingRight" type="CollisionShape3D" parent="Railings"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0.5, 1.5)
-shape = SubResource("BoxShape3D_railing_long")
-
 [node name="LockerRoom" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0, 3.8)
-
-[node name="Walls" type="StaticBody3D" parent="LockerRoom"]
-
-[node name="WallBack" type="MeshInstance3D" parent="LockerRoom/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -1.8)
-mesh = SubResource("BoxMesh_wall_back")
-
-[node name="ColBack" type="CollisionShape3D" parent="LockerRoom/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -1.8)
-shape = SubResource("BoxShape3D_wall_back")
-
-[node name="WallWest" type="MeshInstance3D" parent="LockerRoom/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.5, 0)
-mesh = SubResource("BoxMesh_wall_side")
-
-[node name="ColWest" type="CollisionShape3D" parent="LockerRoom/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.5, 0)
-shape = SubResource("BoxShape3D_wall_side")
-
-[node name="WallFront" type="MeshInstance3D" parent="LockerRoom/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 1.5, 1.8)
-mesh = SubResource("BoxMesh_wall_back")
-
-[node name="ColFront" type="CollisionShape3D" parent="LockerRoom/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 1.5, 1.8)
-shape = SubResource("BoxShape3D_wall_back")
-
-[node name="Bench" type="StaticBody3D" parent="LockerRoom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0.6)
-
-[node name="BenchMesh" type="MeshInstance3D" parent="LockerRoom/Bench"]
-mesh = SubResource("BoxMesh_bench")
-
-[node name="ColBench" type="CollisionShape3D" parent="LockerRoom/Bench"]
-shape = SubResource("BoxShape3D_bench")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.8, 0.79, 47.6)
 
 [node name="LockerEPPStation" type="Node3D" parent="LockerRoom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.4)
 script = ExtResource("1_locker")
-
-[node name="LockerBody" type="StaticBody3D" parent="LockerRoom/LockerEPPStation"]
-
-[node name="Locker1" type="MeshInstance3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.0, 0)
-mesh = SubResource("BoxMesh_locker")
-
-[node name="Col1" type="CollisionShape3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.0, 0)
-shape = SubResource("BoxShape3D_locker")
-
-[node name="Locker2" type="MeshInstance3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.0, 0)
-mesh = SubResource("BoxMesh_locker")
-
-[node name="Col2" type="CollisionShape3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.0, 0)
-shape = SubResource("BoxShape3D_locker")
-
-[node name="Locker3" type="MeshInstance3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.0, 0)
-mesh = SubResource("BoxMesh_locker")
-
-[node name="Col3" type="CollisionShape3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.0, 0)
-shape = SubResource("BoxShape3D_locker")
-
-[node name="Locker4" type="MeshInstance3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.0, 0)
-mesh = SubResource("BoxMesh_locker")
-
-[node name="Col4" type="CollisionShape3D" parent="LockerRoom/LockerEPPStation/LockerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.0, 0)
-shape = SubResource("BoxShape3D_locker")
 
 [node name="IndicatorLight" type="OmniLight3D" parent="LockerRoom/LockerEPPStation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0.3)
@@ -232,15 +23,55 @@ light_energy = 1.2
 omni_range = 3.5
 
 [node name="InteractableArea" type="Area3D" parent="LockerRoom/LockerEPPStation"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.58)
 collision_layer = 1
 collision_mask = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="LockerRoom/LockerEPPStation/InteractableArea"]
 shape = SubResource("BoxShape3D_locker_interact")
 
+[node name="Label3D" type="Label3D" parent="LockerRoom/LockerEPPStation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.92, -0.35)
+pixel_size = 0.0013
+billboard = 1
+text = "Lockers EPP"
+font_size = 16
+outline_size = 2
+modulate = Color(1, 0.85, 0.2, 0.88)
+
 [node name="LockerLight" type="OmniLight3D" parent="LockerRoom"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
 light_color = Color(1, 0.95, 0.9, 1)
 light_energy = 0.8
 omni_range = 6.0
+
+[node name="AccessInterlockBarrier" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.2, 1.5, 42.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AccessInterlockBarrier"]
+shape = SubResource("BoxShape3D_interlock")
+disabled = true
+
+[node name="InterlockLight" type="OmniLight3D" parent="AccessInterlockBarrier"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+light_color = Color(1, 0.15, 0.15, 1)
+light_energy = 1.6
+omni_range = 4.0
+
+[node name="Label3D" type="Label3D" parent="AccessInterlockBarrier"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+pixel_size = 0.0013
+billboard = 1
+double_sided = false
+modulate = Color(1, 0.85, 0.2, 0.88)
+text = "Esclusa EPP"
+font_size = 16
+outline_size = 2
+
+[node name="AccessInterlockArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.2, 1.5, 42.5)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AccessInterlockArea"]
+shape = SubResource("BoxShape3D_interlock")

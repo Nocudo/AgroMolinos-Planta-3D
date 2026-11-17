@@ -1,14 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://grain_bag_001"]
+[gd_scene load_steps=3 format=3 uid="uid://grain_bag_001"]
 
 [ext_resource type="Script" path="res://scripts/interactive/InteractiveGrainBag.gd" id="1_bag"]
-
-[sub_resource type="StandardMaterial3D" id="Mat_Burlap"]
-albedo_color = Color(0.72, 0.62, 0.46, 1)
-roughness = 0.9
-
-[sub_resource type="BoxMesh" id="BoxMesh_bag"]
-material = SubResource("Mat_Burlap")
-size = Vector3(0.5, 0.35, 0.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bag_col"]
 size = Vector3(0.5, 0.35, 0.8)
@@ -17,8 +9,16 @@ size = Vector3(0.5, 0.35, 0.8)
 mass = 50.0
 script = ExtResource("1_bag")
 
-[node name="VisualMesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_bag")
+[node name="VisualMesh" type="Node3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_bag_col")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.30, 0)
+pixel_size = 0.0011
+billboard = 1
+text = "50 kg"
+font_size = 14
+outline_size = 2
+modulate = Color(1, 1, 1, 0.85)

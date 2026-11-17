@@ -1,84 +1,43 @@
-[gd_scene load_steps=8 format=3 uid="uid://breaker_panel_001"]
+[gd_scene load_steps=4 format=3 uid="uid://breaker_panel_001"]
 
 [ext_resource type="Script" path="res://scripts/interactive/PhysicalBreakerPanel.gd" id="1_breaker"]
 
-[sub_resource type="StandardMaterial3D" id="Mat_CabinetGrey"]
-albedo_color = Color(0.25, 0.28, 0.32, 1)
-metallic = 0.5
-roughness = 0.4
-
-[sub_resource type="BoxMesh" id="BoxMesh_cabinet"]
-material = SubResource("Mat_CabinetGrey")
-size = Vector3(0.8, 1.4, 0.35)
-
-[sub_resource type="BoxMesh" id="BoxMesh_door"]
-material = SubResource("Mat_CabinetGrey")
-size = Vector3(0.78, 1.38, 0.04)
-
-[sub_resource type="StandardMaterial3D" id="Mat_BlackLever"]
-albedo_color = Color(0.08, 0.08, 0.08, 1)
-metallic = 0.1
-roughness = 0.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_lever"]
-material = SubResource("Mat_BlackLever")
-size = Vector3(0.04, 0.14, 0.06)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_panel_area"]
-size = Vector3(1.0, 1.6, 0.8)
+size = Vector3(1.5, 1.85, 1.35)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_cabinet_col"]
-size = Vector3(0.8, 1.4, 0.35)
+size = Vector3(1.25, 1.65, 1.05)
 
 [node name="PhysicalBreakerPanel" type="Node3D"]
 script = ExtResource("1_breaker")
 
 [node name="CabinetCollider" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CabinetCollider"]
 shape = SubResource("BoxShape3D_cabinet_col")
-
-[node name="CabinetBody" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
-mesh = SubResource("BoxMesh_cabinet")
+disabled = false
 
 [node name="DoorPivot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39, 1.2, 0.18)
-
-[node name="DoorMesh" type="MeshInstance3D" parent="DoorPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.39, 0, 0)
-mesh = SubResource("BoxMesh_door")
 
 [node name="BreakerL1" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 1.2, 0.08)
 
 [node name="LeverPivot" type="Node3D" parent="BreakerL1"]
 
-[node name="LeverMesh" type="MeshInstance3D" parent="BreakerL1/LeverPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
-mesh = SubResource("BoxMesh_lever")
-
 [node name="BreakerL2" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.08)
 
 [node name="LeverPivot" type="Node3D" parent="BreakerL2"]
-
-[node name="LeverMesh" type="MeshInstance3D" parent="BreakerL2/LeverPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
-mesh = SubResource("BoxMesh_lever")
 
 [node name="BreakerL3" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 1.2, 0.08)
 
 [node name="LeverPivot" type="Node3D" parent="BreakerL3"]
 
-[node name="LeverMesh" type="MeshInstance3D" parent="BreakerL3/LeverPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
-mesh = SubResource("BoxMesh_lever")
-
 [node name="InteractableArea" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0.1)
 collision_layer = 1
 collision_mask = 2
 
@@ -87,3 +46,12 @@ shape = SubResource("BoxShape3D_panel_area")
 
 [node name="AudioClick" type="AudioStreamPlayer3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.1)
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.08, 0)
+pixel_size = 0.0013
+billboard = 1
+text = "CCM 460 V"
+font_size = 16
+outline_size = 2
+modulate = Color(1, 0.85, 0.2, 0.88)

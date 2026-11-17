@@ -1,40 +1,23 @@
 [gd_scene load_steps=5 format=3 uid="uid://industrial_tablet_001"]
 
 [ext_resource type="Script" path="res://scripts/ui/IndustrialTabletController.gd" id="1_tablet"]
+[ext_resource type="Script" path="res://scripts/ui/TabletChassisVisuals.gd" id="2_chassis"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tablet_frame"]
-bg_color = Color(0.06, 0.08, 0.14, 0.96)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.18, 0.28, 0.45, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-content_margin_left = 20.0
-content_margin_top = 16.0
-content_margin_right = 20.0
-content_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_banner"]
-bg_color = Color(0.1, 0.65, 0.35, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.035, 0.051, 0.086, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.118, 0.173, 0.275, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mhi"]
-bg_color = Color(0.15, 0.2, 0.3, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
 
 [node name="IndustrialTablet" type="CanvasLayer"]
 
@@ -54,141 +37,45 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.62)
 
-[node name="Frame" type="PanelContainer" parent="TabletRoot"]
+[node name="TabletChassis" type="Control" parent="TabletRoot"]
+clip_contents = true
+custom_minimum_size = Vector2(1320, 830)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -380.0
-offset_top = -280.0
-offset_right = 380.0
-offset_bottom = 280.0
+offset_left = -660.0
+offset_top = -408.0
+offset_right = 660.0
+offset_bottom = 422.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_chassis")
+
+[node name="Frame" type="PanelContainer" parent="TabletRoot"]
+clip_contents = true
+custom_minimum_size = Vector2(1180, 700)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -590.0
+offset_top = -350.0
+offset_right = 590.0
+offset_bottom = 350.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_tablet_frame")
 
 [node name="VBox" type="VBoxContainer" parent="TabletRoot/Frame"]
+clip_contents = true
 layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Header" type="HBoxContainer" parent="TabletRoot/Frame/VBox"]
-layout_mode = 2
-
-[node name="TabletTitle" type="Label" parent="TabletRoot/Frame/VBox/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 15
-text = "AGROMOLINOS TABLET INDUSTRIAL DE CAMPO (DIGITAL TWIN)"
-
-[node name="BtnClose" type="Button" parent="TabletRoot/Frame/VBox/Header"]
-custom_minimum_size = Vector2(32, 28)
-layout_mode = 2
-text = "X"
-
-[node name="BannerPanel" type="PanelContainer" parent="TabletRoot/Frame/VBox"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
-
-[node name="HBox" type="HBoxContainer" parent="TabletRoot/Frame/VBox/BannerPanel"]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="TabletRoot/Frame/VBox/BannerPanel/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 14
-text = "SISTEMA OPERATIVO CONFORME (IE3)"
-
-[node name="Confidence" type="Label" parent="TabletRoot/Frame/VBox/BannerPanel/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 13
-text = "Certeza IA: 99.5 %"
-
-[node name="Details" type="VBoxContainer" parent="TabletRoot/Frame/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="LblRootCause" type="Label" parent="TabletRoot/Frame/VBox/Details"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
-theme_override_font_sizes/font_size = 11
-text = "CAUSA RAÍZ DIAGNOSTICADA POR IA:"
-
-[node name="ValRootCause" type="Label" parent="TabletRoot/Frame/VBox/Details"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "Operación nominal balanceada a 460 V / 60 Hz bajo supervisión VFD."
-autowrap_mode = 2
-
-[node name="LblPrognosis" type="Label" parent="TabletRoot/Frame/VBox/Details"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
-theme_override_font_sizes/font_size = 11
-text = "PRONÓSTICO FÍSICO & RUL:"
-
-[node name="ValPrognosis" type="Label" parent="TabletRoot/Frame/VBox/Details"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "Vida útil remanente estimada: 24,000 horas de servicio continuo."
-autowrap_mode = 2
-
-[node name="LblPrescription" type="Label" parent="TabletRoot/Frame/VBox/Details"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
-theme_override_font_sizes/font_size = 11
-text = "PRESCRIPCIÓN RCM INMEDIATA:"
-
-[node name="ValPrescription" type="Label" parent="TabletRoot/Frame/VBox/Details"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 12
-text = "Mantener régimen de producción e inspección preventiva mensual."
-autowrap_mode = 2
-
-[node name="MhiBox" type="VBoxContainer" parent="TabletRoot/Frame/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="HBox" type="HBoxContainer" parent="TabletRoot/Frame/VBox/MhiBox"]
-layout_mode = 2
-
-[node name="MhiLabel" type="Label" parent="TabletRoot/Frame/VBox/MhiBox/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 12
-text = "ÍNDICE DE SALUD DEL MOTOR (MOTOR HEALTH INDEX - MHI):"
-
-[node name="MhiValue" type="Label" parent="TabletRoot/Frame/VBox/MhiBox/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
-theme_override_font_sizes/font_size = 13
-text = "98.5 %"
-
-[node name="ProgressBar" type="ProgressBar" parent="TabletRoot/Frame/VBox/MhiBox"]
-custom_minimum_size = Vector2(0, 16)
-layout_mode = 2
-theme_override_styles/background = SubResource("StyleBoxFlat_mhi")
-value = 98.5
-show_percentage = false
-
-[node name="LblChecklist" type="Label" parent="TabletRoot/Frame/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 12
-text = "RUTA DE MANTENIMIENTO GUIADA (5 REGLAS DE ORO RETIE / LOTO):"
-
-[node name="ChecklistScroll" type="ScrollContainer" parent="TabletRoot/Frame/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="ChecklistVBox" type="VBoxContainer" parent="TabletRoot/Frame/VBox/ChecklistScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
+theme_override_constants/separation = 8
 
 [node name="AudioAlert" type="AudioStreamPlayer" parent="TabletRoot"]

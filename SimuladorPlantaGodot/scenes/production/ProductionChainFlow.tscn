@@ -1,0 +1,83 @@
+[gd_scene load_steps=9 format=3 uid="uid://production_chain_flow_001"]
+
+[ext_resource type="Script" path="res://scripts/production/AnimatedProductionLogistics.gd" id="1_prod"]
+
+[sub_resource type="Curve3D" id="Curve3D_intake"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -12, 0, 14, 0, 0, 0, 0, 0, 0, -2, 0, 8, 0, 0, 0, 0, 0, 0, 2.5, 0, 2, 0, 0, 0, 0, 0, 0, 14, 0, -8),
+"tilts": PackedFloat32Array(0, 0, 0, 0)
+}
+point_count = 4
+
+[sub_resource type="Curve3D" id="Curve3D_dispatch"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 12, 0, 6, 0, 0, 0, 0, 0, 0, 16, 0, 10, 0, 0, 0, 0, 0, 0, 24, 0, 16),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
+[sub_resource type="Curve3D" id="Curve3D_conveyor"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 1.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 5.5, 0.8, 2.5, 0, 0, 0, 0, 0, 0, 9.5, 0.8, 4.5),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_grain"]
+emission_shape = 1
+emission_sphere_radius = 0.35
+direction = Vector3(0, -1, 0)
+spread = 18.0
+initial_velocity_min = 1.5
+initial_velocity_max = 3.0
+gravity = Vector3(0, -9.8, 0)
+color = Color(0.92, 0.78, 0.35, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_GrainParticle"]
+albedo_color = Color(0.92, 0.78, 0.35, 1)
+billboard_mode = 3
+
+[sub_resource type="QuadMesh" id="QuadMesh_grain"]
+material = SubResource("Mat_GrainParticle")
+size = Vector2(0.06, 0.06)
+
+[node name="ProductionChainFlow" type="Node3D"]
+script = ExtResource("1_prod")
+
+[node name="Stage1_IntakeWeighbridge" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 0.5)
+
+[node name="Stage2_Milling10HP" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Stage3_Bagging50kg" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 5)
+
+[node name="Stage4_DispatchBay" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 8)
+
+[node name="IntakeTruckPath" type="Path3D" parent="."]
+curve = SubResource("Curve3D_intake")
+
+[node name="IntakeFollow" type="PathFollow3D" parent="IntakeTruckPath"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 14)
+
+[node name="DispatchTruckPath" type="Path3D" parent="."]
+curve = SubResource("Curve3D_dispatch")
+
+[node name="DispatchFollow" type="PathFollow3D" parent="DispatchTruckPath"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
+
+[node name="BagConveyorPath" type="Path3D" parent="."]
+curve = SubResource("Curve3D_conveyor")
+
+[node name="ConveyorFollow" type="PathFollow3D" parent="BagConveyorPath"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.8, 0)
+
+[node name="GrainUnloadParticles" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.2, 0)
+emitting = false
+amount = 48
+lifetime = 0.9
+process_material = SubResource("ParticleProcessMaterial_grain")
+draw_pass_1 = SubResource("QuadMesh_grain")

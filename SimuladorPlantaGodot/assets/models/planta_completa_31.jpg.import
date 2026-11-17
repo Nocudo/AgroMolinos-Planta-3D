@@ -3,23 +3,22 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bduefiebs7ues"
-path.s3tc="res://.godot/imported/planta_completa_31.jpg-8e46c682fcd1f310e883ca964c819a4b.s3tc.ctex"
+path="res://.godot/imported/planta_completa_31.jpg-8e46c682fcd1f310e883ca964c819a4b.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "35d47535583c217a8e5a94eb3118e1a4"
+"md5": "f73d244d6c8254a61b56bb43621f610b"
 }
 
 [deps]
 
 source_file="res://assets/models/planta_completa_31.jpg"
-dest_files=["res://.godot/imported/planta_completa_31.jpg-8e46c682fcd1f310e883ca964c819a4b.s3tc.ctex"]
+dest_files=["res://.godot/imported/planta_completa_31.jpg-8e46c682fcd1f310e883ca964c819a4b.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -41,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

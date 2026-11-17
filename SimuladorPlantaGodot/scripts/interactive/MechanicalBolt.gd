@@ -19,29 +19,33 @@ func _ready() -> void:
 func interact(tool_id: int) -> String:
 	# Tool 3 = Llave fija 3/4"
 	if tool_id == 3:
-		is_loosened = not is_loosened
-		if bolt_head != null:
-			var target_y: float = 0.04 if is_loosened else 0.0
-			var t = create_tween()
-			t.tween_property(bolt_head, "position:y", target_y, 0.2)
-			t.parallel().tween_property(bolt_head, "rotation:y", deg_to_rad(180.0 if is_loosened else 0.0), 0.2)
-		
-		var bus = get_node_or_null("/root/EventBus")
-		if bus != null:
-			bus.bolt_loosened.emit(bolt_id, is_loosened)
-			if is_loosened:
-				bus.notification_posted.emit(
-					"PERNO DE BANCADA AFLOJADO",
-					"Desajuste mecánico en anclaje. Vibración se dispara a Zona D (> 5 mm/s).",
-					"error"
-				)
-			else:
-				bus.notification_posted.emit(
-					"PERNO DE BANCADA APRETADO",
-					"Torque de apriete certificado según RETIE. Vibración normalizada.",
-					"info"
-				)
-		
+		set_loosened(not is_loosened)
 		return "Has " + ("aflojado" if is_loosened else "apretado") + " el perno de anclaje con la llave de 3/4\"."
 	else:
-		return "Perno de bancada 3/4\". Selecciona la Llave Fija (tecla 3) para intervenirlo."
+		return "Perno de bancada 3/4\". Selecciona [3] Llave 3/4\" para intervenirlo."
+
+func set_loosened(loosened: bool) -> void:
+	is_loosened = loosened
+	if bolt_head != null and is_inside_tree():
+		var target_y: float = 0.04 if is_loosened else 0.0
+		var t = create_tween()
+		t.tween_property(bolt_head, "position:y", target_y, 0.2)
+		t.parallel().tween_property(bolt_head, "rotation:y", deg_to_rad(180.0 if is_loosened else 0.0), 0.2)
+
+	var bus = get_node_or_null("/root/EventBus")
+	if bus != null:
+		bus.bolt_loosened.emit(bolt_id, is_loosened)
+		if is_loosened:
+			bus.notification_posted.emit(
+				"PERNO DE BANCADA AFLOJADO",
+				"Desajuste mecánico en anclaje. Vibración se dispara a Zona D (> 5 mm/s).",
+				"error"
+			)
+		else:
+			if bus.has_signal("fault_resolved"):
+				bus.fault_resolved.emit("PERNOS_FLOJOS")
+			bus.notification_posted.emit(
+				"PERNO DE BANCADA APRETADO",
+				"Torque de apriete certificado según RETIE. Vibración normalizada.",
+				"info"
+			)

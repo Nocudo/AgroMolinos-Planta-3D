@@ -1,0 +1,366 @@
+[gd_scene load_steps=34 format=3 uid="uid://safety_zones_lighting_001"]
+
+[ext_resource type="Script" path="res://scripts/environment/PlantSpatialBuilder.gd" id="1_spatial"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_concrete"]
+friction = 0.85
+rough = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor_600"]
+size = Vector3(600, 1, 600)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nave_slab"]
+size = Vector3(41, 0.8, 26.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp_south"]
+size = Vector3(8.5, 0.4, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp_landing"]
+size = Vector3(3.4, 0.8, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_admin_slab"]
+size = Vector3(32.5, 0.4, 31)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp_admin_east"]
+size = Vector3(2.8, 0.4, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_north_bay"]
+size = Vector3(23.3, 0.6, 4.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp_north_bay"]
+size = Vector3(5.6, 0.4, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ConcreteEpoxy"]
+albedo_color = Color(0.235, 0.251, 0.263, 1)
+metallic = 0.05
+roughness = 0.65
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor_600"]
+material = SubResource("Mat_ConcreteEpoxy")
+size = Vector2(600, 600)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone1_Yellow"]
+transparency = 1
+albedo_color = Color(0.984, 0.753, 0.176, 0.35)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone1"]
+material = SubResource("Mat_Zone1_Yellow")
+size = Vector2(9.3, 23.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone1"]
+size = Vector3(9.3, 3, 23.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone2_Red"]
+transparency = 1
+albedo_color = Color(0.827, 0.184, 0.184, 0.45)
+roughness = 0.6
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone2"]
+material = SubResource("Mat_Zone2_Red")
+size = Vector2(1.7, 2.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone2"]
+size = Vector3(1.7, 3, 2.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone3_Blue"]
+transparency = 1
+albedo_color = Color(0.098, 0.463, 0.824, 0.35)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone3"]
+material = SubResource("Mat_Zone3_Blue")
+size = Vector2(5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone3"]
+size = Vector3(5, 3, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone4_Green"]
+transparency = 1
+albedo_color = Color(0.18, 0.49, 0.196, 0.4)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone4"]
+material = SubResource("Mat_Zone4_Green")
+size = Vector2(1.75, 24.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone4"]
+size = Vector3(1.75, 3, 24.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone5_White"]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.25)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone5"]
+material = SubResource("Mat_Zone5_White")
+size = Vector2(7.6, 7.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone5"]
+size = Vector3(7.6, 3, 7.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone6_YellowDispatch"]
+transparency = 1
+albedo_color = Color(0.984, 0.753, 0.176, 0.3)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone6"]
+material = SubResource("Mat_Zone6_YellowDispatch")
+size = Vector2(8.2, 5.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone6"]
+size = Vector3(8.2, 3, 5.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone8_YellowIntake"]
+transparency = 1
+albedo_color = Color(0.984, 0.753, 0.176, 0.34)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone8"]
+material = SubResource("Mat_Zone8_YellowIntake")
+size = Vector2(5.8, 4.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone8"]
+size = Vector3(5.8, 3, 4.3)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone7_OrangeATEX"]
+transparency = 1
+albedo_color = Color(0.961, 0.486, 0, 0.32)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone7"]
+material = SubResource("Mat_Zone7_OrangeATEX")
+size = Vector2(6.4, 5.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone7"]
+size = Vector3(6.4, 3, 5.2)
+
+[node name="SafetyZonesAndLighting" type="Node3D"]
+script = ExtResource("1_spatial")
+
+[node name="SueloFisicoPBR" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+physics_material_override = SubResource("PhysicsMaterial_concrete")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SueloFisicoPBR"]
+shape = SubResource("BoxShape3D_floor_600")
+
+[node name="FloorNaveSlab" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.6, 0.89, 36.4)
+shape = SubResource("BoxShape3D_nave_slab")
+
+[node name="RampSouthNave" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(0.9956, -0.0936, 0, 0.0936, 0.9956, 0, 0, 0, 1, -24.4, 0.695, 22.2)
+shape = SubResource("BoxShape3D_ramp_south")
+
+[node name="RampLandingNave" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.7, 0.89, 22.2)
+shape = SubResource("BoxShape3D_ramp_landing")
+
+[node name="FloorAdminSlab" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.8, 0.67, 36.6)
+shape = SubResource("BoxShape3D_admin_slab")
+
+[node name="RampEastAdmin" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(0.9901, 0.1405, 0, -0.1405, 0.9901, 0, 0, 0, 1, 45.1, 0.485, 34.0)
+shape = SubResource("BoxShape3D_ramp_admin_east")
+
+[node name="PlatformNorthBay" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.3, 0.79, 51.1)
+shape = SubResource("BoxShape3D_north_bay")
+
+[node name="RampNorthBay" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(0.9934, 0.1147, 0, -0.1147, 0.9934, 0, 0, 0, 1, -14.0, 0.61, 53.7)
+shape = SubResource("BoxShape3D_ramp_north_bay")
+
+[node name="FloorMesh" type="MeshInstance3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, 0)
+mesh = SubResource("PlaneMesh_floor_600")
+
+[node name="DemarcacionZonas" type="Node3D" parent="."]
+
+[node name="Zone1_Milling_OSHA" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.0, 0.79, 36.85)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone1_Milling_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("PlaneMesh_zone1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone1_Milling_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone1")
+
+[node name="Label3D" type="Label3D" parent="DemarcacionZonas/Zone1_Milling_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 2.35, 5.15)
+pixel_size = 0.0014
+billboard = 1
+double_sided = false
+modulate = Color(1, 1, 1, 0.85)
+text = "Zona 1 · >85 dBA"
+font_size = 16
+outline_size = 2
+
+[node name="Zone2_CCM460V_RETIE" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.48, 0.79, 38.5)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone2_CCM460V_RETIE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0)
+mesh = SubResource("PlaneMesh_zone2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone2_CCM460V_RETIE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone2")
+
+[node name="Label3D" type="Label3D" parent="DemarcacionZonas/Zone2_CCM460V_RETIE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+pixel_size = 0.0013
+billboard = 1
+double_sided = false
+modulate = Color(1, 0.4, 0.4, 0.85)
+text = "460 V · 1 m"
+font_size = 16
+outline_size = 2
+
+[node name="Zone3_ReceptionHopper_ISO" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.1, 0.79, 46.6)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone3_ReceptionHopper_ISO"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.014, 0)
+visible = false
+mesh = SubResource("PlaneMesh_zone3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone3_ReceptionHopper_ISO"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone3")
+
+[node name="Zone4_PedestrianWalkway_OSHA" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.69, 0.79, 36.65)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone4_PedestrianWalkway_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
+mesh = SubResource("PlaneMesh_zone4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone4_PedestrianWalkway_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone4")
+
+[node name="Zone5_WarehouseRacks" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.4, 0.79, 27.4)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone5_WarehouseRacks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
+visible = false
+mesh = SubResource("PlaneMesh_zone5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone5_WarehouseRacks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone5")
+
+[node name="Zone6_DispatchBay" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.0, 0.0, 52.8)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone6_DispatchBay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
+mesh = SubResource("PlaneMesh_zone6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone6_DispatchBay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone6")
+
+[node name="Zone7_ATEX_DustZone" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 0.79, 32.7)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone7_ATEX_DustZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+visible = false
+mesh = SubResource("PlaneMesh_zone7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone7_ATEX_DustZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone7")
+
+[node name="Label3D" type="Label3D" parent="DemarcacionZonas/Zone7_ATEX_DustZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.55, 0)
+pixel_size = 0.0013
+billboard = 1
+double_sided = false
+modulate = Color(1, 0.65, 0.2, 0.85)
+text = "ATEX 22"
+font_size = 16
+outline_size = 2
+
+[node name="Zone8_IntakeConveyor_OSHA" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.85, 0.115, 51.2)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone8_IntakeConveyor_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("PlaneMesh_zone8")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone8_IntakeConveyor_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone8")
+
+[node name="Label3D" type="Label3D" parent="DemarcacionZonas/Zone8_IntakeConveyor_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.35, 0.8)
+pixel_size = 0.0014
+billboard = 1
+double_sided = false
+modulate = Color(1, 0.86, 0.25, 0.9)
+text = "Zona 8 · Descarga & Bandas"
+font_size = 16
+outline_size = 2
+
+[node name="LucesIndustriales" type="Node3D" parent="."]
+
+[node name="HighBay_5000K_1" type="OmniLight3D" parent="LucesIndustriales"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 6.5, 27)
+light_color = Color(0.98, 0.99, 1, 1)
+light_energy = 1.6
+omni_range = 20.0
+
+[node name="HighBay_5000K_2" type="OmniLight3D" parent="LucesIndustriales"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 6.5, 27)
+light_color = Color(0.98, 0.99, 1, 1)
+light_energy = 1.6
+omni_range = 20.0
+
+[node name="HighBay_5000K_3" type="OmniLight3D" parent="LucesIndustriales"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 6.5, 45)
+light_color = Color(0.98, 0.99, 1, 1)
+light_energy = 1.5
+omni_range = 20.0
+
+[node name="HighBay_5000K_4" type="OmniLight3D" parent="LucesIndustriales"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 6.5, 45)
+light_color = Color(0.98, 0.99, 1, 1)
+light_energy = 1.5
+omni_range = 20.0
+
+[node name="HighBay_Spot_Milling" type="SpotLight3D" parent="LucesIndustriales"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, -25.81, 6.5, 42.6)
+light_color = Color(1, 0.98, 0.94, 1)
+light_energy = 2.4
+spot_range = 15.0
+spot_angle = 48.0
+
+[node name="MeetingRoomLight_5000K" type="OmniLight3D" parent="LucesIndustriales"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.5, 2.8, 34.0)
+light_color = Color(1, 0.97, 0.92, 1)
+light_energy = 1.05
+omni_range = 12.0

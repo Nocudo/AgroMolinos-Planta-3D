@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb4186rl2mnkd"
-path="res://.godot/imported/trabajador_logistica_1.png-de6b81431d0c59af1555a7da5e158601.ctex"
+path.s3tc="res://.godot/imported/trabajador_logistica_1.png-de6b81431d0c59af1555a7da5e158601.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "16806a244a452eca326a648e32029b97"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/trabajador_logistica_1.png"
-dest_files=["res://.godot/imported/trabajador_logistica_1.png-de6b81431d0c59af1555a7da5e158601.ctex"]
+dest_files=["res://.godot/imported/trabajador_logistica_1.png-de6b81431d0c59af1555a7da5e158601.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

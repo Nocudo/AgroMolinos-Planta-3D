@@ -4,6 +4,7 @@
 .godot/
 *.translation
 .import/
+SimuladorPlantaGodot/assets/models/*.skp
 
 # ==========================================
 # MATLAB / Simulink Ignore Rules

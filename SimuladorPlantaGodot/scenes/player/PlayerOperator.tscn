@@ -1,14 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://player_operator_001"]
+[gd_scene load_steps=4 format=3 uid="uid://player_operator_001"]
 
 [ext_resource type="Script" path="res://scripts/interactive/PlayerOperator.gd" id="1_operator"]
 [ext_resource type="PackedScene" path="res://assets/models/trabajador_operario.glb" id="2_worker_mesh"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
-radius = 0.4
+radius = 0.3
 height = 1.8
-
-[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_cam"]
-length = 2.5
 
 [node name="PlayerOperator" type="CharacterBody3D"]
 collision_layer = 2
@@ -20,7 +17,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_body")
 
 [node name="CharacterVisual" parent="." instance=ExtResource("2_worker_mesh")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.16)
 
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
@@ -28,6 +25,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 [node name="CameraFPS" type="Camera3D" parent="Head"]
 current = true
 fov = 75.0
+near = 0.08
 
 [node name="InteractionRay" type="RayCast3D" parent="Head/CameraFPS"]
 target_position = Vector3(0, 0, -2.8)
@@ -36,13 +34,3 @@ collide_with_areas = true
 
 [node name="HandMount" type="Marker3D" parent="Head/CameraFPS"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, -0.25, -0.7)
-
-[node name="SpringArm3D" type="SpringArm3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.9659, 0.2588, 0, -0.2588, 0.9659, 0, 1.7, 0)
-shape = SubResource("SeparationRayShape3D_cam")
-spring_length = 2.6
-margin = 0.2
-
-[node name="CameraTPS" type="Camera3D" parent="SpringArm3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.6)
-fov = 75.0

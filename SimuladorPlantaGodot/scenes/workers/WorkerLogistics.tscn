@@ -25,10 +25,11 @@ shape = SubResource("CapsuleShape3D_npc")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="RoleLabel3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
+pixel_size = 0.0013
 billboard = 1
 double_sided = false
-text = "Operario de Almacén"
-font_size = 20
-outline_size = 6
-modulate = Color(1, 0.6, 0.1, 1)
+text = "Almacén"
+font_size = 16
+outline_size = 2
+modulate = Color(1, 0.6, 0.1, 0.88)
