@@ -35,6 +35,10 @@ const HAZARD_LINE_ZONES: Dictionary = {
 	"Zone8_IntakeConveyor_OSHA": {
 		"title": "⚠ ZONA 8 · BANDAS EXTERIORES",
 		"msg": "Perímetro tolva. Usa selección remota."
+	},
+	"Zone9_AirThermal_OSHA": {
+		"title": "⚠ ZONA 9 · AIRE & TÉRMICA",
+		"msg": "Horno, soplador y extracción. Mantén distancia."
 	}
 }
 
@@ -46,7 +50,8 @@ const ZONE_DESCRIPTIONS: Dictionary = {
 	"Zone5_WarehouseRacks": "Zona 5: Almacén Sacos",
 	"Zone6_DispatchBay": "Zona 6: Bahía Despacho",
 	"Zone7_ATEX_DustZone": "Zona 7: Atmósfera ATEX 22",
-	"Zone8_IntakeConveyor_OSHA": "Zona 8: Bandas Exteriores"
+	"Zone8_IntakeConveyor_OSHA": "Zona 8: Bandas Exteriores",
+	"Zone9_AirThermal_OSHA": "Zona 9: Aire y Térmica"
 }
 
 const SKIP_COLLISION_KEYWORDS: Array[String] = [
@@ -881,6 +886,7 @@ void fragment() {
 		"Zone2_CCM460V_RETIE": {"type": "hazard", "size": Vector2(1.7, 2.6), "stripe": Color(0.98, 0.18, 0.15), "tint": Color(0.88, 0.15, 0.15), "bw": 0.22, "alpha": 0.30},
 		"Zone6_DispatchBay": {"type": "hazard", "size": Vector2(8.2, 5.2), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.92, 0.72, 0.15), "bw": 0.34, "alpha": 0.24},
 		"Zone8_IntakeConveyor_OSHA": {"type": "hazard", "size": Vector2(5.8, 4.3), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.95, 0.72, 0.10), "bw": 0.28, "alpha": 0.18},
+		"Zone9_AirThermal_OSHA": {"type": "hazard", "size": Vector2(9.2, 10.0), "stripe": Color(0.98, 0.76, 0.06), "tint": Color(0.96, 0.56, 0.08), "bw": 0.28, "alpha": 0.16},
 		"Zone4_PedestrianWalkway_OSHA": {"type": "walkway", "size": Vector2(1.75, 24.5), "lane": Color(0.10, 0.56, 0.24), "line": Color(0.98, 0.86, 0.20), "corridor": 1.0}
 	}
 

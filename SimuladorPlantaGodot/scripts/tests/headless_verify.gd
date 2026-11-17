@@ -1115,6 +1115,7 @@ func _qa_10_main_scene_integration() -> void:
 		var zone2_node := inst.find_child("Zone2_CCM460V_RETIE", true, false) as Node3D
 		var zone4_node := inst.find_child("Zone4_PedestrianWalkway_OSHA", true, false) as Node3D
 		var zone8_node := inst.find_child("Zone8_IntakeConveyor_OSHA", true, false) as Node3D
+		var zone9_node := inst.find_child("Zone9_AirThermal_OSHA", true, false) as Node3D
 		if breaker_node != null and zone2_node != null:
 			ok = _assert_true(Vector2(breaker_node.global_position.x - zone2_node.global_position.x, breaker_node.global_position.z - zone2_node.global_position.z).length() <= 0.15,
 				"PhysicalBreakerPanel debe quedar centrado en recuadro Zone2_CCM460V_RETIE (panel=%s, zone=%s)" % [str(breaker_node.global_position), str(zone2_node.global_position)]) and ok
@@ -1124,6 +1125,8 @@ func _qa_10_main_scene_integration() -> void:
 			"Zone4_PedestrianWalkway_OSHA debe quedar centrado con la puerta de entrada X=-18.69 (actual=%s)" % [str(zone4_node.global_position) if zone4_node else "null"]) and ok
 		ok = _assert_true(zone8_node != null,
 			"Falta perímetro de seguridad Zone8_IntakeConveyor_OSHA en bandas exteriores de descarga/tolva") and ok
+		ok = _assert_true(zone9_node != null,
+			"Falta perímetro de seguridad Zone9_AirThermal_OSHA en zona exterior de aire y térmica") and ok
 		ok = _assert_true(breaker_node != null and breaker_node.find_child("DownloadedCabinetModel", true, false) != null and breaker_node.find_child("defaultMaterial3", true, false) == null,
 			"PhysicalBreakerPanel debe cargar panel_control.glb sin tubos/cables residuales (defaultMaterial3)") and ok
 		var glow_ctrl := inst.find_child("InteractableGlowController", true, false)
@@ -1407,6 +1410,12 @@ func _qa_10_main_scene_integration() -> void:
 					spatial_b.evaluate_player_hazard_lines(Vector3(-29.85, 0.15, 51.2)) # Cruzando Zona 8 bandas exteriores
 					ok = _assert_true(bool(spatial_b.is_player_past_safety_lines()) and bool(hud_ctrl.is_safety_line_alert_visible()),
 						"Al cruzar la línea de seguridad de Zona 8 (banda descarga/inclinada exterior) debe saltar la alerta") and ok
+					spatial_b.evaluate_player_hazard_lines(Vector3(-36.2, 0.85, 34.9)) # Cruzando Zona 9 aire & térmica
+					ok = _assert_true(bool(spatial_b.is_player_past_safety_lines()) and bool(hud_ctrl.is_safety_line_alert_visible()),
+						"Al cruzar la línea de seguridad de Zona 9 (aire/horno/soplador exterior) debe saltar la alerta") and ok
+					spatial_b.evaluate_player_hazard_lines(Vector3(-39.5, 0.85, 28.5)) # En acceso seguro fuera de Zona 9
+					ok = _assert_true(not bool(spatial_b.is_player_past_safety_lines()) and not bool(hud_ctrl.is_safety_line_alert_visible()),
+						"En la zona libre de acceso exterior junto a Zona 9 la alerta debe despejarse") and ok
 					spatial_b.evaluate_player_hazard_lines(Vector3(-18.69, 0.85, 38.0)) # Al salir vuelve a seguro
 					ok = _assert_true(not bool(spatial_b.is_player_past_safety_lines()) and not bool(hud_ctrl.is_safety_line_alert_visible()),
 						"Al retroceder fuera de la línea de seguridad la alerta debe despejarse") and ok

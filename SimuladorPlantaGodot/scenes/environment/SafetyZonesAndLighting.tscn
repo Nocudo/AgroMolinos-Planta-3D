@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://safety_zones_lighting_001"]
+[gd_scene load_steps=37 format=3 uid="uid://safety_zones_lighting_001"]
 
 [ext_resource type="Script" path="res://scripts/environment/PlantSpatialBuilder.gd" id="1_spatial"]
 
@@ -134,6 +134,18 @@ size = Vector2(6.4, 5.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_zone7"]
 size = Vector3(6.4, 3, 5.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Zone9_AirThermal"]
+transparency = 1
+albedo_color = Color(0.98, 0.62, 0.08, 0.34)
+roughness = 0.7
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_zone9"]
+material = SubResource("Mat_Zone9_AirThermal")
+size = Vector2(9.2, 10.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone9"]
+size = Vector3(9.2, 3, 10.0)
 
 [node name="SafetyZonesAndLighting" type="Node3D"]
 script = ExtResource("1_spatial")
@@ -323,6 +335,29 @@ billboard = 1
 double_sided = false
 modulate = Color(1, 0.86, 0.25, 0.9)
 text = "Zona 8 · Descarga & Bandas"
+font_size = 16
+outline_size = 2
+
+[node name="Zone9_AirThermal_OSHA" type="Area3D" parent="DemarcacionZonas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.2, 0.79, 34.9)
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone9_AirThermal_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("PlaneMesh_zone9")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone9_AirThermal_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone9")
+
+[node name="Label3D" type="Label3D" parent="DemarcacionZonas/Zone9_AirThermal_OSHA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -4.4)
+pixel_size = 0.0014
+billboard = 1
+double_sided = false
+modulate = Color(1, 0.82, 0.25, 0.9)
+text = "Zona 9 · Aire & Térmica"
 font_size = 16
 outline_size = 2
 
