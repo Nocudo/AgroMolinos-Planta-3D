@@ -188,6 +188,8 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 	_wearing_epp = all_equipped
 	if character_visual == null:
 		return
+	var tex_epp := load("res://assets/models/trabajador_logistica_trabajador_logistica_0.jpg") as Texture2D if ResourceLoader.exists("res://assets/models/trabajador_logistica_trabajador_logistica_0.jpg") else null
+	var tex_civil := load("res://assets/models/trabajador_operario_trabajador_operario_0.jpg") as Texture2D if ResourceLoader.exists("res://assets/models/trabajador_operario_trabajador_operario_0.jpg") else null
 	var mesh_instances := character_visual.find_children("*", "MeshInstance3D", true, false)
 	for child in mesh_instances:
 		var mi := child as MeshInstance3D
@@ -198,10 +200,16 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 			if base_mat is StandardMaterial3D:
 				var std := base_mat.duplicate() as StandardMaterial3D
 				if all_equipped:
-					# Indumentaria ignífuga / dieléctrica naranja-ámbar de alta visibilidad RETIE
-					std.albedo_color = Color(1.0, 0.68, 0.25, 1.0)
+					# Indumentaria ignífuga / dieléctrica naranja de alta visibilidad RETIE
+					if tex_epp != null:
+						std.albedo_texture = tex_epp
+						std.albedo_color = Color(1.04, 1.02, 0.98, 1.0)
+					else:
+						std.albedo_color = Color(1.0, 0.68, 0.25, 1.0)
 					std.roughness = 0.55
 				else:
+					if tex_civil != null:
+						std.albedo_texture = tex_civil
 					std.albedo_color = (base_mat as StandardMaterial3D).albedo_color
 				mi.set_surface_override_material(s, std)
 

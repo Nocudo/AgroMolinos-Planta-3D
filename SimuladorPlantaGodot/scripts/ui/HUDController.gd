@@ -2,6 +2,7 @@ class_name HUDController
 extends Control
 
 const RetieCourseModalScript = preload("res://scripts/ui/RetieCourseModal.gd")
+const HUDHotbarAndAvatarScript = preload("res://scripts/ui/HUDHotbarAndAvatar.gd")
 
 # ==============================================================================
 # HUD INDUSTRIAL MINIMALISTA EN GODOT 4.7
@@ -49,6 +50,7 @@ var _safety_line_banner: PanelContainer = null
 var _safety_line_title: Label = null
 var _safety_line_detail: Label = null
 var _safety_line_pulse_t: float = 0.0
+var _hotbar_avatar = null
 
 func _ready() -> void:
 	# Mantener HUD activo durante pausas de inducción para recibir el clic / tecla de cierre
@@ -59,6 +61,7 @@ func _ready() -> void:
 	# Asegurar que todos los elementos visuales del HUD ignoren clics de mouse
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_mouse_filter_recursive(self)
+	_setup_hotbar_and_avatar()
 	_setup_dialogue_panel()
 	_setup_tablet_notify_legend()
 	_setup_safety_line_banner()
@@ -144,7 +147,29 @@ func _process(delta: float) -> void:
 		var s_alpha := 0.80 + 0.20 * sin(_safety_line_pulse_t)
 		_safety_line_banner.modulate = Color(1.0, 1.0, 1.0, s_alpha)
 
+func _setup_hotbar_and_avatar() -> void:
+	var legacy_bar := get_node_or_null("BottomBar") as Control
+	if legacy_bar != null:
+		legacy_bar.visible = false
+	_hotbar_avatar = HUDHotbarAndAvatarScript.new()
+	add_child(_hotbar_avatar)
+	call_deferred("_sync_hotbar_initial_state")
+
+func _sync_hotbar_initial_state() -> void:
+	if _hotbar_avatar == null or not is_inside_tree():
+		return
+	var locker := get_tree().root.find_child("LockerEPPStation", true, false)
+	if locker != null and "epp_equipped" in locker:
+		_hotbar_avatar.set_epp_equipped(bool(locker.epp_equipped), false)
+	var player := get_tree().root.find_child("PlayerOperator", true, false)
+	if player != null and "active_tool_id" in player:
+		var tid: int = int(player.active_tool_id)
+		var t_map: Dictionary = player.get("tool_names") if player.get("tool_names") is Dictionary else {}
+		_hotbar_avatar.set_active_tool(tid, String(t_map.get(tid, "")))
+
 func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
+	if _hotbar_avatar != null and _hotbar_avatar.has_method("set_epp_equipped"):
+		_hotbar_avatar.set_epp_equipped(all_equipped, true)
 	if all_equipped:
 		show_npc_dialogue(
 			"SUPERVISOR SST",
@@ -174,8 +199,8 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_dialogue_panel.offset_left = 28.0
 	_dialogue_panel.offset_right = -28.0
-	_dialogue_panel.offset_bottom = -54.0
-	_dialogue_panel.offset_top = -132.0
+	_dialogue_panel.offset_bottom = -154.0
+	_dialogue_panel.offset_top = -230.0
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color(0.05, 0.09, 0.15, 0.90)
 	st.border_color = Color(1.0, 0.80, 0.22, 0.92)
@@ -400,9 +425,11 @@ func _on_prompt_updated(txt: String) -> void:
 		var col := Color(1.0, 0.50, 0.48, 1.0) if is_fault else (Color(0.32, 1.0, 0.52, 1.0) if is_green_sel else Color(1.0, 0.92, 0.4, 0.95))
 		prompt_label.add_theme_color_override("font_color", col)
 
-func _on_tool_changed(_tool_id: int, tool_name: String) -> void:
+func _on_tool_changed(tool_id: int, tool_name: String) -> void:
 	if lbl_active_tool != null:
 		lbl_active_tool.text = tool_name
+	if _hotbar_avatar != null and _hotbar_avatar.has_method("set_active_tool"):
+		_hotbar_avatar.set_active_tool(tool_id, tool_name)
 
 func _on_telemetry_updated(
 	rpm: float,
