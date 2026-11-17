@@ -920,6 +920,13 @@ func _qa_10_main_scene_integration() -> void:
 				var saved_rpm := float(prod_flow.current_rpm)
 				var saved_flow := float(prod_flow.current_flow_kg_s)
 				var saved_cycle := float(prod_flow.truck_cycle_time)
+				var m_bay2 := prod_flow.get_node_or_null("TruckBay2Mover") as Node3D
+				var m_staging := prod_flow.get_node_or_null("TruckStagingMover") as Node3D
+				var fleet_movers: Array[Node3D] = [m_south, m_west]
+				if m_bay2 != null:
+					fleet_movers.append(m_bay2)
+				if m_staging != null:
+					fleet_movers.append(m_staging)
 				prod_flow.set_motor_rpm(1750.0, 0.8)
 				prod_flow.truck_cycle_time = 0.0
 				prod_flow.step_production(0.01)
@@ -927,11 +934,12 @@ func _qa_10_main_scene_integration() -> void:
 				var prev_w: Vector3 = m_west.global_position
 				var max_fwd_ms := 0.0
 				var max_rev_ms := 0.0
+				var min_pair_dist := 9999.0
 				var dt_spd := 1.0
 				var n_spd := int(prod_flow.TRUCK_CYCLE_DURATION / dt_spd)
 				for _si in range(n_spd):
 					var u_s := float(prod_flow.truck_cycle_time) / float(prod_flow.TRUCK_CYCLE_DURATION)
-					var u_w := fmod(u_s + 0.5, 1.0)
+					var u_w := float(prod_flow.dispatch_cycle_time)
 					prod_flow.step_production(dt_spd)
 					var vs := Vector2(m_south.global_position.x - prev_s.x, m_south.global_position.z - prev_s.z).length() / dt_spd
 					var vw := Vector2(m_west.global_position.x - prev_w.x, m_west.global_position.z - prev_w.z).length() / dt_spd
@@ -939,10 +947,17 @@ func _qa_10_main_scene_integration() -> void:
 						max_rev_ms = maxf(max_rev_ms, vs)
 					elif u_s >= 0.16:
 						max_fwd_ms = maxf(max_fwd_ms, vs)
-					if u_w >= 0.90:
+					if u_w >= 0.86 and u_w < 0.94:
 						max_rev_ms = maxf(max_rev_ms, vw)
-					elif u_w >= 0.16:
+					elif u_w >= 0.22 and u_w < 0.86:
 						max_fwd_ms = maxf(max_fwd_ms, vw)
+					for fi in range(fleet_movers.size()):
+						for fj in range(fi + 1, fleet_movers.size()):
+							var p_i: Vector3 = fleet_movers[fi].global_position
+							var p_j: Vector3 = fleet_movers[fj].global_position
+							var d_ij := Vector2(p_i.x - p_j.x, p_i.z - p_j.z).length()
+							if d_ij < min_pair_dist:
+								min_pair_dist = d_ij
 					prev_s = m_south.global_position
 					prev_w = m_west.global_position
 				prod_flow.set_motor_rpm(saved_rpm, saved_flow)
@@ -950,6 +965,8 @@ func _qa_10_main_scene_integration() -> void:
 				prod_flow.step_production(0.01)
 				ok = _assert_true(max_fwd_ms * 3.6 <= 10.0 and max_rev_ms * 3.6 <= 5.0,
 					"Velocidad camiones debe cumplir límite reglamentario (max_fwd=%.2f km/h <= 10, max_rev=%.2f km/h <= 5)" % [max_fwd_ms * 3.6, max_rev_ms * 3.6]) and ok
+				ok = _assert_true(min_pair_dist >= 18.0,
+					"Separación mínima entre camiones en todo el ciclo de 300s debe evitar cruces/colisiones (min_dist=%.2fm >= 18.0m)" % min_pair_dist) and ok
 				# Verificar articulación de quinta rueda y contacto en pavimento para los 3 tractocamiones
 				var semi_names := ["TruckIntakeMover", "TruckBay2Mover", "TruckStagingMover"]
 				var max_bend_deg := 0.0

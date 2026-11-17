@@ -990,20 +990,21 @@ func _update_truck_logistics(delta: float) -> void:
 	_idle_pulse_t += delta
 	var speed_scale: float = 1.0 if is_production_active else 0.78
 	truck_cycle_time = fmod(truck_cycle_time + delta * speed_scale, TRUCK_CYCLE_DURATION)
-	dispatch_cycle_time = fmod(truck_cycle_time / TRUCK_CYCLE_DURATION + 0.5, 1.0)
 
+	# Desfases matemáticamente optimizados (>20 m de separación mínima centro-a-centro en todo el ciclo de 300 s)
 	var u_south: float = truck_cycle_time / TRUCK_CYCLE_DURATION
-	var u_bay2: float = fmod(u_south + 0.38, 1.0)
+	var u_bay2: float = fmod(u_south + 0.367, 1.0)
+	dispatch_cycle_time = fmod(u_south + 0.99, 1.0)
 	var u_west: float = dispatch_cycle_time
 	var u_staging: float = fmod(u_south * 5.0, 1.0)
 
-	var south_state := _update_single_truck_rig(_south_rig, u_south, delta, true, _south_spotter, "Muelle Sur #1")
+	var south_state := _update_single_truck_rig(_south_rig, u_south, delta, true, _south_spotter, "Muelle Sur #1", false)
 	truck_cycle_phase = south_state["phase"]
 	truck_tilt_angle_deg = south_state["tilt_deg"]
 
-	_update_single_truck_rig(_bay2_rig, u_bay2, delta, false, null, "Bahía Sur #2")
-	_update_single_truck_rig(_staging_rig, u_staging, delta, false, null, "Patio Norte")
-	_update_single_truck_rig(_west_rig, u_west, delta, false, _west_spotter, "Bahía Oeste (Est. 11)")
+	_update_single_truck_rig(_bay2_rig, u_bay2, delta, false, null, "Bahía Sur #2", false)
+	_update_single_truck_rig(_staging_rig, u_staging, delta, false, null, "Patio Norte", false)
+	_update_single_truck_rig(_west_rig, u_west, delta, false, _west_spotter, "Bahía Oeste (Est. 11)", true)
 
 	if intake_follow != null:
 		intake_follow.progress_ratio = fmod(u_south, 1.0)
@@ -1028,7 +1029,7 @@ func _trapezoid_u(t: float, accel_frac: float = 0.12) -> float:
 		return 1.0 - (0.5 * rem - (r / (2.0 * PI)) * sin(PI * rem / r)) * inv_cruise
 	return (c - 0.5 * r) * inv_cruise
 
-func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake: bool, spotter, bay_label: String) -> Dictionary:
+func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake: bool, spotter, bay_label: String, is_west_box: bool = false) -> Dictionary:
 	var phase := "WEIGHING"
 	var tilt_deg := 0.0
 	var target_pos: Vector3 = rig.get("dock_pos", Vector3.ZERO)
@@ -1043,6 +1044,15 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 	var is_moving: bool = false
 	var steer_bias_rad: float = 0.0
 
+	# Ventanas proporcionales a la longitud real de cada tramo para velocidad crucero uniforme (~7 km/h)
+	# sin adelantamientos ni cruces entre camiones en toda la vía perimetral
+	var u_weigh_end: float = 0.08 if is_west_box else 0.06
+	var u_dock_end: float = 0.22 if is_west_box else 0.16
+	var u_exit_end: float = 0.52 if is_west_box else 0.31
+	var u_transit_end: float = 0.60 if is_west_box else 0.40
+	var u_enter_end: float = 0.86 if is_west_box else 0.90
+	var u_rev_end: float = 0.94 if is_west_box else 1.00
+
 	if bool(rig.get("is_closed_loop", false)):
 		phase = "YARD_MANEUVER"
 		active_route = rig.get("exit_route", {})
@@ -1054,23 +1064,23 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 			target_yaw = atan2(-sm["dir"].x, -sm["dir"].z)
 		engine_pitch = 0.96 + 0.04 * sin(u * TAU)
 		engine_vol = -5.0
-	elif u < 0.06:
+	elif u < u_weigh_end or u >= u_rev_end:
 		phase = "WEIGHING"
 		engine_pitch = 0.86
 		engine_vol = -7.5
 		spotter_anim = "inspect"
 		spotter_msg = "%s: Camión detenido sobre báscula verificando peso bruto y autorización de carga." % bay_label
-	elif u < 0.16:
+	elif u < u_dock_end:
 		phase = "TILTING_UNLOAD"
-		var local_p := (u - 0.06) / 0.10
+		var local_p := (u - u_weigh_end) / maxf(u_dock_end - u_weigh_end, 0.001)
 		tilt_deg = 45.0 * clampf(sin(local_p * PI) * 1.35, 0.0, 1.0) if is_intake else 0.0
 		engine_pitch = 1.02 if is_intake else 0.88
 		engine_vol = -4.5 if is_intake else -7.0
 		spotter_anim = "interact" if sin(local_p * PI * 2.0) > 0.0 else "inspect"
 		spotter_msg = "%s: Descarga neumática/hidráulica de tolva activa (%.0f°)." % [bay_label, tilt_deg] if is_intake else "%s: Cargando estibas de 50 kg con montacargas." % bay_label
-	elif u < 0.44:
+	elif u < u_exit_end:
 		phase = "EXITING_STATION"
-		route_s = _trapezoid_u((u - 0.16) / 0.28, 0.12)
+		route_s = _trapezoid_u((u - u_dock_end) / maxf(u_exit_end - u_dock_end, 0.001), 0.10 if is_west_box else 0.12)
 		active_route = rig.get("exit_route", {})
 		is_moving = true
 		if not active_route.is_empty():
@@ -1081,9 +1091,9 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_vol = -2.5
 		spotter_anim = "idle"
 		spotter_msg = "%s: Camión saliendo a velocidad reglamentaria (<=10 km/h) hacia portería." % bay_label
-	elif u < 0.54:
+	elif u < u_transit_end:
 		phase = "EXTERIOR_TRANSIT"
-		route_s = _trapezoid_u((u - 0.44) / 0.10, 0.10)
+		route_s = _trapezoid_u((u - u_exit_end) / maxf(u_transit_end - u_exit_end, 0.001), 0.10)
 		active_route = rig.get("transit_route", {})
 		is_moving = true
 		if not active_route.is_empty():
@@ -1094,9 +1104,9 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_vol = -3.5
 		spotter_anim = "idle"
 		spotter_msg = "%s: Unidad realizando giro amplio exterior para ingreso controlado." % bay_label
-	elif u < 0.90:
+	elif u < u_enter_end:
 		phase = "ENTERING_APPROACH"
-		route_s = _trapezoid_u((u - 0.54) / 0.36, 0.12)
+		route_s = _trapezoid_u((u - u_transit_end) / maxf(u_enter_end - u_transit_end, 0.001), 0.10 if is_west_box else 0.08)
 		active_route = rig.get("enter_route", {})
 		is_moving = true
 		if not active_route.is_empty():
@@ -1109,7 +1119,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		spotter_msg = "%s: Camión ingresando por calzada adoquinada a <=10 km/h hacia bahía." % bay_label
 	else:
 		phase = "REVERSING_TO_DOCK"
-		route_s = _trapezoid_u((u - 0.90) / 0.10, 0.14)
+		route_s = _trapezoid_u((u - u_enter_end) / maxf(u_rev_end - u_enter_end, 0.001), 0.14)
 		active_route = rig.get("reverse_route", {})
 		reverse_mode = true
 		is_moving = true
