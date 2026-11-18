@@ -996,8 +996,8 @@ func _qa_10_main_scene_integration() -> void:
 			var m_west := prod_flow.get_node_or_null("TruckDispatchMover") as Node3D
 			if m_south != null and m_west != null:
 				var fy_ry_w := _measure_truck_wheel_front_rear_y(m_west)
-				ok = _assert_true(absf(fy_ry_w.x) <= 0.03 and absf(fy_ry_w.y) <= 0.03 and absf(fy_ry_w.x - fy_ry_w.y) <= 0.025,
-					"TruckDispatchMover debe estar nivelado y pegado al suelo (frente=%.4f, atrás=%.4f)" % [fy_ry_w.x, fy_ry_w.y]) and ok
+				ok = _assert_true(absf(fy_ry_w.x) <= 0.03 and fy_ry_w.y >= 0.34 and fy_ry_w.y <= 0.41,
+					"TruckDispatchMover estacionado en rampa Patio Norte debe apoyar eje delantero en patio y trasero sobre la rampa (frente=%.4f, atrás=%.4f)" % [fy_ry_w.x, fy_ry_w.y]) and ok
 				var fy_ry_s := _measure_truck_wheel_front_rear_y(m_south)
 				ok = _assert_true(absf(fy_ry_s.x) <= 0.03 and absf(fy_ry_s.y) <= 0.03,
 					"TruckIntakeMover debe apoyar sus ruedas al pavimento (frente=%.4f, atrás=%.4f)" % [fy_ry_s.x, fy_ry_s.y]) and ok

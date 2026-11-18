@@ -210,6 +210,14 @@ const STAGING_YARD_LOOP: Array[Vector3] = [
 ]
 
 const WEST_DOCK_POS := Vector3(-38.43, 0.0, 51.31)
+# Geometría exacta de la rampa blanca de concreto (Geom3D_173) en Patio Norte frente a 01 · Banda de Descarga
+const WEST_RAMP_MIN_X: float = -42.856
+const WEST_RAMP_MAX_X: float = -32.726
+const WEST_RAMP_MIN_Z: float = 49.65
+const WEST_RAMP_MAX_Z: float = 53.05
+const WEST_RAMP_TOP_Y: float = 0.600
+const WEST_TRUCK_FRONT_AXLE_Z: float = -4.934
+const WEST_TRUCK_REAR_AXLE_Z: float = 1.830
 const WEST_EXIT_ROUTE: Array[Vector3] = [
 	Vector3(-38.43, 0.0, 51.31),
 	Vector3(-47.5, 0.0, 51.0),
@@ -411,6 +419,9 @@ func _bind_downloaded_models() -> void:
 			WEST_DOCK_POS, WEST_EXIT_ROUTE, WEST_TRANSIT_ROUTE, WEST_ENTER_ROUTE, WEST_REVERSE_ROUTE,
 			atan2(0.3594, 6.763), 0.006
 		)
+		var wm := _west_rig.get("mover") as Node3D
+		if wm != null and is_instance_valid(wm):
+			_apply_west_ramp_pose(wm, WEST_DOCK_POS, float(_west_rig.get("dock_yaw", wm.rotation.y)))
 
 	if scene_root.name == "MainPlantScene":
 		_spawn_dock_operators(scene_root)
@@ -1238,8 +1249,11 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 	rig["phase"] = phase
 
 	if mover != null and is_instance_valid(mover):
-		mover.global_position = target_pos
-		mover.rotation = Vector3(0.0, cur_yaw, 0.0)
+		if is_west_box:
+			_apply_west_ramp_pose(mover, target_pos, cur_yaw)
+		else:
+			mover.global_position = target_pos
+			mover.rotation = Vector3(0.0, cur_yaw, 0.0)
 
 	# Física de articulación de quinta rueda (kingpin -> eje trasero del semirremolque)
 	if bool(rig.get("is_semi", false)):
@@ -1288,6 +1302,29 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		spotter.set_work_state(spotter_anim, target_pos, spotter_msg)
 
 	return {"phase": phase, "tilt_deg": tilt_deg}
+
+func _sample_west_ramp_y(world_x: float, world_z: float) -> float:
+	if world_z < WEST_RAMP_MIN_Z or world_z > WEST_RAMP_MAX_Z:
+		return 0.0
+	if world_x <= WEST_RAMP_MIN_X:
+		return 0.0
+	if world_x >= WEST_RAMP_MAX_X:
+		return WEST_RAMP_TOP_Y if world_x <= -32.2 else 0.0
+	var t := (world_x - WEST_RAMP_MIN_X) / (WEST_RAMP_MAX_X - WEST_RAMP_MIN_X)
+	return clampf(t, 0.0, 1.0) * WEST_RAMP_TOP_Y
+
+func _apply_west_ramp_pose(mover: Node3D, base_pos: Vector3, yaw: float) -> void:
+	# Cinemática exacta de dos ejes (delantero y trasero) sobre la rampa blanca de Patio Norte
+	var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw))
+	var p_front := Vector3(base_pos.x, 0.0, base_pos.z) + fwd * (-WEST_TRUCK_FRONT_AXLE_Z)
+	var p_rear := Vector3(base_pos.x, 0.0, base_pos.z) - fwd * WEST_TRUCK_REAR_AXLE_Z
+	var y_front := _sample_west_ramp_y(p_front.x, p_front.z)
+	var y_rear := _sample_west_ramp_y(p_rear.x, p_rear.z)
+	var wheelbase := WEST_TRUCK_REAR_AXLE_Z - WEST_TRUCK_FRONT_AXLE_Z
+	var y_origin := y_front + (-WEST_TRUCK_FRONT_AXLE_Z / wheelbase) * (y_rear - y_front)
+	var ramp_pitch := atan2(y_front - y_rear, wheelbase)
+	mover.global_position = Vector3(base_pos.x, base_pos.y + y_origin, base_pos.z)
+	mover.rotation = Vector3(ramp_pitch, yaw, 0.0)
 
 func _step_articulated_semi_hitch(
 	rig: Dictionary,
