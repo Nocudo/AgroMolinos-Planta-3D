@@ -1967,6 +1967,52 @@ func _qa_10_main_scene_integration() -> void:
 				"Salir de la planta hacia Vestidores debe limpiar la interceptación SST sin bloqueo"
 			) and ok
 
+			# Regresión: Escenarios de Riesgo en Tablet deben cambiar Causas, Consecuencias y Prevención al cambiar de máquina (42 escenarios únicos)
+			var tab_cat := preload("res://scripts/ui/TabletDataCatalog.gd")
+			var all_risks_unique := true
+			var m_count: int = tab_cat.RISK_MACHINES.size()
+			for f_spec in tab_cat.RISK_FACTORS:
+				var fid := str(f_spec["id"])
+				var seen_c := {}
+				var seen_q := {}
+				var seen_p := {}
+				for m_spec in tab_cat.RISK_MACHINES:
+					var sc: Dictionary = tab_cat.get_risk_scenario(str(m_spec["id"]), fid)
+					seen_c[str(sc.get("causes", ""))] = true
+					seen_q[str(sc.get("consequences", ""))] = true
+					seen_p[str(sc.get("mitigation", ""))] = true
+				if seen_c.size() != m_count or seen_q.size() != m_count or seen_p.size() != m_count:
+					all_risks_unique = false
+					break
+			var tab_riesgos := inst.find_child("TabRiesgos", true, false)
+			var ui_changes_on_machine := false
+			if tab_riesgos != null:
+				var opts := tab_riesgos.find_children("*", "OptionButton", true, false)
+				if opts.size() >= 2:
+					var opt_machine := opts[0] as OptionButton
+					var opt_factor := opts[1] as OptionButton
+					opt_factor.select(2)
+					opt_factor.item_selected.emit(2)
+					opt_machine.select(0)
+					opt_machine.item_selected.emit(0)
+					var lbls_0: Array[String] = []
+					for l in tab_riesgos.find_children("*", "Label", true, false):
+						lbls_0.append((l as Label).text)
+					opt_machine.select(4) # Ciclones ATEX
+					opt_machine.item_selected.emit(4)
+					var lbls_4: Array[String] = []
+					for l in tab_riesgos.find_children("*", "Label", true, false):
+						lbls_4.append((l as Label).text)
+					var diff_cnt := 0
+					for li in range(mini(lbls_0.size(), lbls_4.size())):
+						if lbls_0[li] != lbls_4[li]:
+							diff_cnt += 1
+					ui_changes_on_machine = (diff_cnt >= 4) # Encabezado + Causas + Consecuencias + Prevención
+			ok = _assert_true(
+				all_risks_unique and ui_changes_on_machine,
+				"Al cambiar de máquina en TabRiesgos deben cambiar Causas, Consecuencias y Prevención con textos específicos por equipo"
+			) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

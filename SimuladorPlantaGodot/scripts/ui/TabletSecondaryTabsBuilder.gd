@@ -326,11 +326,12 @@ static func _make_risk_col(parent: HBoxContainer, title_txt: String, col: Color)
 	c.add_theme_stylebox_override("panel", TTheme.make_left_stripe_card(col, TTheme.BG_CARD))
 	parent.add_child(c)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 8)
+	vb.add_theme_constant_override("separation", 10)
 	c.add_child(vb)
-	vb.add_child(TTheme.make_label(title_txt, 12, col))
-	var body := TTheme.make_label("", 11, Color(0.86, 0.90, 0.96))
+	vb.add_child(TTheme.make_label(title_txt, 13, col))
+	var body := TTheme.make_label("", 12, Color(0.88, 0.92, 0.97))
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_constant_override("line_spacing", 5)
 	vb.add_child(body)
 	return body
 
