@@ -94,6 +94,21 @@ func toggle_drive_mode() -> String:
 func is_emergency_stop_engaged() -> bool:
 	return induction_motor != null and is_instance_valid(induction_motor) and bool(induction_motor.is_e_stop_engaged)
 
+func are_machines_stopped() -> bool:
+	if induction_motor == null or not is_instance_valid(induction_motor):
+		return true
+	return bool(induction_motor.is_e_stop_engaged) or bool(induction_motor.is_loto_isolated) or (not bool(induction_motor.is_running))
+
+func notify_repair_blocked_machines_running(equipment_label: String = "el equipo") -> String:
+	var bus = get_node_or_null("/root/EventBus")
+	if bus != null and bus.has_signal("notification_posted"):
+		bus.notification_posted.emit(
+			"Detén las máquinas primero",
+			"Abre la tablet (TAB) y pulsa Parar Máquinas antes de reparar.",
+			"warning"
+		)
+	return "Detén primero las máquinas en la tablet (TAB · Parar Máquinas) antes de reparar %s." % equipment_label
+
 func toggle_emergency_stop(source: String = "TABLET_SCADA") -> bool:
 	if induction_motor == null or not is_instance_valid(induction_motor):
 		return false

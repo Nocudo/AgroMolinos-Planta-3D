@@ -1623,6 +1623,9 @@ func get_hover_selection_prompt(tool_id: int) -> String:
 	var is_fault := bool(plan["fault"])
 	var tool_name := str(TOOL_CLEAN_NAMES.get(pref, "Herramienta"))
 	if is_fault:
+		var sm := get_node_or_null("/root/SimulationManager")
+		if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+			return "Detén las máquinas (TAB) para reparar · %s" % tool_name
 		return "Reparar falla · %s" % tool_name
 	return "Inducir falla · %s" % tool_name
 
@@ -1630,6 +1633,16 @@ func induce_fault_for_hovered_machine(tool_id: int = 1) -> String:
 	if not _is_post_tutorial() or _hovered_machine_group == "":
 		return ""
 	var plan := _build_interaction_plan(_hovered_machine_group, tool_id)
+	var is_repair_action := bool(plan["fault"])
+	if _hovered_machine_group == "motor":
+		if _hovered_target_node is VentilationCover and _vent_node != null and _prop_bool(_vent_node, "is_blocked"):
+			is_repair_action = true
+		elif _hovered_target_node is MechanicalBolt and _bolt_node != null and _prop_bool(_bolt_node, "is_loosened"):
+			is_repair_action = true
+	if is_repair_action:
+		var sm := get_node_or_null("/root/SimulationManager")
+		if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+			return String(sm.notify_repair_blocked_machines_running(str(plan["label"])))
 	var allowed: Array = plan["allowed"]
 	if not allowed.has(tool_id):
 		var pref: int = int(plan["pref"])

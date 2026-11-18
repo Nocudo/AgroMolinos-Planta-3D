@@ -20,6 +20,10 @@ func interact(tool_id: int) -> String:
 	# Tool 2 = Alicates / pinzas aisladas para intervenir rejilla cerca de partes móviles
 	if tool_id != 2:
 		return "Usa los alicates para obstruir o despejar la rejilla."
+	if is_blocked:
+		var sm := get_node_or_null("/root/SimulationManager")
+		if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+			return String(sm.notify_repair_blocked_machines_running("la rejilla de ventilación"))
 	set_blocked(not is_blocked)
 	if is_blocked:
 		return "Rejilla de ventilación obstruida."

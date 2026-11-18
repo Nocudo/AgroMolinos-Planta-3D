@@ -1487,15 +1487,22 @@ func _qa_10_main_scene_integration() -> void:
 				glow_ctrl.set_hovered_machine_group("")
 				ok = _assert_true(glow_ctrl.get_group_state("breaker") == "RED",
 					"Al retirar el mouse tras inducir falla en CCM, su glow debe quedar RED (%s)" % glow_ctrl.get_group_state("breaker")) and ok
+				var sm_loop := root.get_node_or_null("/root/SimulationManager")
 				glow_ctrl.set_hovered_machine_group("breaker")
 				player._select_tool(1) # Manos NO deben rearmar CCM
 				player._handle_interaction()
 				ok = _assert_true(not bool(breaker_node.l3_active), "Reparación CCM sin Kit LOTO/Llave debe ser rechazada") and ok
-				player._select_tool(5) # Kit LOTO (5) rearma CCM
+				player._select_tool(5) # Con máquinas en marcha, incluso con Kit LOTO se exige parar primero
 				player._handle_interaction()
+				ok = _assert_true(not bool(breaker_node.l3_active), "Rearmar CCM con máquinas encendidas debe bloquearse hasta detener las máquinas") and ok
+				if sm_loop != null and sm_loop.has_method("set_emergency_stop"):
+					sm_loop.set_emergency_stop(true, "QA_TEST")
+				player._handle_interaction()
+				if sm_loop != null and sm_loop.has_method("set_emergency_stop"):
+					sm_loop.set_emergency_stop(false, "QA_TEST")
 				glow_ctrl.set_hovered_machine_group("")
 				ok = _assert_true(bool(breaker_node.l3_active) and glow_ctrl.get_group_state("breaker") == "WHITE",
-					"Volver a pulsar [E] con Kit LOTO [5] sobre CCM fallado debe rearmar a WHITE") and ok
+					"Volver a pulsar [E] con Kit LOTO [5] sobre CCM fallado con máquinas detenidas debe rearmar a WHITE") and ok
 
 				for test_grp in glow_ctrl.ORDERED_15_MACHINES:
 					glow_ctrl.set_hovered_machine_group(test_grp)
@@ -1520,10 +1527,17 @@ func _qa_10_main_scene_integration() -> void:
 						"Reparar '%s' sin herramienta adecuada debe ser rechazado" % test_grp) and ok
 					var req_out := int(glow_ctrl.get_required_tool_for_action(test_grp, true))
 					player._select_tool(req_out)
-					player._handle_interaction()
+					player._handle_interaction() # En marcha debe bloquearse
+					ok = _assert_true(bool(glow_ctrl.is_machine_fault_active(test_grp)),
+						"Reparar '%s' con máquinas encendidas debe ser bloqueado" % test_grp) and ok
+					if sm_loop != null and sm_loop.has_method("set_emergency_stop"):
+						sm_loop.set_emergency_stop(true, "QA_TEST")
+					player._handle_interaction() # Detenido sí debe reparar
+					if sm_loop != null and sm_loop.has_method("set_emergency_stop"):
+						sm_loop.set_emergency_stop(false, "QA_TEST")
 					glow_ctrl.set_hovered_machine_group("")
 					ok = _assert_true(glow_ctrl.get_group_state(test_grp) == "WHITE" and not bool(glow_ctrl.is_machine_fault_active(test_grp)),
-						"Segundo [E] con herramienta %d sobre '%s' debe despejar falla a WHITE (%s)" % [req_out, test_grp, glow_ctrl.get_group_state(test_grp)]) and ok
+						"Segundo [E] con herramienta %d sobre '%s' tras detener máquinas debe despejar falla a WHITE (%s)" % [req_out, test_grp, glow_ctrl.get_group_state(test_grp)]) and ok
 
 				# Verificar que falla de secador/horno impacta térmicamente al modelo Kloss y regresa a 0 al repararse
 				glow_ctrl.set_hovered_machine_group("horno")
@@ -1532,10 +1546,14 @@ func _qa_10_main_scene_integration() -> void:
 				ok = _assert_true(float(motor_n.ext_temp_offset_c) >= 30.0,
 					"Falla en 12 · Horno debe propagar sobrecarga térmica al gemelo motor (dT=%.1f)" % float(motor_n.ext_temp_offset_c)) and ok
 				player._select_tool(int(glow_ctrl.get_required_tool_for_action("horno", true)))
+				if sm_loop != null and sm_loop.has_method("set_emergency_stop"):
+					sm_loop.set_emergency_stop(true, "QA_TEST")
 				player._handle_interaction()
+				if sm_loop != null and sm_loop.has_method("set_emergency_stop"):
+					sm_loop.set_emergency_stop(false, "QA_TEST")
 				glow_ctrl.set_hovered_machine_group("")
 				ok = _assert_true(is_equal_approx(float(motor_n.ext_temp_offset_c), 0.0),
-					"Reparar 12 · Horno debe normalizar sobrecarga térmica externa (dT=%.1f)" % float(motor_n.ext_temp_offset_c)) and ok
+					"Reparar 12 · Horno tras detener máquinas debe normalizar sobrecarga térmica externa (dT=%.1f)" % float(motor_n.ext_temp_offset_c)) and ok
 				player._select_tool(1)
 
 				# Verificar animación de producto a lo largo de la línea (18 emisores GPUParticles3D, sacos GLB reales y reacción a fallas/parada)
@@ -1590,6 +1608,9 @@ func _qa_10_main_scene_integration() -> void:
 					ok = _assert_true(sample_stream != null and sample_stream.emitting,
 						"Con línea sana y activa el flujo StreamBeltTrituradora debe emitir grano") and ok
 					# Inducir falla en banda_trituradora debe detener su flujo y bajar eficiencia de línea
+					var sm_rep := root.get_node_or_null("/root/SimulationManager")
+					if sm_rep != null and sm_rep.has_method("start_plant_machines"):
+						sm_rep.start_plant_machines()
 					glow_ctrl.set_hovered_machine_group("banda_trituradora")
 					player._select_tool(int(glow_ctrl.get_required_tool_for_action("banda_trituradora", false)))
 					player._handle_interaction()
@@ -1597,8 +1618,20 @@ func _qa_10_main_scene_integration() -> void:
 					var eff_fault: float = float(prod_flow.get_production_metrics().get("line_flow_efficiency", 1.0))
 					ok = _assert_true(sample_stream != null and not sample_stream.emitting and eff_fault < 0.99,
 						"Falla en banda_trituradora debe pausar su stream de grano y reducir eficiencia (eff=%.2f)" % eff_fault) and ok
+					# Intentar reparar con máquinas encendidas debe bloquearse y mostrar aviso
+					var prompt_running: String = String(glow_ctrl.get_hover_selection_prompt(int(glow_ctrl.get_required_tool_for_action("banda_trituradora", true))))
 					player._select_tool(int(glow_ctrl.get_required_tool_for_action("banda_trituradora", true)))
 					player._handle_interaction()
+					ok = _assert_true(glow_ctrl.is_machine_fault_active("banda_trituradora") and prompt_running.to_lower().contains("detén las máquinas"),
+						"Reparar banda_trituradora con máquinas encendidas debe bloquearse hasta detener las máquinas (prompt=%s)" % prompt_running) and ok
+					# Detener máquinas desde SimulationManager (Parar Máquinas) habilita la reparación
+					if sm_rep != null and sm_rep.has_method("set_emergency_stop"):
+						sm_rep.set_emergency_stop(true, "QA_TEST")
+					player._handle_interaction()
+					ok = _assert_true(not glow_ctrl.is_machine_fault_active("banda_trituradora"),
+						"Con máquinas detenidas la reparación de banda_trituradora debe completarse") and ok
+					if sm_rep != null and sm_rep.has_method("set_emergency_stop"):
+						sm_rep.set_emergency_stop(false, "QA_TEST")
 					glow_ctrl.set_hovered_machine_group("")
 					prod_flow.set_motor_rpm(0.0, 0.0)
 					prod_flow.step_production(0.05)
@@ -1615,12 +1648,36 @@ func _qa_10_main_scene_integration() -> void:
 				ok = _assert_true(far_grp == "cyclone" and glow_ctrl.get_group_state(far_grp) == "GREEN" and glow_ctrl.has_active_green_selection(),
 					"Apuntado remoto a ~20 m fuera de líneas de seguridad debe activar selección verde (grp=%s)" % far_grp) and ok
 				if far_grp == "cyclone":
+					var sm_cy := root.get_node_or_null("/root/SimulationManager")
 					var cy_fault_msg := String(glow_ctrl.induce_fault_for_hovered_machine(2))
 					ok = _assert_true(glow_ctrl.is_machine_fault_active("cyclone") and cy_fault_msg != "",
 						"Modo selección remoto (~20 m) debe inducir falla en ciclón sin cruzar líneas de seguridad") and ok
-					glow_ctrl.induce_fault_for_hovered_machine(5) # Restaurar con Kit LOTO
+					# Con máquinas encendidas NO debe permitir reparar el ciclón
+					glow_ctrl.induce_fault_for_hovered_machine(5)
+					ok = _assert_true(glow_ctrl.is_machine_fault_active("cyclone"),
+						"Reparación remota de ciclón debe bloquearse mientras las máquinas estén encendidas") and ok
+					# Detener máquinas -> reparar -> reanudar
+					if sm_cy != null and sm_cy.has_method("set_emergency_stop"):
+						sm_cy.set_emergency_stop(true, "QA_TEST")
+					glow_ctrl.induce_fault_for_hovered_machine(5) # Restaurar con Kit LOTO tras parar máquinas
 					ok = _assert_true(not glow_ctrl.is_machine_fault_active("cyclone"),
-						"Reparación remota (~20 m) en modo selección debe normalizar el ciclón") and ok
+						"Reparación remota (~20 m) en modo selección debe normalizar el ciclón tras detener las máquinas") and ok
+					if sm_cy != null and sm_cy.has_method("set_emergency_stop"):
+						sm_cy.set_emergency_stop(false, "QA_TEST")
+					# Regresión de reparación física directa (perno flojo bloqueado en marcha, permitido detenido)
+					var bolt_qa := inst.find_child("MechanicalBolt", true, false)
+					if bolt_qa != null and bolt_qa.has_method("interact"):
+						bolt_qa.set_loosened(true)
+						bolt_qa.interact(3)
+						var blocked_direct := bool(bolt_qa.get("is_loosened"))
+						if sm_cy != null and sm_cy.has_method("set_emergency_stop"):
+							sm_cy.set_emergency_stop(true, "QA_TEST")
+						bolt_qa.interact(3)
+						var repaired_direct := not bool(bolt_qa.get("is_loosened"))
+						if sm_cy != null and sm_cy.has_method("set_emergency_stop"):
+							sm_cy.set_emergency_stop(false, "QA_TEST")
+						ok = _assert_true(blocked_direct and repaired_direct,
+							"Reparación física directa (perno) también debe exigir detener máquinas antes de reparar") and ok
 				glow_ctrl.set_hovered_machine_group("")
 
 				var spatial_b := inst.find_child("SafetyZonesAndLighting", true, false)

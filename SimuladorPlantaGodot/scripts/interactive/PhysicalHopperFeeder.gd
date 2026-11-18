@@ -37,6 +37,9 @@ func interact(tool_id: int) -> String:
 	if tool_id != 3:
 		return "Usa la llave 3/4\" para operar la tolva."
 	if is_jammed or manual_gate_opening_pct > 120.0:
+		var sm := get_node_or_null("/root/SimulationManager")
+		if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+			return String(sm.notify_repair_blocked_machines_running("la tolva"))
 		clear_jam()
 		return "Tolva desatascada. Flujo normalizado a 0.8 kg/s."
 	else:

@@ -78,6 +78,10 @@ func interact(tool_id: int) -> String:
 
 	# Herramientas 2 (Alicates) o 3 (Llave 3/4") -> Manipulación física de palanca Breaker L3 (Brownout 340 V / Normal 460 V)
 	if tool_id in [2, 3]:
+		if not l3_active:
+			var sm := get_node_or_null("/root/SimulationManager")
+			if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+				return String(sm.notify_repair_blocked_machines_running("el breaker L3"))
 		toggle_breaker_l3()
 		if not l3_active:
 			return "Breaker L3 abierto. Bajón de tensión a 340 V."

@@ -959,7 +959,7 @@ func _setup_fixed_crosshair() -> void:
 
 func _on_prompt_updated(txt: String) -> void:
 	var low := txt.to_lower()
-	var is_fault := "reparar falla" in low or "[falla]" in low
+	var is_fault := "reparar falla" in low or "[falla]" in low or "para reparar" in low or "detén las máquinas" in low
 	var is_green_sel := (txt != "" and not is_fault)
 	# La cruz central es siempre blanca con borde fino negro y nunca cambia de color
 	if prompt_label != null:

@@ -48,6 +48,9 @@ func interact(tool_id: int) -> String:
 			return "El conductor " + phase_id + " ya está cortado."
 	elif tool_id == 5:
 		if is_cut:
+			var sm := get_node_or_null("/root/SimulationManager")
+			if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+				return String(sm.notify_repair_blocked_machines_running("el conductor " + phase_id))
 			repair_cable()
 			return "Conductor " + phase_id + " empalmado y aislado."
 		else:

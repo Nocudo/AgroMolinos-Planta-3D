@@ -19,6 +19,10 @@ func _ready() -> void:
 func interact(tool_id: int) -> String:
 	# Tool 3 = Llave fija 3/4"
 	if tool_id == 3:
+		if is_loosened:
+			var sm := get_node_or_null("/root/SimulationManager")
+			if sm != null and sm.has_method("are_machines_stopped") and not bool(sm.are_machines_stopped()):
+				return String(sm.notify_repair_blocked_machines_running("el perno de bancada"))
 		set_loosened(not is_loosened)
 		return "Perno " + ("aflojado." if is_loosened else "apretado.")
 	else:
