@@ -406,18 +406,20 @@ func _handle_interaction() -> void:
 			_emit_prompt("Soltar bulto")
 			return
 		if close_target.has_method("interact"):
+			var seq_before := _get_hud_notification_seq()
 			var result_msg: String = close_target.interact(active_tool_id)
 			var bus = get_node_or_null("/root/EventBus")
-			if bus != null and result_msg != "" and bus.has_signal("notification_posted"):
+			if bus != null and result_msg != "" and _get_hud_notification_seq() == seq_before and bus.has_signal("notification_posted"):
 				bus.notification_posted.emit("Acción", result_msg, "info")
 		return
 
 	var glow := _get_glow_controller()
 	if glow != null and glow.has_method("has_active_green_selection") and glow.has_active_green_selection():
 		_trigger_action_anim("interact", 1.1)
+		var seq_before_f := _get_hud_notification_seq()
 		var fault_msg: String = str(glow.induce_fault_for_hovered_machine(active_tool_id))
 		var bus_f = get_node_or_null("/root/EventBus")
-		if bus_f != null and fault_msg != "" and bus_f.has_signal("notification_posted"):
+		if bus_f != null and fault_msg != "" and _get_hud_notification_seq() == seq_before_f and bus_f.has_signal("notification_posted"):
 			bus_f.notification_posted.emit("Equipo", fault_msg, "info")
 		_update_ray_prompt()
 		return
@@ -427,21 +429,31 @@ func _handle_interaction() -> void:
 			return
 		_trigger_action_anim("interact", 1.1)
 		if close_target.has_method("interact"):
+			var seq_before2 := _get_hud_notification_seq()
 			var result_msg2: String = close_target.interact(active_tool_id)
 			var bus2 = get_node_or_null("/root/EventBus")
-			if bus2 != null and result_msg2 != "" and bus2.has_signal("notification_posted"):
+			if bus2 != null and result_msg2 != "" and _get_hud_notification_seq() == seq_before2 and bus2.has_signal("notification_posted"):
 				bus2.notification_posted.emit("Acción", result_msg2, "info")
 		return
 
 	# Si el jugador está dentro de la estación activa (3..12) y presiona [E] sin apuntar a otro equipo, avanzar de estación
 	var tut := get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
 	if tut != null and tut.has_method("try_advance_station_by_interact"):
+		var seq_before3 := _get_hud_notification_seq()
 		var adv_msg: String = String(tut.try_advance_station_by_interact())
 		if adv_msg != "":
 			_trigger_action_anim("interact", 1.1)
 			var bus3 = get_node_or_null("/root/EventBus")
-			if bus3 != null and bus3.has_signal("notification_posted"):
+			if bus3 != null and _get_hud_notification_seq() == seq_before3 and bus3.has_signal("notification_posted"):
 				bus3.notification_posted.emit("RECORRIDO GUIADO", adv_msg, "info")
+
+func _get_hud_notification_seq() -> int:
+	if not is_inside_tree():
+		return -1
+	var hud := get_tree().root.find_child("HUDController", true, false)
+	if hud != null and hud.has_method("get_notification_seq"):
+		return int(hud.get_notification_seq())
+	return -1
 
 func _physics_process(delta: float) -> void:
 	if is_on_floor():

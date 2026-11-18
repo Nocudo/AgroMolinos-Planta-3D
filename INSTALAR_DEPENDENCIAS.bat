@@ -110,7 +110,7 @@ echo.
 :: ----------------------------------------------------------------------------
 echo [5/5] Pre-importando modelos y texturas de baja resolucion en Godot...
 if defined GODOT_EXE (
-    "!GODOT_EXE!" --headless --import --path "%~dp0SimuladorPlantaGodot" >nul 2>&1
+    call "!GODOT_EXE!" --headless --import --path "%~dp0SimuladorPlantaGodot" >nul 2>&1
     echo       [OK] Cache de recursos de SimuladorPlantaGodot preparado.
 ) else (
     echo       [AVISO] Se omitio la pre-importacion porque Godot no estuvo disponible en esta sesion.
@@ -130,13 +130,24 @@ exit /b 0
 :: Subrutinas de deteccion
 :: ----------------------------------------------------------------------------
 :FIND_GODOT
-for /f "delims=" %%f in ('dir /b /s "%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine*\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
-    set "GODOT_EXE=%%f"
+for /d %%d in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine*") do (
+    for /f "delims=" %%f in ('dir /b /s "%%d\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
+        set "GODOT_EXE=%%f"
+        goto :eof
+    )
+)
+for /d %%d in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine*") do (
+    for /f "delims=" %%f in ('dir /b /s "%%d\Godot_v4.*win64_console.exe" 2^>nul') do (
+        set "GODOT_EXE=%%f"
+        goto :eof
+    )
+)
+if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links\godot.exe" (
+    set "GODOT_EXE=%LOCALAPPDATA%\Microsoft\WinGet\Links\godot.exe"
     goto :eof
 )
-where godot >nul 2>nul
-if %errorlevel% equ 0 (
-    set "GODOT_EXE=godot"
+for /f "delims=" %%g in ('where godot 2^>nul') do (
+    set "GODOT_EXE=%%g"
     goto :eof
 )
 if exist "%USERPROFILE%\.gemini\antigravity\bin\godot.cmd" (

@@ -230,9 +230,12 @@ var _live_sync_accum: float = 0.0
 var _custom_workers: Array[Dictionary] = []
 var _has_unread_warning: bool = false
 var _unread_warning_count: int = 0
+var _unread_warning_keys: Dictionary = {}
 var _active_warning_data: Dictionary = {}
 var _last_warning_key: String = ""
 var _last_warning_ms: int = -10000
+var _last_critical_notif_ms: int = -10000
+var _hazard_tablet_cooldown_ms: Dictionary = {}
 var _last_chime_ms: int = -10000
 
 # Handles UI internos Tab 1 (Monitoreo IoT)
@@ -832,6 +835,8 @@ func _connect_event_bus() -> void:
 		bus.golden_rule_step_completed.connect(_on_golden_step)
 	if bus.has_signal("notification_posted") and not bus.notification_posted.is_connected(_on_bus_notification_posted):
 		bus.notification_posted.connect(_on_bus_notification_posted)
+	if bus.has_signal("safety_line_crossed") and not bus.safety_line_crossed.is_connected(_on_safety_line_crossed_warning):
+		bus.safety_line_crossed.connect(_on_safety_line_crossed_warning)
 	if bus.has_signal("safety_violation_committed") and not bus.safety_violation_committed.is_connected(_on_safety_violation_warning):
 		bus.safety_violation_committed.connect(_on_safety_violation_warning)
 	if bus.has_signal("emergency_stop_triggered") and not bus.emergency_stop_triggered.is_connected(_on_emergency_stop_triggered):
@@ -865,6 +870,7 @@ func toggle_tablet() -> void:
 		if _has_unread_warning:
 			_has_unread_warning = false
 			_unread_warning_count = 0
+			_unread_warning_keys.clear()
 			_select_tab(0)
 		var bus = get_node_or_null("/root/EventBus")
 		if bus != null and bus.has_signal("tablet_notifications_cleared"):
@@ -1522,23 +1528,51 @@ func _clamp_str(raw: String, max_len: int) -> String:
 		return raw
 	return raw.substr(0, max_len - 3).strip_edges() + "..."
 
+func _normalize_warning_key(raw: String) -> String:
+	var s := raw.strip_edges().to_lower()
+	for rep in ["⚠", "⚡", "🔴", "🟡", "·", "•", "-", "_", ":", ".", ",", ";", "!", "?", "(", ")", "[", "]", "/"]:
+		s = s.replace(rep, " ")
+	s = s.replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+	while "  " in s:
+		s = s.replace("  ", " ")
+	return s.strip_edges()
+
 func _on_bus_notification_posted(title: String, message: String, severity: String) -> void:
 	var sev_low := severity.to_lower()
 	if sev_low != "warning" and sev_low != "error" and sev_low != "critical":
 		return
 	var norm_sev := "CRITICAL" if (sev_low == "error" or sev_low == "critical") else "WARNING"
+	if norm_sev == "CRITICAL":
+		_last_critical_notif_ms = Time.get_ticks_msec()
 	_push_tablet_warning(title, message, norm_sev)
 
+func _on_safety_line_crossed_warning(active: bool, zone_id: String, title: String, message: String) -> void:
+	if not active:
+		return
+	var now_ms := Time.get_ticks_msec()
+	var last_z := int(_hazard_tablet_cooldown_ms.get(zone_id, -999999))
+	if (now_ms - last_z) < 3500:
+		return
+	_hazard_tablet_cooldown_ms[zone_id] = now_ms
+	_push_tablet_warning(title, message, "CRITICAL")
+
 func _on_safety_violation_warning(_code: String, description: String, penalty: float) -> void:
+	var now_ms := Time.get_ticks_msec()
+	# Si acaba de entrar una notificación CRITICAL por el mismo evento en el mismo instante, fusionar la sanción sin duplicar alerta
+	if (now_ms - _last_critical_notif_ms) <= 800:
+		_append_blackbox("CRITICAL", "Penalización RETIE (-%.1f) · %s" % [absf(penalty), _clamp_str(description, 100)])
+		if _warning_banner_body != null and not _warning_banner_body.text.contains("RETIE"):
+			_warning_banner_body.text = _clamp_str(_warning_banner_body.text + " (RETIE -%.1f)" % absf(penalty), 120)
+		return
 	var title_txt := "Infracción RETIE · -%.1f" % absf(penalty)
 	_push_tablet_warning(title_txt, description, "CRITICAL")
 
 func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: String) -> void:
 	var now_ms := Time.get_ticks_msec()
-	var wkey := severity_norm + "|" + title_txt
-	if wkey == _last_warning_key and (now_ms - _last_warning_ms) < 2500:
+	var nkey := severity_norm + "|" + _normalize_warning_key(title_txt)
+	if nkey == _last_warning_key and (now_ms - _last_warning_ms) < 2500:
 		return
-	_last_warning_key = wkey
+	_last_warning_key = nkey
 	_last_warning_ms = now_ms
 
 	_append_blackbox(severity_norm, "%s · %s" % [title_txt, _clamp_str(detail_txt, 110)])
@@ -1572,17 +1606,21 @@ func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: 
 	var st_pill := "Falla crítica" if is_crit else "Alerta"
 	TTheme.set_badge_state(_header_status_panel, _header_status_lbl, st_pill, severity_norm)
 
+	if not visible:
+		if not _unread_warning_keys.has(nkey):
+			_unread_warning_keys[nkey] = true
+			_unread_warning_count += 1
+		_has_unread_warning = true
+
 	_active_warning_data = {
 		"title": title_txt,
 		"detail": detail_txt,
 		"severity": severity_norm,
 		"timestamp": Time.get_time_string_from_system(),
-		"unread_count": _unread_warning_count + 1
+		"unread_count": maxi(1, _unread_warning_count)
 	}
 
 	if not visible:
-		_unread_warning_count += 1
-		_has_unread_warning = true
 		var bus = get_node_or_null("/root/EventBus")
 		if bus != null and bus.has_signal("tablet_warning_received"):
 			bus.tablet_warning_received.emit(_active_warning_data)

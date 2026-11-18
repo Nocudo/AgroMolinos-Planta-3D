@@ -1758,6 +1758,34 @@ func _qa_10_main_scene_integration() -> void:
 								tips_card != null and n_cnt >= 2 and last_lbl != null and last_lbl.text == "Prueba B",
 								"Pila de notificaciones debe apilar sin emojis dejando la más actual abajo (cnt=%d, last=%s)" % [n_cnt, last_lbl.text if last_lbl != null else ""]
 							) and ok
+							# Regresión: Deduplicación estricta + alertas de tablet y línea de seguridad ancladas abajo-derecha (nunca arriba-centro)
+							var br_dock := hud_ctrl.find_child("BottomRightAlertsDock", true, false) as Control
+							var tab_leg := hud_ctrl.find_child("TabletNotifyLegend", true, false) as Control
+							var sl_ban := hud_ctrl.find_child("SafetyLineAlertBanner", true, false) as Control
+							var cnt_before_dup := notif_stack.get_child_count()
+							ev_bus.notification_posted.emit("⚠ prueba b!", "Mensaje B duplicado", "error")
+							var cnt_after_dup := notif_stack.get_child_count()
+							var unread_before_sv: int = int(tablet_root.get("_unread_warning_count")) if tablet_root != null else 0
+							ev_bus.safety_violation_committed.emit("QA_DEDUP", "Infracción simultánea a alerta crítica", 1.0)
+							var unread_after_sv: int = int(tablet_root.get("_unread_warning_count")) if tablet_root != null else 0
+							if spatial_b != null:
+								var cnt_before_sl := notif_stack.get_child_count()
+								spatial_b.evaluate_player_hazard_lines(Vector3(-25.0, 0.85, 38.0))
+								var cnt_after_sl := notif_stack.get_child_count()
+								var detail_hidden := not bool(hud_ctrl.get("_tablet_notify_detail").visible) if hud_ctrl.get("_tablet_notify_detail") != null else false
+								spatial_b.evaluate_player_hazard_lines(Vector3(-18.69, 0.85, 38.0))
+								ok = _assert_true(
+									cnt_after_sl == cnt_before_sl and detail_hidden,
+									"Cruzar línea de seguridad no debe duplicar tarjeta en NotificationStack (%d==%d) ni repetir título en TabletNotifyLegend (detail_hidden=%s)" % [cnt_after_sl, cnt_before_sl, str(detail_hidden)]
+								) and ok
+							ok = _assert_true(
+								br_dock != null and br_dock.anchor_left == 1.0 and br_dock.anchor_top == 1.0 and br_dock.offset_bottom <= -86.0
+								and tab_leg != null and tab_leg.get_parent() == br_dock
+								and sl_ban != null and sl_ban.get_parent() == br_dock
+								and cnt_after_dup == cnt_before_dup
+								and unread_after_sv == unread_before_sv,
+								"TabletNotifyLegend y SafetyLineAlertBanner deben residir en BottomRightAlertsDock sin duplicar notificaciones ni contador de tablet"
+							) and ok
 						# Regresión: Conversación interactiva con SST (Historia, Qué hacen, Misión, Visión) solo subtítulos sin voz
 						if tut_node != null:
 							var saved_skip := bool(tut_node.tutorial_skipped)

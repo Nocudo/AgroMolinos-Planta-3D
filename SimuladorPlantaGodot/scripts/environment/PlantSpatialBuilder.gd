@@ -844,15 +844,7 @@ func _set_zone_presence(zone_id: String, is_inside: bool) -> void:
 		if bus != null and bus.has_signal("safety_zone_entered"):
 			bus.safety_zone_entered.emit(zone_id, zone_name)
 		if HAZARD_LINE_ZONES.has(zone_id):
-			var hz: Dictionary = HAZARD_LINE_ZONES[zone_id]
-			var title: String = str(hz["title"])
-			var msg: String = str(hz["msg"])
-			var now_ms: int = Time.get_ticks_msec()
-			var last_ms: int = int(_hazard_alert_cooldown_ms.get(zone_id, -999999))
-			if now_ms - last_ms >= 2200:
-				_hazard_alert_cooldown_ms[zone_id] = now_ms
-				if bus != null and bus.has_signal("notification_posted"):
-					bus.notification_posted.emit(title, msg, "error")
+			# Emitir únicamente safety_line_crossed para evitar triple notificación duplicada en HUD/Tablet
 			_sync_safety_line_crossed_signal(bus)
 	else:
 		active_zones.erase(zone_id)
