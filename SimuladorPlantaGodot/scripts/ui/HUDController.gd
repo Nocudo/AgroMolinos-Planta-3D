@@ -84,6 +84,9 @@ func _ready() -> void:
 
 	if toast_panel != null:
 		toast_panel.visible = false
+	var top_scada := get_node_or_null("TopScadaBar") as Control
+	if top_scada != null:
+		top_scada.visible = false
 	if prompt_label != null:
 		prompt_label.text = ""
 		prompt_label.visible = false
@@ -561,8 +564,8 @@ func _setup_tablet_notify_legend() -> void:
 	_tablet_notify_legend.anchor_bottom = 0.0
 	_tablet_notify_legend.offset_left = -200.0
 	_tablet_notify_legend.offset_right = 200.0
-	_tablet_notify_legend.offset_top = 42.0
-	_tablet_notify_legend.offset_bottom = 86.0
+	_tablet_notify_legend.offset_top = 12.0
+	_tablet_notify_legend.offset_bottom = 56.0
 	_tablet_notify_legend.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_tablet_notify_legend)
 
@@ -666,8 +669,8 @@ func _setup_safety_line_banner() -> void:
 	_safety_line_banner.anchor_bottom = 0.0
 	_safety_line_banner.offset_left = -210.0
 	_safety_line_banner.offset_right = 210.0
-	_safety_line_banner.offset_top = 92.0
-	_safety_line_banner.offset_bottom = 132.0
+	_safety_line_banner.offset_top = 62.0
+	_safety_line_banner.offset_bottom = 102.0
 	_safety_line_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_safety_line_banner.grow_vertical = Control.GROW_DIRECTION_END
 	var st := StyleBoxFlat.new()
