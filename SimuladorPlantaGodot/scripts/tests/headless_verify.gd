@@ -1501,6 +1501,39 @@ func _qa_10_main_scene_integration() -> void:
 								locker_alpha_scissor_cnt, str(has_merged_mesh), str(has_merged_pulls), locker_shell_cnt
 							]) and ok
 
+					# Regresión: Pantalla de inducción minimalista + tips de controles y pila de notificaciones abajo-derecha sin solapamientos
+					if hud_ctrl != null:
+						var tips_card := hud_ctrl.find_child("ControlsTipsCard", true, false) as Control
+						var notif_stack := hud_ctrl.find_child("NotificationStack", true, false) as VBoxContainer
+						var b_title := hud_ctrl.find_child("BriefingTitle", true, false) as Label
+						var b_greet := hud_ctrl.find_child("BriefingGreeting", true, false) as Label
+						var b_yes := hud_ctrl.find_child("BtnCourseSST", true, false) as Button
+						var b_no := hud_ctrl.find_child("BtnStartTour", true, false) as Button
+						var b_skip := hud_ctrl.find_child("BtnSkipTutorial", true, false) as Button
+						var b_skip_h := hud_ctrl.find_child("BtnSkipTutorialHUD", true, false) as Button
+						hud_ctrl.show_briefing_panel("Bienvenido a Agromolinos del Valle", "¿Deseas realizar el curso SST?", true)
+						ok = _assert_true(
+							b_title != null and b_title.text == "Bienvenido a Agromolinos del Valle"
+							and b_greet != null and b_greet.text == "¿Deseas realizar el curso SST?"
+							and b_yes != null and b_yes.text == "Sí"
+							and b_no != null and b_no.text == "No"
+							and b_skip != null and b_skip.text == "Saltar tutorial"
+							and b_skip_h != null and b_skip_h.text == "Saltar tutorial",
+							"Briefing debe mostrar título/pregunta/botones limpios sin emojis ni [F9]"
+						) and ok
+						hud_ctrl.close_briefing_panel()
+						var ev_bus := root.get_node_or_null("/root/EventBus")
+						if ev_bus != null and notif_stack != null:
+							ev_bus.notification_posted.emit("⚠ Prueba A", "Mensaje A", "warning")
+							ev_bus.notification_posted.emit("⚡ Prueba B", "Mensaje B", "error")
+							var n_cnt := notif_stack.get_child_count()
+							var last_card := notif_stack.get_child(n_cnt - 1) as Control if n_cnt >= 2 else null
+							var last_lbl := last_card.find_children("*", "Label", true, false)[0] as Label if last_card != null else null
+							ok = _assert_true(
+								tips_card != null and n_cnt >= 2 and last_lbl != null and last_lbl.text == "Prueba B",
+								"Pila de notificaciones debe apilar sin emojis dejando la más actual abajo (cnt=%d, last=%s)" % [n_cnt, last_lbl.text if last_lbl != null else ""]
+							) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

@@ -248,8 +248,8 @@ func _post_welcome_message() -> void:
 			bus.induction_briefing_closed.connect(_on_briefing_closed)
 		if bus.has_signal("induction_briefing_requested"):
 			bus.induction_briefing_requested.emit(
-				"INDUCCIÓN RETIE · PORTERÍA",
-				"Bienvenido a AgroMolinos. Elige: Curso SST (+0.5 pt) o recorrido a Vestidores.",
+				"Bienvenido a Agromolinos del Valle",
+				"¿Deseas realizar el curso SST?",
 				true
 			)
 		elif bus.has_signal("notification_posted"):

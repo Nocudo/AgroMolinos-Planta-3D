@@ -51,6 +51,13 @@ var _safety_line_title: Label = null
 var _safety_line_detail: Label = null
 var _safety_line_pulse_t: float = 0.0
 var _hotbar_avatar = null
+var _controls_tips_card: PanelContainer = null
+var _notification_stack: VBoxContainer = null
+var _notification_entries: Array[Dictionary] = []
+
+const MAX_STACKED_NOTIFICATIONS: int = 5
+const NOTIFICATION_DURATION_S: float = 4.2
+const NOTIFICATION_FADE_S: float = 0.45
 
 func _ready() -> void:
 	# Mantener HUD activo durante pausas de inducción para recibir el clic / tecla de cierre
@@ -62,6 +69,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_mouse_filter_recursive(self)
 	_setup_hotbar_and_avatar()
+	_setup_controls_tips_card()
+	_setup_notification_stack()
 	_setup_dialogue_panel()
 	_setup_tablet_notify_legend()
 	_setup_safety_line_banner()
@@ -134,6 +143,7 @@ func _process(delta: float) -> void:
 		toast_timer -= delta
 		if toast_timer <= 0.0 and toast_panel != null:
 			toast_panel.visible = false
+	_update_notification_stack(delta)
 	if _dialogue_timer > 0.0:
 		_dialogue_timer -= delta
 		if _dialogue_timer <= 0.0 and _dialogue_panel != null:
@@ -146,6 +156,219 @@ func _process(delta: float) -> void:
 		_safety_line_pulse_t += delta * 7.5
 		var s_alpha := 0.80 + 0.20 * sin(_safety_line_pulse_t)
 		_safety_line_banner.modulate = Color(1.0, 1.0, 1.0, s_alpha)
+
+func _setup_controls_tips_card() -> void:
+	_controls_tips_card = PanelContainer.new()
+	_controls_tips_card.name = "ControlsTipsCard"
+	_controls_tips_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_controls_tips_card.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_controls_tips_card.anchor_left = 1.0
+	_controls_tips_card.anchor_right = 1.0
+	_controls_tips_card.anchor_top = 1.0
+	_controls_tips_card.anchor_bottom = 1.0
+	_controls_tips_card.offset_left = -296.0
+	_controls_tips_card.offset_right = -14.0
+	_controls_tips_card.offset_top = -78.0
+	_controls_tips_card.offset_bottom = -12.0
+	_controls_tips_card.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_controls_tips_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.04, 0.07, 0.12, 0.64)
+	st.border_color = Color(0.24, 0.42, 0.58, 0.40)
+	st.set_border_width_all(1)
+	st.set_corner_radius_all(7)
+	st.content_margin_left = 10.0
+	st.content_margin_right = 10.0
+	st.content_margin_top = 6.0
+	st.content_margin_bottom = 6.0
+	_controls_tips_card.add_theme_stylebox_override("panel", st)
+	add_child(_controls_tips_card)
+
+	var vb := VBoxContainer.new()
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_theme_constant_override("separation", 2)
+	_controls_tips_card.add_child(vb)
+
+	var hdr := Label.new()
+	hdr.name = "ControlsTipsHeader"
+	hdr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hdr.text = "Controles"
+	hdr.add_theme_font_size_override("font_size", 10)
+	hdr.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0, 0.92))
+	vb.add_child(hdr)
+
+	var rtl := RichTextLabel.new()
+	rtl.name = "ControlsTipsBody"
+	rtl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rtl.bbcode_enabled = true
+	rtl.fit_content = true
+	rtl.scroll_active = false
+	rtl.add_theme_font_size_override("normal_font_size", 10)
+	rtl.add_theme_font_size_override("bold_font_size", 10)
+	rtl.add_theme_color_override("default_color", Color(0.84, 0.90, 0.96, 0.88))
+	rtl.text = (
+		"[color=#7ee8c0][b]WASD[/b][/color] Mover  |  [color=#7ee8c0][b]Shift[/b][/color] Correr  |  [color=#7ee8c0][b]Espacio[/b][/color] Saltar\n"
+		+ "[color=#7ee8c0][b]E / Clic[/b][/color] Interactuar  |  [color=#7ee8c0][b]1-5 / Rueda[/b][/color] Herramientas\n"
+		+ "[color=#7ee8c0][b]TAB[/b][/color] Tablet  |  [color=#7ee8c0][b]X[/b][/color] E-Stop  |  [color=#7ee8c0][b]F11[/b][/color] Pantalla"
+	)
+	vb.add_child(rtl)
+
+func _setup_notification_stack() -> void:
+	_notification_stack = VBoxContainer.new()
+	_notification_stack.name = "NotificationStack"
+	_notification_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_notification_stack.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_notification_stack.anchor_left = 1.0
+	_notification_stack.anchor_right = 1.0
+	_notification_stack.anchor_top = 1.0
+	_notification_stack.anchor_bottom = 1.0
+	_notification_stack.offset_left = -296.0
+	_notification_stack.offset_right = -14.0
+	_notification_stack.offset_top = -360.0
+	_notification_stack.offset_bottom = -86.0
+	_notification_stack.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_notification_stack.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_notification_stack.alignment = BoxContainer.ALIGNMENT_END
+	_notification_stack.add_theme_constant_override("separation", 6)
+	add_child(_notification_stack)
+
+func _sanitize_plain_text(raw: String) -> String:
+	var s := raw.strip_edges()
+	# Eliminar símbolos/emojis decorativos para mantener notificaciones 100% texto limpio
+	var stripped := ""
+	for i in range(s.length()):
+		var ch := s[i]
+		var code := s.unicode_at(i)
+		# Conservar ASCII imprimible y caracteres latinos acentuados / signos de puntuación españoles (¿¡°·•–—)
+		if (code >= 32 and code <= 126) or (code >= 160 and code <= 255) or code in [0x2013, 0x2014]:
+			stripped += ch
+		elif code == 0x2022 or code == 0x00B7:
+			stripped += "-"
+	while "  " in stripped:
+		stripped = stripped.replace("  ", " ")
+	return stripped.strip_edges()
+
+func _compact_text(txt: String, max_len: int) -> String:
+	var clean := _sanitize_plain_text(txt)
+	if clean.length() <= max_len:
+		return clean
+	return clean.substr(0, max_len - 3).strip_edges() + "..."
+
+func _push_stacked_notification(title: String, message: String, severity: String) -> void:
+	if _notification_stack == null:
+		return
+	var clean_title := _compact_text(title, 36)
+	var clean_msg := _compact_text(message, 68)
+	if clean_title == "" and clean_msg == "":
+		return
+
+	# Deduplicar si la misma notificación ya está activa: actualizar y mover al fondo (más actual abajo)
+	for idx in range(_notification_entries.size()):
+		var entry: Dictionary = _notification_entries[idx]
+		if str(entry.get("key", "")) == clean_title:
+			var card_e := entry["card"] as PanelContainer
+			var msg_lbl := entry["msg_lbl"] as Label
+			if card_e != null and is_instance_valid(card_e):
+				if msg_lbl != null:
+					msg_lbl.text = clean_msg
+					msg_lbl.visible = (clean_msg != "")
+				card_e.modulate = Color.WHITE
+				entry["ttl"] = NOTIFICATION_DURATION_S
+				_notification_stack.move_child(card_e, _notification_stack.get_child_count() - 1)
+				_notification_entries.remove_at(idx)
+				_notification_entries.append(entry)
+				return
+
+	# Limitar pila para evitar saturación visual (retirar la más antigua arriba)
+	while _notification_entries.size() >= MAX_STACKED_NOTIFICATIONS:
+		var oldest: Dictionary = _notification_entries.pop_front()
+		var old_card := oldest.get("card") as Node
+		if old_card != null and is_instance_valid(old_card):
+			old_card.queue_free()
+
+	var accent := Color(0.26, 0.78, 0.96, 0.95)
+	var bg := Color(0.05, 0.08, 0.13, 0.82)
+	var sev_l := severity.to_lower()
+	if sev_l == "error" or sev_l == "critical":
+		accent = Color(0.95, 0.30, 0.28, 0.98)
+		bg = Color(0.14, 0.05, 0.06, 0.88)
+	elif sev_l == "warning":
+		accent = Color(0.98, 0.74, 0.18, 0.96)
+		bg = Color(0.12, 0.09, 0.04, 0.86)
+
+	var card := PanelContainer.new()
+	card.name = "NotifCard"
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var st := StyleBoxFlat.new()
+	st.bg_color = bg
+	st.border_width_left = 3
+	st.border_width_top = 1
+	st.border_width_right = 1
+	st.border_width_bottom = 1
+	st.border_color = accent
+	st.set_corner_radius_all(6)
+	st.content_margin_left = 9.0
+	st.content_margin_right = 9.0
+	st.content_margin_top = 5.0
+	st.content_margin_bottom = 5.0
+	card.add_theme_stylebox_override("panel", st)
+
+	var vb := VBoxContainer.new()
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_theme_constant_override("separation", 1)
+	card.add_child(vb)
+
+	var t_lbl := Label.new()
+	t_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t_lbl.text = clean_title
+	t_lbl.clip_text = true
+	t_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	t_lbl.add_theme_font_size_override("font_size", 11)
+	t_lbl.add_theme_color_override("font_color", accent)
+	vb.add_child(t_lbl)
+
+	var m_lbl := Label.new()
+	m_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	m_lbl.text = clean_msg
+	m_lbl.visible = (clean_msg != "")
+	m_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	m_lbl.add_theme_font_size_override("font_size", 10)
+	m_lbl.add_theme_color_override("font_color", Color(0.90, 0.94, 0.98, 0.94))
+	vb.add_child(m_lbl)
+
+	# Añadir al final del VBoxContainer con alignment=END coloca siempre la más actual abajo
+	_notification_stack.add_child(card)
+	_notification_entries.append({
+		"key": clean_title,
+		"card": card,
+		"msg_lbl": m_lbl,
+		"ttl": NOTIFICATION_DURATION_S
+	})
+
+func _update_notification_stack(delta: float) -> void:
+	if _notification_entries.is_empty():
+		return
+	var i := _notification_entries.size() - 1
+	while i >= 0:
+		var entry: Dictionary = _notification_entries[i]
+		var card := entry.get("card") as PanelContainer
+		if card == null or not is_instance_valid(card):
+			_notification_entries.remove_at(i)
+			i -= 1
+			continue
+		var ttl: float = float(entry.get("ttl", 0.0)) - delta
+		entry["ttl"] = ttl
+		if ttl <= 0.0:
+			card.queue_free()
+			_notification_entries.remove_at(i)
+		elif ttl < NOTIFICATION_FADE_S:
+			card.modulate = Color(1.0, 1.0, 1.0, clampf(ttl / NOTIFICATION_FADE_S, 0.0, 1.0))
+		i -= 1
+
+func get_active_notification_count() -> int:
+	return _notification_entries.size()
 
 func _setup_hotbar_and_avatar() -> void:
 	var legacy_bar := get_node_or_null("BottomBar") as Control
@@ -197,10 +420,10 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_dialogue_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_dialogue_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_dialogue_panel.offset_left = 28.0
-	_dialogue_panel.offset_right = -28.0
+	_dialogue_panel.offset_left = 316.0
+	_dialogue_panel.offset_right = -316.0
 	_dialogue_panel.offset_bottom = -154.0
-	_dialogue_panel.offset_top = -230.0
+	_dialogue_panel.offset_top = -222.0
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color(0.05, 0.09, 0.15, 0.90)
 	st.border_color = Color(1.0, 0.80, 0.22, 0.92)
@@ -264,7 +487,7 @@ func _setup_tablet_notify_legend() -> void:
 
 	_tablet_notify_badge_lbl = Label.new()
 	_tablet_notify_badge_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tablet_notify_badge_lbl.text = "▲ TABLET"
+	_tablet_notify_badge_lbl.text = "TABLET"
 	_tablet_notify_badge_lbl.add_theme_font_size_override("font_size", 11)
 	_tablet_notify_badge.add_child(_tablet_notify_badge_lbl)
 
@@ -277,7 +500,7 @@ func _setup_tablet_notify_legend() -> void:
 	_tablet_notify_title = Label.new()
 	_tablet_notify_title.name = "TabletLegendTitle"
 	_tablet_notify_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tablet_notify_title.text = "NOTIFICACIÓN NUEVA · [TAB]"
+	_tablet_notify_title.text = "NOTIFICACIÓN NUEVA - [TAB]"
 	_tablet_notify_title.add_theme_font_size_override("font_size", 11)
 	_tablet_notify_title.add_theme_color_override("font_color", Color(1.0, 0.86, 0.30, 1.0))
 	txt_vb.add_child(_tablet_notify_title)
@@ -329,9 +552,9 @@ func _on_tablet_warning_received(warning_data: Dictionary) -> void:
 	_tablet_notify_is_crit = (sev == "CRITICAL")
 	_apply_tablet_legend_style(_tablet_notify_is_crit)
 	var unread := int(warning_data.get("unread_count", 1))
-	_tablet_notify_badge_lbl.text = "■ (%d)" % unread if _tablet_notify_is_crit else "▲ (%d)" % unread
-	_tablet_notify_title.text = "NOTIFICACIÓN NUEVA (%d) · [TAB]" % unread
-	_tablet_notify_detail.text = str(warning_data.get("title", "Alerta"))
+	_tablet_notify_badge_lbl.text = "CRIT (%d)" % unread if _tablet_notify_is_crit else "ALERTA (%d)" % unread
+	_tablet_notify_title.text = "NOTIFICACIÓN NUEVA (%d) - [TAB]" % unread
+	_tablet_notify_detail.text = _sanitize_plain_text(str(warning_data.get("title", "Alerta")))
 	_tablet_notify_pulse_t = 0.0
 	_tablet_notify_legend.modulate = Color.WHITE
 	_tablet_notify_legend.visible = true
@@ -378,7 +601,7 @@ func _setup_safety_line_banner() -> void:
 	_safety_line_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_safety_line_title.add_theme_font_size_override("font_size", 11)
 	_safety_line_title.add_theme_color_override("font_color", Color(1.0, 0.35, 0.30, 1.0))
-	_safety_line_title.text = "⚠ LÍNEA DE SEGURIDAD"
+	_safety_line_title.text = "LINEA DE SEGURIDAD"
 	vb.add_child(_safety_line_title)
 
 	_safety_line_detail = Label.new()
@@ -397,9 +620,9 @@ func _on_safety_line_crossed(active: bool, _zone_id: String, title: String, mess
 	_safety_line_banner.visible = active
 	if active:
 		if _safety_line_title != null and title != "":
-			_safety_line_title.text = title
+			_safety_line_title.text = _sanitize_plain_text(title)
 		if _safety_line_detail != null and message != "":
-			_safety_line_detail.text = message
+			_safety_line_detail.text = _sanitize_plain_text(message)
 		_safety_line_pulse_t = 0.0
 		_safety_line_banner.modulate = Color.WHITE
 
@@ -472,19 +695,13 @@ func _on_safety_score_updated(current_score: float, _history: Array) -> void:
 		pass # Se muestra la nota en la Tablet [TAB] y toast de seguridad
 
 func _on_notification_posted(title: String, message: String, severity: String) -> void:
-	if toast_panel == null: return
-	toast_title.text = title
-	toast_msg.text = message
-
-	if severity == "error":
-		toast_panel.self_modulate = Color(1.0, 0.25, 0.25, 0.95)
-	elif severity == "warning":
-		toast_panel.self_modulate = Color(1.0, 0.75, 0.2, 0.95)
-	else:
-		toast_panel.self_modulate = Color(0.2, 0.75, 1.0, 0.95)
-
-	toast_panel.visible = true
-	toast_timer = 3.0
+	if toast_panel != null:
+		toast_panel.visible = false
+	if toast_title != null:
+		toast_title.text = _compact_text(title, 36)
+	if toast_msg != null:
+		toast_msg.text = _compact_text(message, 68)
+	_push_stacked_notification(title, message, severity)
 
 func is_briefing_visible() -> bool:
 	return briefing_overlay != null and briefing_overlay.visible
@@ -495,17 +712,25 @@ func show_briefing_panel(title: String, greeting: String, resume_tour_on_close: 
 	_briefing_resume_tour = resume_tour_on_close
 	_briefing_opened_ms = Time.get_ticks_msec()
 	if _briefing_title != null:
-		_briefing_title.text = title
+		_briefing_title.text = (
+			"Bienvenido a Agromolinos del Valle"
+			if resume_tour_on_close
+			else _sanitize_plain_text(title)
+		)
 	if _briefing_greeting != null:
-		_briefing_greeting.text = greeting
+		_briefing_greeting.text = (
+			"¿Deseas realizar el curso SST?"
+			if resume_tour_on_close
+			else _sanitize_plain_text(greeting)
+		)
 	if _btn_course_sst != null:
 		_btn_course_sst.visible = resume_tour_on_close
+		_btn_course_sst.text = "Sí"
 	if _btn_close_briefing != null:
-		_btn_close_briefing.text = (
-			"▶  Directo al Recorrido  [E / Espacio]"
-			if resume_tour_on_close
-			else "▶  Continuar Simulación  [E / Espacio]"
-		)
+		_btn_close_briefing.text = "No" if resume_tour_on_close else "Continuar"
+	if _btn_skip_briefing != null:
+		_btn_skip_briefing.visible = resume_tour_on_close
+		_btn_skip_briefing.text = "Saltar tutorial"
 	briefing_overlay.visible = true
 	if resume_tour_on_close and _btn_course_sst != null:
 		_btn_course_sst.grab_focus()
@@ -554,83 +779,43 @@ func _setup_briefing_overlay() -> void:
 
 	var card := PanelContainer.new()
 	card.name = "BriefingCard"
-	card.custom_minimum_size = Vector2(900, 0)
+	card.custom_minimum_size = Vector2(460, 0)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.add_theme_stylebox_override("panel", _build_briefing_panel_style())
 	center.add_child(card)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 12)
+	vbox.add_theme_constant_override("separation", 14)
 	card.add_child(vbox)
-
-	var badge := Label.new()
-	badge.text = "INDUCCIÓN RETIE · AGROMOLINOS 10 HP"
-	badge.add_theme_font_size_override("font_size", 11)
-	badge.add_theme_color_override("font_color", Color(0.25, 0.92, 0.65, 1.0))
-	vbox.add_child(badge)
 
 	_briefing_title = Label.new()
 	_briefing_title.name = "BriefingTitle"
-	_briefing_title.add_theme_font_size_override("font_size", 20)
-	_briefing_title.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
+	_briefing_title.text = "Bienvenido a Agromolinos del Valle"
+	_briefing_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_briefing_title.add_theme_font_size_override("font_size", 21)
+	_briefing_title.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
 	vbox.add_child(_briefing_title)
 
 	_briefing_greeting = Label.new()
 	_briefing_greeting.name = "BriefingGreeting"
+	_briefing_greeting.text = "¿Deseas realizar el curso SST?"
+	_briefing_greeting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_briefing_greeting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_briefing_greeting.add_theme_font_size_override("font_size", 13)
+	_briefing_greeting.add_theme_font_size_override("font_size", 15)
 	_briefing_greeting.add_theme_color_override("font_color", Color(0.84, 0.90, 0.96, 1.0))
 	vbox.add_child(_briefing_greeting)
 
-	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 14)
-	vbox.add_child(cols)
-
-	cols.add_child(_build_briefing_column(
-		"CONTROLES",
-		"[color=#48e5a8][b]WASD[/b][/color] Mover  •  [color=#48e5a8][b]Shift[/b][/color] Correr  •  [color=#48e5a8][b]Espacio[/b][/color] Saltar\n"
-		+ "[color=#48e5a8][b]E / Clic[/b][/color] Interactuar, puertas y EPP\n"
-		+ "[color=#48e5a8][b]1–5[/b][/color] Herramientas: Manos, Alicates, Llave, Multímetro, LOTO\n"
-		+ "[color=#48e5a8][b]TAB[/b][/color] Tablet SCADA  •  [color=#48e5a8][b]X[/b][/color] E-Stop  •  [color=#48e5a8][b]F11[/b][/color] Pantalla"
-	))
-	cols.add_child(_build_briefing_column(
-		"SEGURIDAD RETIE",
-		"[color=#ffd15c][b]1. Vestidores:[/b][/color] Ropa y 6 EPP en lockers.\n"
-		+ "[color=#ffd15c][b]2. Puertas:[/b][/color] Abre y cierra con [b][E][/b].\n"
-		+ "[color=#ffd15c][b]3. 5 Reglas LOTO:[/b][/color] En CCM con [4] Multímetro y [5] LOTO.\n"
-		+ "[color=#ffd15c][b]4. Fallas / Selección:[/b][/color] Rojo: falla activa. Verde: a distancia.\n"
-		+ "[color=#ffd15c][b]5. Tablet [TAB]:[/b][/color] Telemetría, IA, cámaras y nota RETIE."
-	))
-
-	var hint := Label.new()
-	hint.text = "Elige una opción:"
-	hint.add_theme_font_size_override("font_size", 11)
-	hint.add_theme_color_override("font_color", Color(0.70, 0.84, 0.94, 1.0))
-	vbox.add_child(hint)
-
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 10)
-	footer.alignment = BoxContainer.ALIGNMENT_END
+	footer.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(footer)
-
-	_btn_skip_briefing = Button.new()
-	_btn_skip_briefing.name = "BtnSkipTutorial"
-	_btn_skip_briefing.text = "⏭  Saltar [F9]"
-	_btn_skip_briefing.custom_minimum_size = Vector2(160, 38)
-	_btn_skip_briefing.mouse_filter = Control.MOUSE_FILTER_STOP
-	_btn_skip_briefing.add_theme_font_size_override("font_size", 12)
-	_btn_skip_briefing.add_theme_stylebox_override("normal", _build_briefing_button_style(Color(0.32, 0.20, 0.06, 1.0), Color(0.98, 0.72, 0.22, 1.0)))
-	_btn_skip_briefing.add_theme_stylebox_override("hover", _build_briefing_button_style(Color(0.45, 0.28, 0.08, 1.0), Color(1.0, 0.84, 0.38, 1.0)))
-	_btn_skip_briefing.add_theme_stylebox_override("focus", _build_briefing_button_style(Color(0.40, 0.24, 0.07, 1.0), Color(1.0, 0.84, 0.38, 1.0)))
-	_btn_skip_briefing.pressed.connect(_on_skip_tutorial_pressed)
-	footer.add_child(_btn_skip_briefing)
 
 	_btn_course_sst = Button.new()
 	_btn_course_sst.name = "BtnCourseSST"
-	_btn_course_sst.text = "★  Curso SST (+0.5 pt) [C]"
-	_btn_course_sst.custom_minimum_size = Vector2(230, 38)
+	_btn_course_sst.text = "Sí"
+	_btn_course_sst.custom_minimum_size = Vector2(115, 38)
 	_btn_course_sst.mouse_filter = Control.MOUSE_FILTER_STOP
-	_btn_course_sst.add_theme_font_size_override("font_size", 12)
+	_btn_course_sst.add_theme_font_size_override("font_size", 13)
 	_btn_course_sst.add_theme_stylebox_override("normal", _build_briefing_button_style(Color(0.06, 0.34, 0.44, 1.0), Color(0.24, 0.88, 0.98, 1.0)))
 	_btn_course_sst.add_theme_stylebox_override("hover", _build_briefing_button_style(Color(0.10, 0.46, 0.58, 1.0), Color(0.45, 0.96, 1.0, 1.0)))
 	_btn_course_sst.add_theme_stylebox_override("focus", _build_briefing_button_style(Color(0.08, 0.40, 0.52, 1.0), Color(0.45, 0.96, 1.0, 1.0)))
@@ -639,8 +824,8 @@ func _setup_briefing_overlay() -> void:
 
 	_btn_close_briefing = Button.new()
 	_btn_close_briefing.name = "BtnStartTour"
-	_btn_close_briefing.text = "[E] Iniciar Recorrido"
-	_btn_close_briefing.custom_minimum_size = Vector2(210, 38)
+	_btn_close_briefing.text = "No"
+	_btn_close_briefing.custom_minimum_size = Vector2(115, 38)
 	_btn_close_briefing.mouse_filter = Control.MOUSE_FILTER_STOP
 	_btn_close_briefing.add_theme_font_size_override("font_size", 13)
 	_btn_close_briefing.add_theme_stylebox_override("normal", _build_briefing_button_style(Color(0.08, 0.45, 0.34, 1.0), Color(0.25, 0.95, 0.65, 1.0)))
@@ -648,6 +833,18 @@ func _setup_briefing_overlay() -> void:
 	_btn_close_briefing.add_theme_stylebox_override("focus", _build_briefing_button_style(Color(0.10, 0.52, 0.38, 1.0), Color(0.45, 1.0, 0.75, 1.0)))
 	_btn_close_briefing.pressed.connect(close_briefing_panel)
 	footer.add_child(_btn_close_briefing)
+
+	_btn_skip_briefing = Button.new()
+	_btn_skip_briefing.name = "BtnSkipTutorial"
+	_btn_skip_briefing.text = "Saltar tutorial"
+	_btn_skip_briefing.custom_minimum_size = Vector2(145, 38)
+	_btn_skip_briefing.mouse_filter = Control.MOUSE_FILTER_STOP
+	_btn_skip_briefing.add_theme_font_size_override("font_size", 12)
+	_btn_skip_briefing.add_theme_stylebox_override("normal", _build_briefing_button_style(Color(0.32, 0.20, 0.06, 1.0), Color(0.98, 0.72, 0.22, 1.0)))
+	_btn_skip_briefing.add_theme_stylebox_override("hover", _build_briefing_button_style(Color(0.45, 0.28, 0.08, 1.0), Color(1.0, 0.84, 0.38, 1.0)))
+	_btn_skip_briefing.add_theme_stylebox_override("focus", _build_briefing_button_style(Color(0.40, 0.24, 0.07, 1.0), Color(1.0, 0.84, 0.38, 1.0)))
+	_btn_skip_briefing.pressed.connect(_on_skip_tutorial_pressed)
+	footer.add_child(_btn_skip_briefing)
 
 func _setup_retie_course_modal() -> void:
 	if RetieCourseModalScript == null:
@@ -727,16 +924,16 @@ func _build_briefing_button_style(bg: Color, border: Color) -> StyleBoxFlat:
 func _setup_skip_tutorial_hud_button() -> void:
 	_btn_skip_hud = Button.new()
 	_btn_skip_hud.name = "BtnSkipTutorialHUD"
-	_btn_skip_hud.text = "⏭ Saltar Tutorial [F9]"
+	_btn_skip_hud.text = "Saltar tutorial"
 	_btn_skip_hud.mouse_filter = Control.MOUSE_FILTER_STOP
 	_btn_skip_hud.anchor_left = 0.0
 	_btn_skip_hud.anchor_right = 0.0
 	_btn_skip_hud.anchor_top = 0.0
 	_btn_skip_hud.anchor_bottom = 0.0
 	_btn_skip_hud.offset_left = 14.0
-	_btn_skip_hud.offset_right = 210.0
+	_btn_skip_hud.offset_right = 156.0
 	_btn_skip_hud.offset_top = 10.0
-	_btn_skip_hud.offset_bottom = 42.0
+	_btn_skip_hud.offset_bottom = 40.0
 	_btn_skip_hud.add_theme_font_size_override("font_size", 12)
 	_btn_skip_hud.add_theme_stylebox_override("normal", _build_briefing_button_style(Color(0.24, 0.16, 0.05, 0.88), Color(0.98, 0.72, 0.22, 0.92)))
 	_btn_skip_hud.add_theme_stylebox_override("hover", _build_briefing_button_style(Color(0.38, 0.24, 0.07, 0.96), Color(1.0, 0.85, 0.35, 1.0)))
