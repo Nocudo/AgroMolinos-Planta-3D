@@ -520,28 +520,25 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 		_hotbar_avatar.set_epp_equipped(all_equipped, true)
 	if all_equipped:
 		show_npc_dialogue(
-			"SUPERVISOR SST",
-			"EPP equipado (lockers). Avanza a Esclusa Norte.",
-			3.5
+			"Carlos Mendoza (Supervisor SST):",
+			"Perfecto, ya quedaste bien equipado con tu protección. Ahora sí podemos pasar hacia la esclusa norte.",
+			5.0
 		)
-	elif _dialogue_panel != null:
+	elif _dialogue_panel != null and not _dialogue_keep_open:
 		_dialogue_panel.visible = false
 
-func show_npc_dialogue(speaker: String, dialogue_text: String, duration: float = 9.0) -> void:
+func show_npc_dialogue(speaker: String, dialogue_text: String, duration: float = 7.5) -> void:
 	if _dialogue_panel == null:
 		return
+	var clean_spk := _sanitize_plain_text(speaker)
+	if clean_spk != "" and not clean_spk.ends_with(":"):
+		clean_spk += ":"
 	if _dialogue_speaker != null:
-		_dialogue_speaker.text = _sanitize_plain_text(speaker)
+		_dialogue_speaker.text = clean_spk
 	if _dialogue_body != null:
 		_dialogue_body.text = _sanitize_plain_text(dialogue_text)
-	# El panel inferior solo se muestra durante la conversación interactiva de subtítulos con el SST;
-	# la ubicación actual en tiempo real siempre se muestra arriba al centro en LocationTopBanner.
-	if _dialogue_keep_open:
-		_dialogue_panel.visible = true
-		_dialogue_timer = duration
-	else:
-		_dialogue_panel.visible = false
-		_dialogue_timer = 0.0
+	_dialogue_panel.visible = true
+	_dialogue_timer = duration
 
 func set_dialogue_choices(options: Array, active_id: String, asked_ids: Array, callback: Callable) -> void:
 	if _dialogue_choices_row == null:
@@ -618,21 +615,24 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_dialogue_panel.offset_left = 316.0
 	_dialogue_panel.offset_right = -316.0
-	_dialogue_panel.offset_bottom = -154.0
-	_dialogue_panel.offset_top = -238.0
+	_dialogue_panel.offset_bottom = -152.0
+	_dialogue_panel.offset_top = -214.0
 	var st := StyleBoxFlat.new()
-	st.bg_color = Color(0.05, 0.09, 0.15, 0.90)
-	st.border_color = Color(1.0, 0.80, 0.22, 0.92)
-	st.set_border_width_all(2)
-	st.set_corner_radius_all(10)
-	st.set_content_margin_all(12)
+	st.bg_color = Color(0.04, 0.07, 0.12, 0.86)
+	st.border_color = Color(0.28, 0.55, 0.78, 0.65)
+	st.set_border_width_all(1)
+	st.set_corner_radius_all(8)
+	st.content_margin_left = 14.0
+	st.content_margin_right = 14.0
+	st.content_margin_top = 8.0
+	st.content_margin_bottom = 8.0
 	_dialogue_panel.add_theme_stylebox_override("panel", st)
 	add_child(_dialogue_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", 4)
 	_dialogue_panel.add_child(vbox)
 
 	_dialogue_speaker = Label.new()
@@ -640,8 +640,8 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_speaker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dialogue_speaker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dialogue_speaker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dialogue_speaker.add_theme_font_size_override("font_size", 13)
-	_dialogue_speaker.add_theme_color_override("font_color", Color(1.0, 0.85, 0.28, 1.0))
+	_dialogue_speaker.add_theme_font_size_override("font_size", 12)
+	_dialogue_speaker.add_theme_color_override("font_color", Color(0.98, 0.84, 0.36, 1.0))
 	vbox.add_child(_dialogue_speaker)
 
 	_dialogue_body = Label.new()
@@ -651,7 +651,7 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dialogue_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dialogue_body.add_theme_font_size_override("font_size", 14)
-	_dialogue_body.add_theme_color_override("font_color", Color(0.95, 0.97, 1.0, 1.0))
+	_dialogue_body.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
 	vbox.add_child(_dialogue_body)
 
 	_dialogue_choices_row = HBoxContainer.new()

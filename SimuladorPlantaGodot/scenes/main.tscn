@@ -108,7 +108,7 @@ transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -20.48, 0.8, 36.2)
 [node name="WorkerSafetyAuditor" parent="PlantStaff" instance=ExtResource("11_safety")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 48.8, 0.02, 34.0)
 is_tour_guide = true
-worker_dialogue = "¡Bienvenido a AgroMolinos del Valle S.A.! Soy tu Inspector SST guía. Sigue la ruta exterior de bienvenida hacia los Vestidores (Estación 2) para vestirte con tu ropa ignífuga y EPP antes de recorrer la nave de molienda."
+worker_dialogue = "Hola, bienvenido a Agromolinos del Valle. Soy Carlos, supervisor SST; sígueme hacia los vestidores para que te pongas tu equipo de protección antes de entrar a la planta."
 
 [node name="WorkerLogistics" parent="PlantStaff" instance=ExtResource("12_logistics")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -20.2, 0.80, 27.5)

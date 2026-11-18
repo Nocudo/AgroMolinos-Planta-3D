@@ -122,12 +122,29 @@ const SST_COMPANY_TOPICS: Array[Dictionary] = [
 	}
 ]
 
+const SST_SPEAKER_HEADER: String = "Carlos Mendoza (Supervisor SST):"
+
+const STATION_NATURAL_SPEECH: Dictionary = {
+	1: "Bienvenido a la portería. Cuando estés listo vamos avanzando hacia la planta.",
+	2: "Ya estamos en los vestidores. Tu ropa y el equipo de protección están en los lockers verdes de enfrente.",
+	3: "Esta es la esclusa norte de ingreso. Desde aquí entramos al pasillo peatonal de la nave de producción.",
+	4: "Aquí está el tablero eléctrico de 460 voltios. Antes de tocarlo siempre aplicamos las cinco reglas de oro y bloqueo LOTO.",
+	5: "Este es nuestro motor principal de 10 caballos que mueve la trituradora. Siempre vigilamos su corriente, temperatura y vibración.",
+	6: "Por aquí entra el grano desde la tolva hacia las bandas y el secador rotatorio para dejarlo seco antes de moler.",
+	7: "En esta zona trabajan los ciclones separando el polvo fino. Como hay polvo combustible, cuidamos mucho la ventilación.",
+	8: "Aquí vamos empacando el grano ya molido en sacos de 50 kilos, listos para salir a despacho.",
+	9: "Este pasillo verde es el camino seguro para circular por la nave sin acercarte de más a las máquinas.",
+	10: "Por esta rampa salimos hacia el patio exterior para revisar la zona de carga y la llegada de camiones.",
+	11: "Aquí afuera cargamos y despachamos los camiones. Siempre mantén buena distancia cuando estén maniobrando.",
+	12: "Con esto terminamos el recorrido por la planta. Ya puedes abrir la tablet cuando quieras para ver los datos o probar fallas."
+}
+
 # Líneas de apertura y transición de la conversación exterior (solo subtítulos)
 const EXTERIOR_NARRATION_SEGMENTS: Array[Dictionary] = [
 	{
 		"min_progress": 0.0,
 		"min_elapsed": 0.0,
-		"speaker": "Supervisor SST",
+		"speaker": "Carlos Mendoza (Supervisor SST):",
 		"text": "Acompáñame por el sendero. Mientras caminamos, elige un tema abajo si quieres preguntarme sobre Agromolinos del Valle."
 	}
 ]
@@ -448,8 +465,11 @@ func _process(delta: float) -> void:
 					_prompted_station_id = target_station_id
 					var hud = get_tree().root.find_child("HUDController", true, false)
 					if hud != null and hud.has_method("show_npc_dialogue"):
-						var action_hint := "[E] Avanzar (%d/12)" % (target_station_id + 1) if target_station_id < STATIONS.size() else "[E] Certificar (12/12)"
-						hud.show_npc_dialogue(st["title"].to_upper(), "%s · %s" % [st["desc"], action_hint], 10.0)
+						var action_hint := "Cuando quieras, presiona E para seguir." if target_station_id < STATIONS.size() else "Presiona E para cerrar el recorrido."
+						hud.show_npc_dialogue(SST_SPEAKER_HEADER, "%s %s" % [get_station_natural_speech(target_station_id), action_hint], 10.0)
+
+func get_station_natural_speech(station_id: int) -> String:
+	return str(STATION_NATURAL_SPEECH.get(station_id, "Seguimos recorriendo la planta con calma y precaución."))
 
 func is_ready_for_interact_advance() -> bool:
 	if is_briefing_active or not briefing_completed or not epp_completed:
@@ -503,14 +523,15 @@ func try_advance_station_by_interact() -> String:
 	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
 	if completed_id < STATIONS.size():
 		var next_st: Dictionary = STATIONS[target_station_id - 1]
-		var reply := "Avanzando hacia %s." % next_st["title"]
+		var next_clean: String = str(next_st["title"]).split(": ")[-1]
+		var reply := "Vamos hacia %s, sígueme." % next_clean
 		if hud != null and hud.has_method("show_npc_dialogue"):
-			hud.show_npc_dialogue("SUPERVISOR SST", "Avanza hacia %s." % next_st["title"], 3.5)
+			hud.show_npc_dialogue(SST_SPEAKER_HEADER, reply, 4.5)
 		return reply
 	_check_tour_completion()
-	var finish_msg := "Recorrido completado (12/12). Máquinas encendidas. Consulta Tablet [TAB]."
+	var finish_msg := "Listo, terminamos el recorrido y las máquinas ya están operando. Puedes abrir la tablet cuando quieras."
 	if hud != null and hud.has_method("show_npc_dialogue"):
-		hud.show_npc_dialogue("CERTIFICACIÓN (12/12)", finish_msg, 5.0)
+		hud.show_npc_dialogue(SST_SPEAKER_HEADER, finish_msg, 6.5)
 	return finish_msg
 
 func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
@@ -940,9 +961,9 @@ func skip_tutorial_to_final_station() -> Dictionary:
 			hud.refresh_skip_button_visibility()
 		if hud.has_method("show_npc_dialogue"):
 			hud.show_npc_dialogue(
-				"ESTACIÓN 12/12 · SCADA",
-				"Tutorial saltado. EPP equipado. Pulsa [TAB] o [E] para certificar.",
-				5.0
+				SST_SPEAKER_HEADER,
+				"Listo, ya tienes tu equipo puesto y la planta está en marcha. Puedes recorrerla libremente o abrir la tablet para monitorear todo.",
+				6.0
 			)
 
 	var bus = get_node_or_null("/root/EventBus")
@@ -1019,20 +1040,20 @@ func select_company_topic(topic_id: String) -> bool:
 
 	_conv_beat_queue.clear()
 	_conv_beat_queue.append({
-		"speaker": "Tú",
+		"speaker": "Tú:",
 		"text": str(chosen.get("question", "")),
 		"dur": 2.4
 	})
 	var beats: Array = chosen.get("beats", [])
 	for b_txt in beats:
 		_conv_beat_queue.append({
-			"speaker": "Supervisor SST",
+			"speaker": SST_SPEAKER_HEADER,
 			"text": str(b_txt),
 			"dur": 5.8
 		})
 	if _conv_asked_topics.size() >= SST_COMPANY_TOPICS.size():
 		_conv_beat_queue.append({
-			"speaker": "Supervisor SST",
+			"speaker": SST_SPEAKER_HEADER,
 			"text": "Ya conoces bien quiénes somos en Agromolinos del Valle. Sigamos adelante con el recorrido.",
 			"dur": 5.0
 		})
@@ -1051,7 +1072,7 @@ func _advance_conversation_beat() -> void:
 	_conv_beat_timer = dur
 	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
 	if hud != null and hud.has_method("show_npc_dialogue"):
-		hud.show_npc_dialogue(str(beat.get("speaker", "Supervisor SST")), str(beat.get("text", "")), dur + 1.0)
+		hud.show_npc_dialogue(str(beat.get("speaker", SST_SPEAKER_HEADER)), str(beat.get("text", "")), dur + 1.0)
 
 func _compute_exterior_walk_progress() -> float:
 	if _player_ref == null or not is_instance_valid(_player_ref):

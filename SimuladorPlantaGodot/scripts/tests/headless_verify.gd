@@ -1567,6 +1567,24 @@ func _qa_10_main_scene_integration() -> void:
 							and hud_ctrl.resolve_plant_location(Vector3(-36.0, 0.8, 35.0)) == "Zona de Aire y Térmica",
 							"LocationTopBanner centrado arriba debe resolver ubicaciones en tiempo real de toda la planta"
 						) and ok
+						# Regresión: Subtítulos encima de la hotbar con formato '[Nombre] ([Cargo]):' en lenguaje natural sin fugarse a NotificationStack
+						var w_elec := inst.find_child("WorkerElectrician", true, false)
+						var w_sst := inst.find_child("WorkerSafetyAuditor", true, false)
+						var dlg_p_sub := hud_ctrl.find_child("DialoguePanel", true, false) as Control
+						var dlg_s_sub := hud_ctrl.find_child("DialogueSpeaker", true, false) as Label
+						var notifs_before_w: int = hud_ctrl.get_active_notification_count()
+						if w_elec != null and w_elec.has_method("interact"):
+							w_elec.interact(1)
+						var notifs_after_w: int = hud_ctrl.get_active_notification_count()
+						ok = _assert_true(
+							w_elec != null and w_sst != null
+							and w_elec.get_subtitle_header() == "Andrés Rojas (Técnico Electromecánico):"
+							and w_sst.get_subtitle_header() == "Carlos Mendoza (Supervisor SST):"
+							and dlg_p_sub != null and dlg_p_sub.visible and dlg_p_sub.offset_bottom <= -150.0
+							and dlg_s_sub != null and dlg_s_sub.text == "Andrés Rojas (Técnico Electromecánico):"
+							and notifs_after_w == notifs_before_w,
+							"Subtítulos de trabajadores deben mostrarse encima de la hotbar como '[Nombre] ([Cargo]):' sin duplicarse en NotificationStack"
+						) and ok
 
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:

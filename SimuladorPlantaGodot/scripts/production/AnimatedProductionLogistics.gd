@@ -1069,7 +1069,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_pitch = 0.86
 		engine_vol = -7.5
 		spotter_anim = "inspect"
-		spotter_msg = "%s: Camión detenido sobre báscula verificando peso bruto y autorización de carga." % bay_label
+		spotter_msg = "Aquí estamos pesando el camión en la báscula antes de autorizar la carga."
 	elif u < u_dock_end:
 		phase = "TILTING_UNLOAD"
 		var local_p := (u - u_weigh_end) / maxf(u_dock_end - u_weigh_end, 0.001)
@@ -1077,7 +1077,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_pitch = 1.02 if is_intake else 0.88
 		engine_vol = -4.5 if is_intake else -7.0
 		spotter_anim = "interact" if sin(local_p * PI * 2.0) > 0.0 else "inspect"
-		spotter_msg = "%s: Descarga neumática/hidráulica de tolva activa (%.0f°)." % [bay_label, tilt_deg] if is_intake else "%s: Cargando estibas de 50 kg con montacargas." % bay_label
+		spotter_msg = "Estamos descargando el grano hacia la tolva, mantén distancia mientras baja la carga." if is_intake else "Estamos subiendo las estibas de sacos de 50 kilos al camión de despacho."
 	elif u < u_exit_end:
 		phase = "EXITING_STATION"
 		route_s = _trapezoid_u((u - u_dock_end) / maxf(u_exit_end - u_dock_end, 0.001), 0.10 if is_west_box else 0.12)
@@ -1090,7 +1090,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_pitch = 1.00 + 0.09 * sin(route_s * PI)
 		engine_vol = -2.5
 		spotter_anim = "idle"
-		spotter_msg = "%s: Camión saliendo a velocidad reglamentaria (<=10 km/h) hacia portería." % bay_label
+		spotter_msg = "El camión ya terminó aquí y va saliendo despacio rumbo a la portería."
 	elif u < u_transit_end:
 		phase = "EXTERIOR_TRANSIT"
 		route_s = _trapezoid_u((u - u_exit_end) / maxf(u_transit_end - u_exit_end, 0.001), 0.10)
@@ -1103,7 +1103,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_pitch = 1.04
 		engine_vol = -3.5
 		spotter_anim = "idle"
-		spotter_msg = "%s: Unidad realizando giro amplio exterior para ingreso controlado." % bay_label
+		spotter_msg = "El conductor está dando la vuelta afuera para volver a entrar con calma."
 	elif u < u_enter_end:
 		phase = "ENTERING_APPROACH"
 		route_s = _trapezoid_u((u - u_transit_end) / maxf(u_enter_end - u_transit_end, 0.001), 0.10 if is_west_box else 0.08)
@@ -1116,7 +1116,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_pitch = 1.04 - 0.06 * route_s
 		engine_vol = -2.5
 		spotter_anim = "inspect"
-		spotter_msg = "%s: Camión ingresando por calzada adoquinada a <=10 km/h hacia bahía." % bay_label
+		spotter_msg = "Viene entrando un camión por la calzada; quédate en la zona peatonal."
 	else:
 		phase = "REVERSING_TO_DOCK"
 		route_s = _trapezoid_u((u - u_enter_end) / maxf(u_rev_end - u_enter_end, 0.001), 0.14)

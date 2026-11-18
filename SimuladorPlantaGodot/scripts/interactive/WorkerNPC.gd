@@ -9,8 +9,9 @@ extends CharacterBody3D
 const HumanGaitAnimatorScript = preload("res://scripts/interactive/HumanGaitAnimator.gd")
 const InteractiveDoorScript = preload("res://scripts/interactive/InteractiveDoor.gd")
 
+@export var worker_person_name: String = ""
 @export var worker_role_name: String = "Trabajador Industrial"
-@export var worker_dialogue: String = "Operando en planta según normatividad RETIE y OSHA."
+@export var worker_dialogue: String = "Hola, por aquí seguimos pendientes de que todo trabaje seguro en la planta."
 @export var primary_animation: String = "idle"
 @export var secondary_animation: String = "inspect"
 @export var animation_switch_time: float = 6.0
@@ -48,6 +49,47 @@ func set_work_state(anim_name: String, look_target: Vector3, live_dialogue: Stri
 		worker_dialogue = live_dialogue
 	if _interact_anim_timer <= 0.0:
 		_play_locomotion_anim(anim_name, 0.25)
+
+func _resolve_person_name() -> String:
+	if not worker_person_name.strip_edges().is_empty():
+		return worker_person_name.strip_edges()
+	var nm := str(name)
+	var role_l := worker_role_name.to_lower()
+	if is_tour_guide or "safety" in nm.to_lower() or "sst" in role_l:
+		return "Carlos Mendoza"
+	if "electric" in nm.to_lower() or "electromec" in role_l:
+		return "Andrés Rojas"
+	if "manager" in nm.to_lower() or "jefe" in role_l:
+		return "Ing. Diana Morales"
+	if "muelle sur" in role_l or "south" in nm.to_lower():
+		return "Jorge Gómez"
+	if "oeste" in role_l or "west" in nm.to_lower():
+		return "Mateo Silva"
+	if "logistic" in nm.to_lower() or "almac" in role_l:
+		return "Luis Herrera"
+	return "Operario"
+
+func get_subtitle_header() -> String:
+	var pname := _resolve_person_name()
+	var cargo := _subtitle_role_title(worker_role_name)
+	return "%s (%s):" % [pname, cargo]
+
+func _subtitle_role_title(full_role: String) -> String:
+	var raw := full_role.strip_edges()
+	var low := raw.to_lower()
+	if "supervisor sst" in low or is_tour_guide:
+		return "Supervisor SST"
+	if "electromec" in low:
+		return "Técnico Electromecánico"
+	if "muelle sur" in low:
+		return "Auxiliar de Muelle Sur"
+	if "bahía oeste" in low or "bahia oeste" in low or "despacho" in low:
+		return "Auxiliar de Despacho"
+	if "almac" in low or "logíst" in low or "logist" in low:
+		return "Operario de Logística"
+	if "jefe de planta" in low:
+		return "Jefe de Planta"
+	return _compact_role_label(raw)
 
 func _compact_role_label(full_role: String) -> String:
 	var raw := full_role.strip_edges()
@@ -340,35 +382,29 @@ func _begin_arrival_explanation() -> void:
 		if ia != null:
 			ia.loop_mode = Animation.LOOP_NONE
 	var msg := worker_dialogue
-	var title := worker_role_name.to_upper()
+	var speaker_hdr := get_subtitle_header()
 	if is_inside_tree():
 		var tut = get_tree().root.find_child("TutorialInductionManager", true, false)
 		var hud = get_tree().root.find_child("HUDController", true, false)
 		if tut != null and bool(tut.get("sst_course_active")) and not bool(tut.get("sst_course_completed")):
-			title = "SALA DE REUNIONES — CURSO RÁPIDO SST (RETIE)"
-			msg = "Bienvenido a la Sala de Reuniones. Revisa los 3 módulos RETIE y completa el quiz simple (+0.5 pt). Puedes abrirlo con [E]."
+			msg = "Ya llegamos a la sala de reuniones. Cuando quieras revisar el curso rápido de seguridad, acércate a la mesa y presiona E."
 			if hud != null and hud.has_method("show_npc_dialogue"):
-				hud.show_npc_dialogue(title, msg, 12.0)
+				hud.show_npc_dialogue(speaker_hdr, msg, 9.5)
 		elif tut != null and "STATIONS" in tut and "target_station_id" in tut:
 			var sid := int(tut.target_station_id)
 			var sts: Array = tut.STATIONS
-			if sid >= 1 and sid <= sts.size():
-				title = str(sts[sid - 1].get("title", title)).to_upper()
-				msg = str(sts[sid - 1].get("desc", msg))
 			if sid == 2 and not bool(tut.get("epp_completed")):
+				msg = "Ya estamos en los vestidores. Tu ropa y el equipo de protección están en los lockers verdes de enfrente; acércate y presiona E para ponértelos."
 				if hud != null and hud.has_method("show_npc_dialogue"):
-					hud.show_npc_dialogue(
-						"SUPERVISOR SST — VESTIDORES EPP RETIE",
-						"Aquí tienes tu ropa ignífuga y las 6 prendas EPP dentro de los lockers verdes de enfrente. Acércate directamente a los lockers y presiona [E] mirando hacia ellos para equiparte.",
-						12.0
-					)
+					hud.show_npc_dialogue(speaker_hdr, msg, 10.0)
 			elif sid >= 3 and bool(tut.get("epp_completed")):
+				if tut.has_method("get_station_natural_speech"):
+					msg = str(tut.get_station_natural_speech(sid))
+				elif sid >= 1 and sid <= sts.size():
+					msg = str(sts[sid - 1].get("desc", msg))
 				if hud != null and hud.has_method("show_npc_dialogue"):
-					var step_cue := "Presiona [E] para avanzar a la Estación %d/12." % (sid + 1) if sid < sts.size() else "Presiona [E] para finalizar el recorrido RETIE (12/12)."
-					hud.show_npc_dialogue(title, "%s\n%s" % [msg, step_cue], 14.0)
-	var bus = get_node_or_null("/root/EventBus")
-	if bus != null and bus.has_signal("notification_posted"):
-		bus.notification_posted.emit(title, msg, "info")
+					var step_cue := "Cuando estés listo, presiona E y seguimos a la siguiente zona." if sid < sts.size() else "Presiona E cuando quieras cerrar el recorrido."
+					hud.show_npc_dialogue(speaker_hdr, "%s %s" % [msg, step_cue], 11.0)
 
 func _face_point(target_pos: Vector3, weight: float) -> void:
 	var dx := target_pos.x - global_position.x
@@ -444,25 +480,22 @@ func interact(_tool_id: int = 1) -> String:
 	if is_tour_guide and tut != null and tut.has_method("is_ready_for_interact_advance") and bool(tut.is_ready_for_interact_advance()):
 		return String(tut.try_advance_station_by_interact())
 	if is_tour_guide and tut != null and int(tut.get("target_station_id")) == 2 and not bool(tut.get("epp_completed")):
-		var locker_msg := "Tu ropa ignífuga y las 6 prendas EPP están dentro de los lockers verdes de enfrente. Apunta a los lockers y presiona [E] para equiparte."
+		var locker_msg := "Tu ropa y el equipo de protección están guardados en los lockers verdes de enfrente. Acércate a los lockers y presiona E para ponértelos."
 		var hud = get_tree().root.find_child("HUDController", true, false)
 		if hud != null and hud.has_method("show_npc_dialogue"):
-			hud.show_npc_dialogue("SUPERVISOR SST — VESTIDORES EPP RETIE", locker_msg, 12.0)
+			hud.show_npc_dialogue(get_subtitle_header(), locker_msg, 10.0)
 		if bus != null and bus.has_signal("induction_briefing_requested"):
-			bus.induction_briefing_requested.emit("VESTIDORES EPP — INDUMENTARIA EN LOS LOCKERS", locker_msg, false)
+			bus.induction_briefing_requested.emit("Vestidores EPP", locker_msg, false)
 		return locker_msg
 
 	if is_tour_guide and bus != null and bus.has_signal("induction_briefing_requested"):
 		var pending_start := (tut != null and not bool(tut.briefing_completed))
-		var title := "BIENVENIDA EN PORTERÍA — INSPECTOR SST" if pending_start else "PAUSA DEL INSPECTOR SST — CONTROLES Y MECÁNICAS"
+		var title := "Bienvenido a Agromolinos del Valle" if pending_start else "Supervisor SST"
 		bus.induction_briefing_requested.emit(title, worker_dialogue, pending_start)
 		return worker_dialogue
 
 	var hud_node = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
 	if hud_node != null and hud_node.has_method("show_npc_dialogue"):
-		hud_node.show_npc_dialogue(worker_role_name.to_upper(), worker_dialogue, 6.5)
-
-	if bus != null and bus.has_signal("notification_posted"):
-		bus.notification_posted.emit(worker_role_name.to_upper(), worker_dialogue, "info")
+		hud_node.show_npc_dialogue(get_subtitle_header(), worker_dialogue, 7.0)
 
 	return worker_dialogue
