@@ -6,7 +6,7 @@ description: Specialized Serious Game & Simulation Engine for the 'Máquinas El�
 # Simulación de Planta Industrial: Molino de Granos & Máquinas Eléctricas (Godot 4.7 Serious Game)
 
 Esta skill es la guía maestra de arquitectura, física electromecánica en GDScript 2.0, montaje espacial del modelo 3D descargado, suelo físico y colisiones, demarcación vial/zonificación de seguridad, iluminación fotorrealista PBR, **Modo Tutorial Interactivo (Spawn en portería, dotación EPP RETIE y 5 Reglas de Oro)**, **Cadena de Producción Secuencial Animada con Camiones de Carga**, **Optimización Energética (VFD vs DOL y Reducción de Huella de Carbono $\text{CO}_2\text{e}$)**, **Analítica IA (MLP 8-16-8-4, SVM RBF, MHI, RUL)**, **Telemetría 100% In-Game y Dashboard de IA en Tablet Industrial interactiva con la tecla [TAB] (Estrictamente SIN páginas web externas)**, **Terminal de Capacitación con Rúbrica Académica (0.0 a 5.0)**, interacción física diegética en 3D para el **Proyecto Final de Máquinas Eléctricas (Universidad de los Llanos - 2026-2)**:
-**Sector Asignado: Planta Molino de Granos** con **Motor Trifásico de Inducción Jaula de Ardilla (10 HP, 460 V, IE3)** accionado por VFD, transformado en un **Juego Serio Interactivo en Primera/Tercera Persona** bajo el paradigma de **Transición de Industria 4.0 a Industria 5.0**.
+**Sector Asignado: Planta Molino de Granos** con **Motor Trifásico de Inducción Jaula de Ardilla (10 HP, 460 V, IE3)** accionado por VFD, transformado en un **Juego Serio Interactivo en Primera Persona (Vulkan 1.3 Forward+)** bajo el paradigma de **Transición de Industria 4.0 a Industria 5.0**.
 **Repositorio Oficial en GitHub:** `https://github.com/Nocudo/AgroMolinos-Planta-3D`
 
 ---
@@ -90,9 +90,10 @@ Los valores derivan del archivo maestro del proyecto (`InductionMachineDTCData.m
 >      * **EL USUARIO LO DESCARGARÁ DE INTERNET Y LO COLOCARÁ EN LA CARPETA `Modelos descargados/`**.
 >      * Una vez el usuario confirme la adición en `Modelos descargados/`, el agente procederá a enlazarlo, optimizarlo y configurarlo en la escena de Godot 4.7.
 
-### 3.1 Modelo Maestro de la Planta Ya Descargado
-- Archivo fuente ya ubicado en el proyecto: `Modelos descargados/planta_completa.glb` y vinculado en `SimuladorPlantaGodot/assets/models/planta_completa.glb` (derivado de `planta_completa.skp`).
-- No requiere descargas adicionales para la nave principal, silos ni estructuras primarias.
+### 3.1 Modelo Maestro de la Planta, Activos 3D y Texturas de Baja Resolución
+- Modelos 3D descargados integrados en `SimuladorPlantaGodot/assets/models/`: `planta_completa.glb`, `panel_control.glb` y los 6 operarios `trabajador_*.glb` (geometría original 100% intacta, cero mallas procedurales).
+- **Texturas Procedurales de Baja Resolución (Fluidez en Vulkan 1.3):** Todas las texturas pesadas originales fueron eliminadas y reemplazadas por **37 texturas procedurales limpias** en `SimuladorPlantaGodot/assets/textures_lowres/` (`64×64` para arquitectura/equipos y `128×128` horneadas desde geometría 3D para los uniformes de operarios, `152.3 KB` totales) e incrustadas en los `.glb` con `gltf/embedded_image_handling=2` (Basis Universal VRAM), sin mapas normales/ORM pesados ni extensión heredada `KHR_materials_pbrSpecularGlossiness`.
+- **Optimización Espacial y Puertas Alineadas:** `PlantVisibilityOptimizer.gd` aplica *batching* espacial en celdas de `16 m` por bandas LOD, oclusión Este/Oeste y eliminación de *Z-fighting*; `PlantSpatialBuilder.gd` alinea las 28 puertas interactivas (23 batientes/dobles alineadas al plano exacto del marco por PCA + portones enrollables y corredizos).
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -190,62 +191,29 @@ Godot 4.7 con el renderizador **Forward Plus** ofrece capacidades gráficas de v
 > Al iniciar el modo tutorial o nueva partida, el personaje **hace spawn en el exterior, en la entrada principal de la empresa (garita de acceso / portería)**.
 > No puede acceder a la maquinaria en funcionamiento ni intervenir circuitos sin antes cumplir los protocolos de seguridad industrial de la norma **RETIE (Capítulo 2, Art. 20)** y **OSHA 1910**.
 
-### 7.1 Spawn en la Entrada de la Empresa (Portería Norte / Garita)
-- **Ubicación de Spawn**: Coordenadas exteriores `Vector3(-14.0, 0.2, -22.0)` frente a la garita de vigilancia y portón de control de acceso.
-- **Interacción Inicial**:
-  - El guardia de seguridad o terminal de inducción entrega el carné de contratista y la **Tablet Industrial de Campo**.
-  - Mensaje en pantalla: *"Bienvenido a AgroMolinos del Valle S.A. Según el Reglamento Técnico de Instalaciones Eléctricas (RETIE), está prohibido ingresar a las áreas de molienda y tableros sin el Equipo de Protección Personal (EPP) certificado. Diríjase al Cuarto de Vestidores (Estación 1)."*
+### 7.1 Spawn en la Entrada de la Empresa (Portería Exterior) y Apertura Exclusiva por Diálogo
+- **Ubicación de Spawn**: Coordenadas exteriores en Portería (`X > 45 m`, primera persona fija con mira central blanca de borde negro fino `1 px`, sin botón flotante de «Saltar tutorial»).
+- **Interacción Inicial (Solo al hablar con el Supervisor SST)**:
+  - Ni el cuadro de bienvenida ni el **Curso SST / Quiz RETIE** se abren automáticamente al entrar a una zona; ambos requieren **hablar directamente con el Supervisor SST (`E` / Clic)**, quien presenta primero la historia de AgroMolinos del Valle S.A. antes de ingresar a planta.
 
-### 7.2 Estación de Vestidores & Equipamiento de EPP (RETIE Art. 20 / OSHA 1910)
-El jugador ingresa al recinto de casilleros y mesa de dotación. Debe interactuar con cada elemento para equiparlo en su personaje 3D:
-1. **Casco Dieléctrico Tipo I Clase E (20.000 V)**: Protección contra impactos craneales y contacto accidental de alta tensión.
-2. **Gafas de Seguridad con Protección Lateral UV (ANSI Z87.1)**: Protección contra proyección de partículas y arcos eléctricos menores.
-3. **Protector Auditivo Tipo Copa (NRR 27 dB)**: Requerido por nivel sonoro $> 85\text{ dBA}$ en el área de molienda de martillos.
-4. **Guantes Dieléctricos Clase 0 (1000 V AC) con Guantelete de Cuero**: Para maniobra segura en el tablero CCM 460 V.
-5. **Botas de Seguridad Dieléctricas con Puntera de Composite (ASTM F2413 / RETIE)**: Resistencia a 18 kV sin partes metálicas conductivas.
-6. **Ropa de Trabajo de Algodón Ignífugo (Arc Flash NFPA 70E Categoría 2 - $8\text{ cal/cm}^2$)**: Protección contra quemaduras por fogonazo térmico.
-- **Enclavamiento de Zona**: Si el jugador intenta cruzar la esclusa hacia la planta sin EPP completo, suena un zumbador de advertencia y se bloquea el paso con notificación de infracción.
+### 7.2 Estación de Vestidores & Equipamiento de EPP (6/6 — RETIE Art. 20 / OSHA 1910)
+- En los casilleros (`LockerEPPStation.gd`), el operario equipa las 6 prendas obligatorias (casco dieléctrico Clase E, gafas ANSI Z87.1, protectores auditivos NRR 28 dB, guantes dieléctricos Clase 0, botas dieléctricas 18 kV y ropa ignífuga NFPA 70E), actualizando en tiempo real el avatar 3D del HUD (`SIN EPP` ↔ `EPP 6/6 OK`) y desbloqueando el avance del recorrido.
 
-### 7.3 Ejecución Interactiva de las 5 Reglas de Oro de Seguridad Eléctrica (RETIE)
-En el cuadrante del tablero CCM 460 V, el tutorial guía al jugador paso a paso para intervenir la máquina sin tensión:
-1. **Regla 1: Corte Visible**: Girar la maneta del seccionador principal bajo carga para abrir los contactos con aislamiento visual de cuchillas.
-2. **Regla 2: Enclavamiento y Bloqueo Físico (LOTO)**: Tomar el candado de seguridad rojo de la aldaba múltiple, bloquear la maneta en posición OFF y colocar la tarjeta de advertencia *"PELIGRO - NO OPERAR - PERSONAL TRABAJANDO"*.
-3. **Regla 3: Verificación de Ausencia de Tensión**: Tomar las puntas de prueba del multímetro digital calibrado y medir entre fases ($L1-L2, L2-L3, L3-L1$) y fases a tierra ($L-PE$). Verificar lectura de $0.0\text{ V}$.
-4. **Regla 4: Puesta a Tierra y en Cortocircuito**: Colocar la pértiga con grapas de puesta a tierra portátil en los bornes del motor para drenar cargas residuales o corrientes inducidas.
-5. **Regla 5: Señalización y Delimitación**: Desplegar cinta de advertencia retráctil y conos de peligro delimitando el área de trabajo a $1.0\text{ m}$.
+### 7.3 Ejecución Secuencial de las 5 Reglas de Oro de Seguridad Eléctrica (RETIE / LOTO)
+- En el tablero CCM 460 V (`LotoGoldenRulesController.gd`), el operario ejecuta en orden estricto: (1) Corte visible, (2) Bloqueo y tarjeteo LOTO (`Kit LOTO`, tecla `5`), (3) Verificación de ausencia de tensión `0.0 V` (`Multímetro CAT III`, tecla `4`), (4) Puesta a tierra y en cortocircuito, y (5) Señalización y delimitación del área.
 
-### 7.4 Recorrido Pedagógico Guiado por Instalaciones (12 Estaciones de Inspección)
-Un sistema de guiado con flechas proyectadas en el piso verde conduce al jugador por las 12 estaciones de la planta:
-- **Estación 1: Vestidores & Dotación EPP**: Área limpia de preparación técnica.
-- **Estación 2: Mezzanine & Oficinas de Ingeniería**: Supervisión de planta, servidores SCADA y gemelo digital.
-- **Estación 3: Esclusa Norte & Troncal Principal**: Sistema de presurización positiva para evitar ingreso de partículas.
-- **Estación 4: Tablero CCM 460 V**: Disyuntores, contactores, relé térmico y Variador de Frecuencia VFD de 10 HP.
-- **Estación 5: Núcleo de Molienda 10 HP**: Molino de martillos M-101, acople de correas y sensor de vibración ISO 10816-3.
-- **Estación 6: Báscula de Recepción & Tolva Subterránea**: Plataforma de pesaje de camiones de cereal entrante.
-- **Estación 7: Almacén de Racks Industriales**: Estiba de sacos de harina terminados y pasillos de montacargas.
-- **Estación 8: Muelle de Despacho & Bahía de Ensacado**: Zona de empaque automatizado en sacos de 50 kg.
-- **Estación 9: Portón Exterior #2**: Patio de maniobras y salida vehicular hacia la vía perimetral.
-- **Estación 10: Subestación Eléctrica 13.2 kV / 460 V**: Transformador reductor tipo pedestal con cerramiento RETIE.
-- **Estación 11: Batería de Silos Graneleros Exteriores**: Almacenamiento primario a granel con aireación forzada.
-- **Estación 12: Retorno a Troncal Central**: Conclusión de la inducción técnica con certificación en la Tablet.
+### 7.4 Recorrido Pedagógico Guiado por Instalaciones (19 Estaciones de Inspección)
+Un sistema de guiado con línea continua en el suelo (`TourFloorGuideLine`, 0 cruces por muros ni líneas de peligro) conduce al jugador máquina por máquina por las **19 estaciones** de la planta: Portería, Vestidores EPP (`6/6`), Zona de Carga (Bandas 01 y 02), Tolva T-301, Banda 04, Tornillo Trituradora 05, Trituradora y Motor 10 HP, Tornillo Secador 07, Tablero CCM 460 V (5 Reglas LOTO), Secador Rotatorio 08, Ciclón Separador 09, Ciclones Clasificadores (ATEX), Almacén de Sacos 50 kg y equipos exteriores (Intercambiador de Calor 14, Horno Térmico 12, Unidad de Extracción 11, Soplador 13 y Ductos de Aire 15).
 
 ---
 
 ## 8. Cadena de Producción Secuencial y Camiones Animados (Ciclo Completo End-to-End)
 
-El juego cuenta con un ciclo de producción continuo y dinámico completamente animado, simulando el flujo de materia prima desde su arribo en camiones hasta el despacho del producto procesado:
+El juego cuenta con un ciclo de producción continuo y dinámico completamente animado sobre las vías pavimentadas (`ADOQUIN`/`baldosa`) y portones automáticos corredizos:
 
-### 8.1 Animación de Camiones de Carga (Logística Vehicular con Modelos Descargados)
-- **Nodos `Path3D` y `PathFollow3D`**: Rutas de navegación con curvas Bézier suaves que guían los vehículos industriales dentro del recinto:
-  1. **Camión Granelero de Descarga**:
-     - Entra por la portería exterior norte (`Portón #1`), avanza a $15\text{ km/h}$ y se estaciona sobre la plataforma de la báscula de pesaje.
-     - Detiene la marcha, emite sonido de freno neumático (`AirBrake.wav`) y activa la animación del pistón hidráulico que eleva el volquete a $45^\circ$.
-     - La compuerta trasera se abre y descarga un flujo continuo de cereal dorado mediante partículas `GPUParticles3D` hacia la rejilla de la tolva subterránea.
-     - Finalizada la descarga, el volquete desciende, el camión enciende luces de marcha atrás y se retira por el circuito perimetral sur.
-  2. **Camión de Reparto y Despacho**:
-     - Estacionado en la bahía de carga con las compuertas traseras abiertas.
-     - Recibe los pallets cargados con sacos de cereal triturado trasladados por el montacargas.
-     - Al completar la carga (10 pallets de 20 sacos = 200 sacos de 50 kg), el chofer cierra las puertas con animación, enciende el motor diésel y sale por el `Portón #2` hacia la vía pública.
+### 8.1 Animación de Camiones de Carga y Cargue Manual por Operarios
+- **Camión Articulado con Giro Natural y Acople Seguro**: El tractocamión articulado circula estrictamente sobre vías pavimentadas, realiza giros naturales (`max_bend = 42°`) sin separación del semirremolque respecto a la quinta rueda y se parquea exactamente frente a la puerta amarilla izquierda de despacho (`0` glow en camiones y sacos).
+- **Cargue Manual de Sacos de 50 kg**: Los operarios de logística y muelle toman y cargan físicamente los sacos hacia el camión en la puerta izquierda mediante caminata biomecánica (`carry_walk`), **únicamente cuando el camión está parqueado** (si no hay camión estacionado, no cargan).
 
 ### 8.2 Etapas Productivas Integradas
 - **Etapa 1 (Recepción)**: Descarga en tolva `T-301` con elevador de cangilones y tornillo sinfín ($0.8\text{ kg/s}$).
@@ -318,10 +286,10 @@ Donde $IUF = \frac{\max(|I_i - I_{avg}|)}{I_{avg}} \times 100\%$ es el Factor de
 > [!IMPORTANT]
 > **TELEMETRÍA 100% INTEGRADA EN EL JUEGO (ESTRICTAMENTE CERO PÁGINAS WEB EXTERNAS)**:
 > 1. **Cero Dependencia de Navegadores Web**: Queda terminantemente prohibido exigir al usuario abrir un navegador web o consultar páginas HTML externas para visualizar la telemetría, gráficas o diagnóstico del juego.
-> 2. **Despliegue Inmersivo con la Tecla `[TAB]`**:
->    - Al presionar la tecla **`[TAB]`**, el operario saca/guarda en pantalla la **Tablet Industrial Diegética de Campo** (`IndustrialTabletController.gd`).
->    - Al desplegarse la tablet, el juego libera el cursor (`Input.MOUSE_MODE_VISIBLE`) para permitir navegación interactiva por pestañas, análisis de oscilogramas y chequeo de listas de mantenimiento.
->    - Al pulsar `[TAB]` nuevamente o presionar el botón "Cerrar", la tablet se guarda y el cursor retorna a captura de primera persona (`Input.MOUSE_MODE_CAPTURED`).
+> 2. **Despliegue Inmersivo con la Tecla `[TAB]` (Diseño Minimalista Limpio)**:
+>    - Al presionar la tecla **`[TAB]`** (o `T`), el operario despliega o guarda la **Tablet Industrial Minimalista** (`IndustrialTabletController.gd` + `TabletChassisVisuals.gd`, tamaño invariante `1228×748` chasis / `1180×700` pantalla), **sin botones físicos ficticios ni botón «Salir»**.
+>    - Al desplegarse, el cursor se libera (`Input.MOUSE_MODE_VISIBLE`) para navegar las **8 pestañas** (`Monitoreo IoT`, `Cámaras`, `RETIE`, `Operarios`, `Riesgos`, `Fisiología IEC`, `Hardware & IA`, `Rúbrica`) y accionar el botón exclusivo **`Parar / Reanudar Máquinas`**.
+>    - Al pulsar **`[TAB]`** o **`[ESC]`**, la tablet se guarda y el cursor retorna a primera persona (`Input.MOUSE_MODE_CAPTURED`).
 > 3. **Dashboard SCADA / Gemelo Digital con IA Integrado en la Tablet**:
 >    La tablet cuenta con un panel frontal estructurado mediante nodos nativos de Godot (`Control`, `PanelContainer`, `SubViewport` y rutinas `_draw()` para strip charts vectoriales dinámicos), similar al dashboard de simulaciones con IA:
 >    - **Módulo 1: Telemetría Electromecánica True-RMS**:

@@ -4,7 +4,24 @@
 **Empresa Caso de Estudio:** AgroMolinos del Valle S.A.  
 **Universidad de los Llanos** — Ingeniería Electrónica — Máquinas Eléctricas (2026-2)  
 **Docente Titular:** Ing. Lauren Genith Isaza  
-**Repositorio Oficial:** [https://github.com/Nocudo/AgroMolinos-Planta-3D](https://github.com/Nocudo/AgroMolinos-Planta-3D)
+**Repositorio Oficial:** [https://github.com/Nocudo/AgroMolinos-Planta-3D](https://github.com/Nocudo/AgroMolinos-Planta-3D)  
+**Estado Actual:** ✅ **Bloques 1–8 Completados + Optimizaciones Vulkan 1.3 Forward+, 37 Texturas Procedurales de Baja Resolución (`64×64`/`128×128`), Tablet Minimalista de 8 Pestañas, 19 Estaciones y QA Headless `10/10 PASS`**
+
+---
+
+## ✅ 0. Estado Consolidado de Implementación (Actualizado)
+
+| Bloque / Módulo | Estado | Implementación Verificada en `SimuladorPlantaGodot/` |
+| :--- | :---: | :--- |
+| **Bloque 1 — Entorno 3D, Vulkan 1.3 y Texturas Low-Res** | ✅ | Renderizador **Vulkan 1.3 Forward+** (Reverse-Z 32-bit), 470 colisionadores sólidos, 28 puertas alineadas por PCA, 0 Z-fighting, batching espacial LOD (`PlantVisibilityOptimizer.gd`) y **37 texturas procedurales `64×64`/`128×128`** (`152.3 KB` total, Basis Universal VRAM, 0 texturas originales pesadas). |
+| **Bloque 2 — Motor Kloss 10 HP + VFD vs DOL** | ✅ | `InductionMotorKloss.gd` + `VFDDriveController.gd` ($1750\text{ RPM}$, $I_{FLA}=13.5\text{ A}$, $I_{LRA}=81.0\text{ A}$, $T_{max}=101.75\text{ N}\cdot\text{m}$, $7.52$ vs $10.50\text{ kWh/ton}$, $28.4\%$ ahorro, $488.7\text{ kg CO}_2\text{e/año}$). |
+| **Bloque 3 — Tutorial RETIE & 19 Estaciones** | ✅ | `TutorialInductionManager.gd`: spawn en Portería en 1ra persona, bienvenida y **Curso SST / Quiz RETIE** abiertos **solo al hablar con el Supervisor SST (`E`/Clic)**, enclavamiento EPP `6/6` con avatar 3D reactivo, 5 Reglas LOTO y recorrido seguro de **19 estaciones**. |
+| **Bloque 4 — Producción y Logística Articulada** | ✅ | `AnimatedProductionLogistics.gd`: camiones articulados por vías pavimentadas con portones automáticos, giro natural y acople a puerta amarilla izquierda (sin desprendimiento de tráiler), cargue manual de sacos por operarios animados solo con camión parqueado y 0 glow. |
+| **Bloque 5 — 5 Fallas Físicas Diegéticas** | ✅ | Corte L3 con alicates (`2`), atasco manual con sacos de $50\text{ kg}$ (`1`), breakers CCM (`460 V -> 340 V`), ventilación obstruida y pernos flojos con llave `3/4"` (`3`), multímetro (`4`) y Kit LOTO (`5`). |
+| **Bloque 6 — Edge AI Nativo (MLP + SVM)** | ✅ | `EdgeAIEngine.gd`: inferencia nativa 10 Hz (`MLP 8-16-8-4`, `SVM RBF`), MHI, RUL y checklist RCM. |
+| **Bloque 7 — Tablet SCADA Minimalista (`[TAB]`)** | ✅ | `IndustrialTabletController.gd` + `TabletChassisVisuals.gd`: marco limpio `1228×748` / pantalla `1180×700`, **sin botones ficticios ni botón «Salir»** (cierra con `TAB`/`ESC`), **8 pestañas** (`Monitoreo IoT`, `Cámaras`, `RETIE`, `Operarios`, `Riesgos`, `Fisiología IEC`, `Hardware & IA`, `Rúbrica`) y parada exclusiva `Parar / Reanudar Máquinas`. |
+| **Bloque 8 — CCTV, Rúbrica RETIE y QA 10/10** | ✅ | `MezzanineCCTVController.gd`, `SafetyEvaluationScorecard.gd` (`0.0–5.0` + JSON) y `headless_verify.gd` (**10/10 PASS**, 0 errores). |
+| **Instalación & Entorno** | ✅ | `requirements.txt` + `INSTALAR_DEPENDENCIAS.bat` (1 clic en Windows) + `INICIAR_SIMULADOR_GODOT.bat` + `ABRIR_EDITOR_GODOT.bat`. |
 
 ---
 

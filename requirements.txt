@@ -1,0 +1,31 @@
+# ==============================================================================
+# AgroMolinos del Valle S.A. — Simulador 3D de Planta Industrial (Godot 4.7)
+# Archivo de dependencias Python y requisitos del entorno
+#
+# Instalación automática recomendada en Windows (1 clic):
+#   Ejecuta: INSTALAR_DEPENDENCIAS.bat
+#
+# Instalación manual de paquetes Python:
+#   python -m pip install --upgrade pip
+#   python -m pip install -r requirements.txt
+#
+# Requisitos del sistema (instalados automáticamente por INSTALAR_DEPENDENCIAS.bat):
+#   - Godot Engine 4.7+ (WinGet ID: GodotEngine.GodotEngine) — API Vulkan 1.3 Forward+
+#   - Git (WinGet ID: Git.Git)
+#   - Python 3.10+ (WinGet ID: Python.Python.3.12)
+#
+# Requisitos opcionales (solo para módulos académicos complementarios):
+#   - MATLAB / Simulink (modelos DTC e IA en Avance 1/ y Avance 2/)
+#   - TeX Live / MiKTeX (compilación de informes IEEE LaTeX en Avance 1/ y Avance 2/)
+# ==============================================================================
+
+# Procesamiento numérico, síntesis procedural de texturas de baja resolución y verificación 3D
+numpy>=1.26.0
+pillow>=10.0.0
+trimesh>=4.0.0
+
+# Modelado electromecánico, análisis de datos, gráficas y validación IA (MLP / SVM)
+scipy>=1.11.0
+matplotlib>=3.8.0
+pandas>=2.1.0
+scikit-learn>=1.4.0

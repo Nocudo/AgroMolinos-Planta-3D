@@ -15,7 +15,7 @@
 
 ## 📋 Descripción General del Proyecto
 
-Plataforma integral de modelado electromecánico, mantenimiento predictivo basado en Inteligencia Artificial, optimización energética con Variador de Frecuencia (VFD) y **Juego Serio Interactivo en 3D (*Serious Game* en Godot Engine 4.7)** para la **Planta Molino de Granos** de la empresa **AgroMolinos del Valle S.A.**, desarrollada bajo el paradigma de **Transición de Industria 4.0 a Industria 5.0** (centrada en el humano, resiliente y sostenible).
+Plataforma integral de modelado electromecánico, mantenimiento predictivo basado en Inteligencia Artificial, optimización energética con Variador de Frecuencia (VFD) y **Juego Serio Interactivo en 3D (*Serious Game* en Godot Engine 4.7 con Vulkan 1.3 Forward+)** para la **Planta Molino de Granos** de la empresa **AgroMolinos del Valle S.A.**, desarrollada bajo el paradigma de **Transición de Industria 4.0 a Industria 5.0** (centrada en el humano, resiliente y sostenible).
 
 ### Alineación con los Cortes Evaluativos del Curso
 
@@ -27,9 +27,9 @@ Plataforma integral de modelado electromecánico, mantenimiento predictivo basad
    - Entrenamiento y validación de clasificadores de diagnóstico: **Red Neuronal Multicapa (MLP $8 \to 16 \to 8 \to 4$)** con **$99.17\%$ de exactitud** y **Máquina de Soporte Vectorial (SVM con kernel RBF)** con **$98.75\%$ de exactitud**.
    - Clasificación automática de 4 estados: *Normal*, *Sobrecalentamiento*, *Falla Eléctrica (monofasización/desbalance)* y *Falla Mecánica (rodamientos/desalineación)*.
 3. **Avance 3 & Proyecto Final (Corte 3 — 40% + 10% Sustentación): Simulador 3D Interactivo, Optimización Energética e Informe IEEE**
-   - **Serious Game en Godot 4.7** sobre el modelo 3D de la planta industrial (`planta_completa.glb`), con físicas electromecánicas de Kloss en tiempo real, modo tutorial normativo RETIE, cadena de producción animada e inducción diegética de fallas físicas en el mundo 3D (sin botones de interfaz).
-   - **Telemetría 100% In-Game en Tablet Industrial (`[TAB]`):** Dashboard completo integrado dentro del juego (sin páginas web externas) con oscilogramas en tiempo real, inferencia de IA, *Motor Health Index* (MHI), *Remaining Useful Life* (RUL) y ruta de mantenimiento RCM interactiva.
-   - **Optimización Energética y Sostenibilidad:** Comparativa entre Arranque Directo (DOL) y Variador de Frecuencia (VFD escalar V/f con lazo PID), logrando un **ahorro energético del $28.38\%$** ($7.52\text{ kWh/ton}$ frente a $10.5\text{ kWh/ton}$) y mitigando **$488.7\text{ kg CO}_2\text{e/año}$** (factor UPME Colombia).
+   - **Serious Game en Godot 4.7 (Vulkan 1.3 Forward+)** sobre el modelo 3D de la planta industrial (`planta_completa.glb`), con físicas electromecánicas de Kloss en tiempo real, recorrido normativo RETIE de 19 estaciones, cadena de producción y logística animada e inducción diegética de fallas físicas en el mundo 3D (sin botones de falla en UI).
+   - **Telemetría 100% In-Game en Tablet Industrial Minimalista (`[TAB]`):** Dashboard SCADA nativo de 8 pestañas integrado dentro del juego (sin páginas web externas, sin botones ficticios ni botón «Salir»), con oscilogramas en tiempo real, cámaras 3D en vivo, inferencia Edge AI, *Motor Health Index* (MHI), *Remaining Useful Life* (RUL), parada de máquinas exclusiva y rúbrica RETIE.
+   - **Optimización Energética y Sostenibilidad:** Comparativa entre Arranque Directo (DOL) y Variador de Frecuencia (VFD escalar V/f con lazo PID), logrando un **ahorro energético del $28.38\%$** ($7.52\text{ kWh/ton}$ frente a $10.50\text{ kWh/ton}$) y mitigando **$488.7\text{ kg CO}_2\text{e/año}$** (factor UPME Colombia $0.164\text{ kg CO}_2\text{e/kWh}$).
 
 ---
 
@@ -57,39 +57,43 @@ Plataforma integral de modelado electromecánico, mantenimiento predictivo basad
 
 ## 🎮 Características del Serious Game en Godot 4.7 (`SimuladorPlantaGodot/`)
 
-### 1. Entorno Industrial 3D, Suelo Físico, Zonificación e Iluminación PBR
-- **Modelos 3D Descargados de Alta Fidelidad:** Integración directa del complejo industrial (`planta_completa.glb`, derivado de SketchUp) usando estrictamente activos 3D descargados en `Modelos descargados/`.
-- **Suelo Físico y Colisiones Sólidas:** Piso industrial (`StaticBody3D` con `BoxShape3D` y acabado PBR de concreto epóxico) y colisiones trimesh/convexas en toda la maquinaria, silos, pasarelas y tableros.
-- **Demarcación Vial y Seguridad (OSHA / RETIE / ATEX):** Delimitación en piso de la zona de molienda (amarillo/negro), perímetro de riesgo eléctrico de $1.0\text{ m}$ frente al tablero CCM $460\text{ V}$ (rojo RETIE Art. 20 / NFPA 70E), pasillos peatonales de $2.4\text{ m}$ (verde), área de recepción/báscula (azul), almacén de producto terminado (blanco) y atmósfera de polvo combustible (NFPA 61 / ATEX).
-- **Iluminación Fotorrealista:** Configurado con `WorldEnvironment` (Tonemapping ACES, SDFGI, SSAO, SSR y *Volumetric Fog*) y matriz de campanas LED High-Bay de $5000\text{ K}$.
+### 1. Motor Gráfico Vulkan 1.3, Texturas de Baja Resolución y Optimización de Rendimiento
+- **Renderizado Nativo Vulkan 1.3 Forward+:** Configurado con profundidad Reverse-Z de 32 bits, `CameraFPS` calibrada (`near = 0.14 m`, `far = 260 m`) y eliminación integral de *Z-fighting* coplanar y mallas duplicadas.
+- **Activos 3D Descargados con 37 Texturas Procedurales de Baja Resolución:** Todos los modelos 3D descargados (`planta_completa.glb`, `panel_control.glb` y los 6 `trabajador_*.glb`) conservan su geometría original intacta, mientras que el **100% de las texturas pesadas originales** fueron eliminadas y reemplazadas por **37 texturas procedurales limpias de baja resolución** (`64×64` para arquitectura/equipos y `128×128` horneadas desde geometría 3D para uniformes de operarios, `152.3 KB` totales) con compresión VRAM **Basis Universal** (reducción $>97\%$ a $99.9\%$ en peso de texturas incrustadas).
+- **Optimización Espacial y Puertas Alineadas por PCA:** `PlantVisibilityOptimizer.gd` aplica *batching* espacial en celdas de $16\text{ m}$ por bandas LOD, oclusión exterior Este/Oeste y *culling* vehicular a distancia; `PlantSpatialBuilder.gd` genera 470 colisionadores sólidos y alinea milimétricamente las **28 puertas interactivas** (23 batientes/dobles alineadas al plano exacto del marco por PCA + portones enrollables y corredizos).
+- **Demarcación Vial y Seguridad (OSHA / RETIE / ATEX):** Delimitación en piso de la zona de molienda (amarillo/negro), perímetro de riesgo eléctrico de $1.0\text{ m}$ frente al tablero CCM $460\text{ V}$ (rojo RETIE Art. 20 / NFPA 70E), pasillos peatonales seguros (verde), recepción (azul), almacén (blanco) y zona de polvo combustible (NFPA 61 / ATEX Zona 22).
 
-### 2. Modo Tutorial Interactivo (RETIE & 5 Reglas de Oro)
-- **Spawn en Portería Exterior:** El operario inicia en la entrada principal de la empresa, donde recibe inducción de seguridad y su **Tablet Industrial**.
-- **Vestidores y Enclavamiento de EPP:** Paso obligatorio por los casilleros para equiparse con el Equipo de Protección Personal reglamentario (casco dieléctrico Clase E, gafas ANSI Z87.1, protectores auditivos NRR $28\text{ dB}$, botas dieléctricas $18\text{ kV}$ y guantes dieléctricos Clase 0). La puerta de acceso a planta permanece bloqueada hasta completar el EPP.
-- **Ejecución Guiada de las 5 Reglas de Oro (LOTO):** En el tablero CCM $460\text{ V}$, el jugador ejecuta en orden estricto: (1) Corte efectivo de tensión, (2) Bloqueo con candado y tarjeteo LOTO, (3) Verificación de ausencia de tensión con multímetro CAT III, (4) Puesta a tierra y en cortocircuito, y (5) Delimitación de la zona de trabajo.
-- **Recorrido Guiado por 12 Estaciones:** Visita explicativa desde la subestación y báscula de camiones hasta los silos, sala del motor de $10\text{ HP}$, zona de ensacado y muelle de despacho.
+### 2. Modo Tutorial Interactivo y Recorrido Seguro de 19 Estaciones (RETIE & 5 Reglas de Oro)
+- **Inicio en Portería y Diálogo Directo con el Supervisor SST:** El operario inicia en primera persona en la Portería exterior. Los menús informativos (bienvenida inicial e ingreso al **Curso SST / Quiz RETIE**) no se abren automáticamente al llegar a una zona, sino **únicamente cuando el jugador interactúa directamente con el Supervisor SST (`E` / Clic)**, incluyendo la historia de la empresa antes de ingresar a planta.
+- **Vestidores y Enclavamiento de EPP (6/6):** Paso obligatorio por los lockers para equipar las 6 prendas reglamentarias (casco dieléctrico Clase E, gafas ANSI Z87.1, protectores auditivos, guantes dieléctricos Clase 0, botas dieléctricas $18\text{ kV}$ y traje ignífugo), con actualización en vivo del avatar 3D del HUD (`SIN EPP` ↔ `EPP 6/6 OK`).
+- **Ejecución Guiada de las 5 Reglas de Oro (LOTO):** En el tablero CCM $460\text{ V}$, el jugador ejecuta en orden estricto: (1) Corte visible, (2) Bloqueo y tarjeteo LOTO, (3) Verificación de ausencia de tensión con multímetro CAT III, (4) Puesta a tierra y en cortocircuito, y (5) Señalización y delimitación.
+- **Recorrido Guiado Seguro por 19 Estaciones:** Línea guía en suelo sin cruces por muros ni líneas de peligro que recorre máquina por máquina desde Portería y Vestidores hasta la zona de carga, molienda, secado, ciclones, almacén y equipos exteriores (intercambiador, horno térmico, extracción, soplador y ductos de aire), resaltando con brillo azul parpadeante la máquina explicada.
 
-### 3. Cadena de Producción y Logística Animada
-- **Ingreso de Materia Prima:** Camión tolva animado ingresando a la báscula y descargando cereal con sistema de partículas (`GPUParticles3D`).
-- **Transporte y Procesamiento:** Elevador de cangilones y tornillo sinfín alimentando el molino de martillos accionado a $1750\text{ RPM}$ por el motor trifásico de $10\text{ HP}$.
-- **Ensacado, Almacenaje y Salida:** Llenado automático de bultos de $50\text{ kg}$ en cinta transportadora, estibado en estanterías y carga en camión de despacho saliendo por el portón sur.
+### 3. Cadena de Producción Animada y Logística Vehicular Natural
+- **Camiones Articulados en Vías Pavimentadas:** Rutas estrictamente sobre adoquín/baldosa atravesando los dos portones automáticos corredizos, con giro natural de tractocamión articulado (sin separación del semirremolque respecto a la quinta rueda) y parqueo exacto frente a la puerta amarilla izquierda de despacho.
+- **Cargue Manual de Sacos por Operarios Animados:** Los operarios de logística y muelle toman y cargan manualmente los sacos de $50\text{ kg}$ hacia el camión estacionado en la puerta izquierda usando caminata biomecánica (`carry_walk`), **únicamente cuando el camión está físicamente parqueado** (sin sacos flotantes ni *glow* artificial en camiones o bolsas).
+- **Flujo Electromecánico Sincronizado:** El tornillo sinfín, el flujo de grano/harina y la tasa de producción responden en tiempo real a las RPM del motor trifásico de $10\text{ HP}$.
 
-### 4. Inducción Diegética de Fallas Físicas en el Mundo 3D (Cero Botones en Interfaz)
-Todas las fallas se provocan mediante interacciones físicas directas del operario sobre los equipos 3D:
-1. **Corte Físico de Cables con Alicates (Pérdida de Fase L3 / Monofasización):** Al cortar la fase L3 del alimentador, la corriente $I_C$ cae a $0\text{ A}$, las fases L1 y L2 se elevan por $\sqrt{3}$ ($\approx 23.4\text{ A}$), se genera chisporroteo de arco eléctrico y la vibración pulsante a $120\text{ Hz}$ escala a Zona D ($> 4.5\text{ mm/s}$ según ISO 10816-3).
-2. **Sobrealimentación Manual en Tolva (Atasco Mecánico y Rotor Bloqueado):** Al cargar y arrojar físicamente múltiples bultos de grano de $50\text{ kg}$ dentro de la tolva sin pausa, el par resistente supera el par máximo de vuelco ($101.75\text{ N}\cdot\text{m}$), el motor cala a $0\text{ RPM}$ y la corriente se dispara a $I_{LRA} = 81.0\text{ A}$, acelerando el calentamiento $\frac{dT}{dt}$.
-3. **Manipulación de Breakers en el Tablero CCM (Bajones de Tensión / *Voltage Sags*):** Al mover las palancas de seccionadores o inducir falso contacto en barraje, la tensión cae a $340\text{ V}$, reduciendo cuadráticamente el par electromagnético ($T_e \propto V^2$) y causando parpadeo en las luminarias de la nave.
-4. **Obstrucción de Rejilla de Ventilación y Desajuste de Pernos de Bancada:** Elevación de la resistencia térmica $R_{th}$ (embalamiento térmico $> 105^\circ\text{C}$) y aparición de armónicos de vibración 1X/2X RPM por soltura mecánica.
+### 4. Inducción Diegética de Fallas Físicas en el Mundo 3D (Cero Botones de Falla en UI)
+Todas las averías se inducen y reparan mediante acciones físicas directas sobre los equipos 3D:
+1. **Corte Físico de Cables con Alicates (Pérdida de Fase L3 / Monofasización):** Al cortar la fase L3 del alimentador, $I_C$ cae a $0\text{ A}$, $I_A$ e $I_B$ se elevan por $\sqrt{3}$ ($\approx 23.4\text{ A}$), se dispara arco eléctrico y la vibración a $120\text{ Hz}$ escala a Zona D ($> 4.5\text{ mm/s}$ ISO 10816-3).
+2. **Sobrealimentación Manual en Tolva (Atasco y Rotor Bloqueado):** Arrojar múltiples bultos de $50\text{ kg}$ a la tolva eleva el par por encima de $T_{max} = 101.75\text{ N}\cdot\text{m}$, frena el rotor a $0\text{ RPM}$ y eleva la corriente a $I_{LRA} = 81.0\text{ A}$.
+3. **Manipulación de Breakers en Tablero CCM 460 V (Bajones de Tensión):** Provoca caída de tensión a $340\text{ V}$, reduciendo cuadráticamente el par ($T_e \propto V^2$).
+4. **Obstrucción de Ventilación y Soltura de Pernos de Bancada:** Eleva $R_{th}$ ($0.068 \to 0.210^\circ\text{C/W}$) para sobrecalentamiento progresivo y genera vibración mecánica armónica 1X/2X RPM corregible con la llave `3/4"`.
 
-### 5. Telemetría 100% In-Game en Tablet Industrial (Tecla `[TAB]`)
-> **Sin páginas web externas:** Todo el monitoreo y diagnóstico ocurre nativamente dentro del juego.
+### 5. HUD Limpio y Tablet Industrial Minimalista 100% In-Game (`[TAB]`)
+> **Sin páginas web externas:** Todo el monitoreo SCADA, cámaras 3D y diagnóstico Edge AI operan nativamente dentro del juego.
 
-Al presionar la tecla **`[TAB]`**, el operario despliega o guarda en pantalla su **Tablet Industrial de Campo**, la cual presenta un dashboard similar al de las simulaciones con IA dividido en 5 módulos:
-- **Módulo 1 — Telemetría Electromecánica True-RMS:** Lectura en vivo de $V_{LL}$, corrientes por fase ($I_A, I_B, I_C$), desbalance $IUF$, velocidad $N_r$, par $T_e$, potencia $P_{in}$, temperatura de devanados $T_w$ y vibración RMS/Pico con semáforo ISO 10816-3.
-- **Módulo 2 — Oscilogramas y Gráficas en Tiempo Real (*Strip Charts* Nativos):** Curvas dinámicas de corrientes trifásicas $I(t)$, evolución térmica $T(t)$ y espectro de vibración.
-- **Módulo 3 — Diagnóstico Edge AI (MLP & SVM):** Estado clasificado en tiempo real (*Normal*, *Sobrecalentamiento*, *Falla Eléctrica*, *Falla Mecánica*), porcentaje de certeza de la IA, barra del **Motor Health Index (MHI 0–100%)** y estimación de **Vida Útil Remanente (RUL)** en horas.
-- **Módulo 4 — Alertas Push Sonoras & Checklist RCM / RETIE:** Notificación de causa raíz, pronóstico y lista de tareas interactiva (`CheckBox`) para verificar paso a paso la reparación segura en planta.
-- **Módulo 5 — Eficiencia Energética y Sostenibilidad:** Comparativa DOL vs VFD en tiempo real, consumo específico ($\text{kWh/ton}$) y emisiones evitadas ($\text{kg CO}_2\text{e}$).
+- **HUD Minimalista:** Mira central blanca fija (`+`) con borde negro fino de $1\text{ px}$ que nunca cambia de color, barra inferior con avatar 3D reactivo al EPP y 5 ranuras de herramientas, subtítulos naturales de operarios sin sufijos redundantes de ubicación y sin botón flotante de «Saltar tutorial».
+- **Tablet Industrial Limpia (`1228×748` chasis / `1180×700` pantalla):** Diseño minimalista sin botones físicos ficticios ni botón «Salir» (se abre y cierra directamente con **`[TAB]`** o **`[ESC]`**), con botón exclusivo de **Parar / Reanudar Máquinas** y **8 pestañas funcionales**:
+  1. **Monitoreo IoT:** Telemetría True-RMS y gráficas en vivo de las 15 máquinas + CCM, modo VFD/DOL, control de audio y alertas push sonoras.
+  2. **Cámaras:** Visores 3D interactivos en vivo de planta (15 máquinas + CCM + vistas generales) y los 4 operarios.
+  3. **RETIE:** Seguimiento en vivo de las 5 Reglas de Oro LOTO, estado EPP y matriz de riesgos eléctricos.
+  4. **Operarios:** Estado del turno y registro manual de personal en planta.
+  5. **Riesgos:** Evaluación de riesgos eléctricos, mecánicos, térmicos y ATEX.
+  6. **Fisiología IEC:** Curvas de efectos fisiológicos de la corriente eléctrica (IEC 60479-1).
+  7. **Hardware & IA:** Diagnóstico Edge AI nativo (MLP & SVM RBF), **MHI**, **RUL**, causa raíz, pronóstico y checklist interactivo RCM.
+  8. **Rúbrica:** Calificación académica RETIE (`0.0` a `5.0`), historial de infracciones/bonificaciones y avance de las 19 estaciones.
 
 ---
 
@@ -107,39 +111,74 @@ Al presionar la tecla **`[TAB]`**, el operario despliega o guarda en pantalla su
 │   ├── abrir_panel.m                   # Lanzador del panel de diagnóstico en MATLAB App Designer
 │   ├── Informe/IA/                     # Entrenamiento de MLP, SVM RBF y generador de dataset
 │   └── Informe/simulaciones/           # Modelos de inyección de fallas en Simulink
-├── Modelos descargados/                # Activos 3D originales descargados (.glb): planta_completa y trabajadores
-├── SimuladorPlantaGodot/               # PROYECTO MAESTRO DEL SERIOUS GAME EN GODOT 4.7
-│   ├── assets/models/                  # Modelo 3D de la planta y trabajadores importados con texturas PBR
+├── Modelos descargados/                # Fuentes 3D originales (.skp)
+├── SimuladorPlantaGodot/               # PROYECTO MAESTRO DEL SERIOUS GAME EN GODOT 4.7 (VULKAN 1.3)
+│   ├── assets/models/                  # 8 modelos .glb optimizados (sin texturas antiguas, Basis Universal)
+│   ├── assets/textures_lowres/         # 37 texturas procedurales 64x64 / 128x128 (152.3 KB total)
 │   ├── scenes/                         # Escenas modulares (.tscn): environment, equipment, infrastructure, player, production, ui, workers
 │   ├── scripts/                        # Módulos GDScript 2.0: ai, core, environment, interactive, physics, production, tests, tutorial, ui
-│   └── project.godot                   # Configuración de Godot 4.7 e Input Map (WASD, E, TAB, 1-5)
-├── PLAN_EJECUCION_ARGON.md             # Plan maestro en 8 bloques optimizado para ejecución agéntica con Orchestrator (Argon)
-├── INICIAR_SIMULADOR_GODOT.bat         # Lanzador 1-clic del juego interactivo en pantalla completa
-├── ABRIR_EDITOR_GODOT.bat              # Lanzador 1-clic para abrir el proyecto en el editor de Godot 4.7
+│   └── project.godot                   # Configuración de Godot 4.7 Forward+ (Vulkan 1.3) e Input Map
+├── requirements.txt                    # Dependencias Python y requisitos del entorno
+├── INSTALAR_DEPENDENCIAS.bat           # Instalador 1-clic (Godot 4.7, Git, Python, requirements.txt y caché Godot)
+├── INICIAR_SIMULADOR_GODOT.bat         # Lanzador 1-clic del simulador interactivo
+├── ABRIR_EDITOR_GODOT.bat              # Lanzador 1-clic del editor de Godot 4.7
+├── PLAN_EJECUCION_ARGON.md             # Plan maestro en 8 bloques y estado de certificación QA 10/10
 ├── PROYECTO FINAL_MAQUINAS 20262.pdf   # Guía oficial y rúbrica de evaluación de la asignatura
 └── README.md                           # Documentación general del proyecto
 ```
 
 ---
 
+## 🛠️ Instalación Rápida (1 Clic en Windows)
+
+1. **Clona el repositorio:**
+   ```bash
+   git clone https://github.com/Nocudo/AgroMolinos-Planta-3D.git
+   cd AgroMolinos-Planta-3D
+   ```
+2. **Instala todo automáticamente:** Haz doble clic en **`INSTALAR_DEPENDENCIAS.bat`**.
+   - Verifica e instala **Git**, **Godot Engine 4.7** y **Python 3.12** mediante WinGet si faltan en el equipo.
+   - Instala todos los paquetes listados en **`requirements.txt`** (`numpy`, `pillow`, `trimesh`, `scipy`, `matplotlib`, `pandas`, `scikit-learn`).
+   - Pre-importa automáticamente la caché de modelos y texturas de `SimuladorPlantaGodot/`.
+3. *(Opcional — solo paquetes Python por consola):*
+   ```bash
+   python -m pip install --upgrade pip
+   python -m pip install -r requirements.txt
+   ```
+
+---
+
 ## 🚀 Ejecución Rápida y Controles en el Juego
 
 ### Lanzadores de 1 Clic (Windows)
+- **Instalar Dependencias y Entorno:** Doble clic en `INSTALAR_DEPENDENCIAS.bat`.
 - **Jugar a la Simulación Interactiva:** Doble clic en `INICIAR_SIMULADOR_GODOT.bat`.
 - **Editar Escenas en Godot 4.7:** Doble clic en `ABRIR_EDITOR_GODOT.bat`.
 
 ### Controles del Operario en el Juego
 | Tecla / Acción | Función en la Simulación |
 | :---: | :--- |
-| **`W`, `A`, `S`, `D`** | Desplazamiento del operario por la planta industrial |
+| **`W`, `A`, `S`, `D`** | Desplazamiento en primera persona por la planta industrial |
 | **`Shift`** | Caminata rápida / Sprint |
 | **`Espacio`** | Saltar |
-| **`Mouse`** | Vista en primera/tercera persona |
-| **`[TAB]` o `T`** | **Sacar / Guardar la Tablet Industrial (Dashboard de Telemetría e IA In-Game)** |
-| **`E` / Clic Izquierdo** | Interactuar con equipos (equipar EPP, accionar breakers, recoger sacos de 50 kg, usar herramientas) |
-| **`1` – `5`** | Seleccionar herramienta de trabajo (1: Mano, 2: Alicates dieléctricos, 3: Candado LOTO, 4: Multímetro CAT III, 5: Llave mecánica) |
-| **`X`** | Accionar Parada de Emergencia (E-Stop Categoría 0) |
-| **`C`** | Alternar cámara Primera Persona / Tercera Persona |
+| **`Mouse`** | Vista en primera persona con mira central blanca fija |
+| **`E` / Clic Izquierdo** | Interactuar (hablar con el Supervisor SST y operarios, abrir puertas, equipar EPP, manipular breakers, cargar sacos, usar herramientas) |
+| **`1` – `5` / Rueda del Mouse** | Seleccionar herramienta (`1`: Manos, `2`: Alicates dieléctricos, `3`: Llave 3/4", `4`: Multímetro CAT III, `5`: Kit LOTO) |
+| **`[TAB]` o `T`** | Abrir / cerrar la **Tablet Industrial SCADA** (incluye botón exclusivo **Parar / Reanudar Máquinas**) |
+| **`ESC`** | Cerrar la Tablet/modales activos o abrir el **Menú de Pausa y Audio** |
+| **`F11`** | Alternar pantalla completa / ventana |
+
+---
+
+## 🧪 Verificación Autónoma QA Headless (`10/10 PASS`)
+
+Para certificar escenas, física de Kloss, VFD vs DOL, tutorial RETIE/LOTO, logística animada, las 5 fallas físicas, Edge AI (MLP/SVM), Tablet SCADA, CCTV/Rúbrica y política de activos 3D desde consola:
+
+```powershell
+godot --headless --audio-driver Dummy --path SimuladorPlantaGodot --script res://scripts/tests/headless_verify.gd
+```
+
+Resultado esperado: `=== RESULTADO QA HEADLESS: 10 PASARON | 0 FALLARON ===` con código de salida `0`.
 
 ---
 
