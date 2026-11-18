@@ -947,6 +947,12 @@ func _qa_10_main_scene_integration() -> void:
 					var fwd := l3d.global_transform.basis.z
 					ok = _assert_true(absf(fwd.x) > 0.9 or absf(fwd.z) > 0.9,
 						"Cartel de máquina '%s' debe orientarse hacia el pasillo (+X/-X/+Z/-Z), fwd=%s" % [l3d.text, str(fwd)]) and ok
+					ok = _assert_true(not l3d.double_sided,
+						"Cartel de máquina '%s' debe ser single-sided (double_sided=false) para no espejarse a través de muros" % l3d.text) and ok
+					var m_grp := str(l3d.get_meta("machine_group", ""))
+					if m_grp in ["unidad_extraccion", "horno", "soplador", "intercambiador_calor", "ductos_aire"]:
+						ok = _assert_true(fwd.x < -0.9,
+							"Cartel exterior Oeste '%s' debe mirar hacia -X para leerse desde el patio oeste (fwd=%s)" % [l3d.text, str(fwd)]) and ok
 				else:
 					billboard_lbl_count += 1
 					ok = _assert_true(l3d.billboard != BaseMaterial3D.BILLBOARD_DISABLED,

@@ -381,11 +381,11 @@ const MACHINE_AISLE_LABEL_SPECS: Dictionary = {
 	"secador_rotatorio": {"text": "08 · SECADOR ROTATORIO", "face": "+x", "y_pref": 3.92, "lat_pref": 36.25, "pixel_size": 0.0031, "offset": 0.22},
 	"ciclon_separador": {"text": "09 · CICLÓN SEPARADOR", "face": "+x", "y_pref": 6.20, "lat_pref": 33.45, "pixel_size": 0.0026, "offset": 0.85},
 	"cyclone": {"text": "10 · CICLONES\nCLASIFICADORES", "face": "+x", "y_pref": 3.65, "lat_pref": 29.15, "pixel_size": 0.0023, "offset": 0.38},
-	"unidad_extraccion": {"text": "11 · UNIDAD DE\nEXTRACCIÓN", "face": "-z", "y_pref": 1.85, "lat_pref": -39.65, "pixel_size": 0.0018, "offset": 0.25},
-	"horno": {"text": "12 · HORNO TÉRMICO", "face": "-z", "y_pref": 3.45, "lat_pref": -35.95, "pixel_size": 0.0023, "offset": 0.20},
-	"soplador": {"text": "13 · SOPLADOR", "face": "+z", "y_pref": 2.05, "lat_pref": -35.50, "pixel_size": 0.0025, "offset": 0.20},
-	"intercambiador_calor": {"text": "14 · INTERCAMBIADOR\nDE CALOR", "face": "-z", "y_pref": 1.80, "lat_pref": -33.50, "pixel_size": 0.0022, "offset": 0.20},
-	"ductos_aire": {"text": "15 · DUCTOS DE AIRE", "face": "+x", "y_pref": 5.95, "lat_pref": 37.30, "pixel_size": 0.0028, "offset": 0.22}
+	"unidad_extraccion": {"text": "11 · UNIDAD DE\nEXTRACCIÓN", "face": "-x", "y_pref": 1.48, "lat_pref": 36.34, "pixel_size": 0.0019, "offset": 0.22},
+	"horno": {"text": "12 · HORNO TÉRMICO", "face": "-x", "y_pref": 3.55, "y_offset": 0.12, "lat_pref": 34.35, "pixel_size": 0.0026, "offset": 0.24},
+	"soplador": {"text": "13 · SOPLADOR", "face": "-x", "y_pref": 2.60, "y_offset": 0.52, "lat_pref": 38.85, "pixel_size": 0.0024, "offset": 0.24},
+	"intercambiador_calor": {"text": "14 · INTERCAMBIADOR\nDE CALOR", "face": "-x", "y_pref": 2.35, "y_offset": 0.25, "lat_pref": 31.00, "pixel_size": 0.0024, "offset": 0.24},
+	"ductos_aire": {"text": "15 · DUCTOS DE AIRE", "face": "-x", "y_pref": 4.05, "lat_pref": 31.30, "pixel_size": 0.0028, "offset": 0.24}
 }
 
 func _exit_tree() -> void:
@@ -619,7 +619,7 @@ func _setup_machine_aisle_labels(scene_root: Node) -> void:
 		var box: AABB = _group_aabbs[group_key]
 		var face: String = str(spec.get("face", "+x"))
 		var y_pref: float = clampf(float(spec.get("y_pref", box.get_center().y)), box.position.y + 0.30, box.end.y - 0.15)
-		var lat_def: float = box.get_center().z if face == "+x" else box.get_center().x
+		var lat_def: float = box.get_center().z if (face == "+x" or face == "-x") else box.get_center().x
 		var lat_pref: float = float(spec.get("lat_pref", lat_def))
 		var offset: float = float(spec.get("offset", 0.08))
 		var y_offset: float = float(spec.get("y_offset", 0.0))
@@ -629,7 +629,7 @@ func _setup_machine_aisle_labels(scene_root: Node) -> void:
 		lbl.name = "AisleLabel_" + group_key
 		lbl.text = str(spec.get("text", MACHINE_DISPLAY_NAMES.get(group_key, group_key.to_upper())))
 		lbl.billboard = BaseMaterial3D.BILLBOARD_DISABLED
-		lbl.double_sided = true
+		lbl.double_sided = false
 		lbl.shaded = false
 		lbl.no_depth_test = true
 		lbl.font_size = int(spec.get("font_size", 84))
