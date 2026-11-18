@@ -1930,6 +1930,43 @@ func _qa_10_main_scene_integration() -> void:
 				"Retroceder durante la historia de Portería debe limpiar botones de opciones de diálogo y reiniciar Portería limpiamente"
 			) and ok
 
+			# Regresión: Ingresar a la planta sin EPP dispara advertencia, hace que el Supervisor SST llegue al jugador y le diga que no puede estar ahí
+			var lk_nepp := inst.find_child("LockerEPPStation", true, false)
+			if lk_nepp != null and lk_nepp.has_method("set_epp_equipped"):
+				lk_nepp.set_epp_equipped(false)
+			tut_node.set("epp_completed", false)
+			var safe_zones_free: bool = (
+				not bool(tut_node.is_position_in_restricted_plant(Vector3(-15.9, 0.79, 47.88)))
+				and not bool(tut_node.is_position_in_restricted_plant(Vector3(52.0, 0.02, 34.0)))
+				and not bool(tut_node.is_position_in_restricted_plant(Vector3(27.0, 0.41, 33.1)))
+				and bool(tut_node.is_position_in_restricted_plant(Vector3(-18.69, 0.85, 45.0)))
+				and bool(tut_node.is_position_in_restricted_plant(Vector3(-25.0, 0.85, 38.0)))
+			)
+			player.global_position = Vector3(-18.69, 0.85, 45.0)
+			var intr_triggered: bool = bool(tut_node.evaluate_no_epp_plant_intrusion(player.global_position))
+			var sst_intercepting: bool = bool(guide.get("sst_intercept_active"))
+			# Simular pasos físicos para que Carlos Mendoza llegue cara a cara al jugador y entregue la advertencia
+			for _st in range(180):
+				guide._physics_process(0.05)
+				if bool(guide.get("sst_intercept_arrived")):
+					break
+			var sst_dist_after: float = Vector2(guide.global_position.x - player.global_position.x, guide.global_position.z - player.global_position.z).length()
+			var dlg_body_nepp := hud_ctrl.find_child("DialogueBody", true, false) as Label
+			var dlg_txt_nepp: String = dlg_body_nepp.text.to_lower() if dlg_body_nepp != null else ""
+			ok = _assert_true(
+				safe_zones_free and intr_triggered and sst_intercepting
+				and bool(guide.get("sst_intercept_arrived")) and sst_dist_after <= 2.3
+				and dlg_txt_nepp.contains("no puedes estar") and dlg_txt_nepp.contains("vestidores"),
+				"Entrar a planta sin EPP debe activar advertencia y traer al Supervisor SST frente al jugador (arrived=%s, dist=%.2f, dlg=%s)" % [str(guide.get("sst_intercept_arrived")), sst_dist_after, dlg_txt_nepp]
+			) and ok
+			# Al salir a vestidores debe despejarse limpiamente la interceptación
+			player.global_position = Vector3(-15.9, 0.79, 47.88)
+			tut_node.evaluate_no_epp_plant_intrusion(player.global_position)
+			ok = _assert_true(
+				not bool(tut_node.is_no_epp_intrusion_active()) and not bool(guide.get("sst_intercept_active")),
+				"Salir de la planta hacia Vestidores debe limpiar la interceptación SST sin bloqueo"
+			) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

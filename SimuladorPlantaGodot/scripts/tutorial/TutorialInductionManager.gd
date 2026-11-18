@@ -293,6 +293,13 @@ var _conv_beat_queue: Array[Dictionary] = []
 var _conv_beat_timer: float = 0.0
 var _conv_asked_topics: Array[String] = []
 var _tour_machines_started: bool = false
+var _no_epp_intrusion_active: bool = false
+var _no_epp_last_alert_ms: int = -60000
+var _no_epp_last_scold_ms: int = -60000
+var _no_epp_saved_guide_pos: Vector3 = Vector3.INF
+var _no_epp_saved_guide_had_target: bool = false
+var _no_epp_saved_guide_waypoints: Array[Vector3] = []
+var _no_epp_saved_guide_target: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	loto_controller = get_node_or_null("LotoGoldenRulesController")
@@ -548,6 +555,7 @@ func _process(delta: float) -> void:
 		_update_guide_line_progress()
 
 	var p_pos: Vector3 = _player_ref.global_position
+	evaluate_no_epp_plant_intrusion(p_pos)
 	if sst_course_active and not sst_course_completed:
 		var flat_m := Vector2(p_pos.x - MEETING_ROOM_POS.x, p_pos.z - MEETING_ROOM_POS.z).length()
 		var dy_m := absf(p_pos.y - MEETING_ROOM_POS.y)
@@ -684,9 +692,164 @@ func try_advance_station_by_interact() -> String:
 func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 	epp_completed = all_equipped
 	if all_equipped:
+		if _no_epp_intrusion_active:
+			_clear_no_epp_interception(true)
 		visit_station(2)
 		_advance_tour_target(3)
 	_notify_glow_controller()
+
+func is_player_wearing_epp() -> bool:
+	if is_inside_tree():
+		var lk := get_tree().root.find_child("LockerEPPStation", true, false)
+		if lk != null and is_instance_valid(lk) and "epp_equipped" in lk:
+			return bool(lk.get("epp_equipped"))
+	return epp_completed
+
+func is_position_in_restricted_plant(p: Vector3) -> bool:
+	# Vestidores EPP (X=[-17.75..-12.4], Z=[44.5..50.4]) y accesos exteriores administrativos siempre son libres sin EPP
+	if p.x >= -17.75 and p.x <= -12.4 and p.z >= 44.5 and p.z <= 50.4:
+		return false
+	# 1) Nave de Producción interior (Pasillo Peatonal, Tolva, Molienda 10 HP, CCM 460 V, Secador, Ciclones, Almacén)
+	if p.x >= -31.5 and p.x <= -17.75 and p.z >= 22.8 and p.z <= 49.45:
+		return true
+	# 2) Bahía de Carga Este interior / zona de puertas enrollables y estiba de sacos
+	if p.x >= -17.75 and p.x <= -14.8 and p.z >= 22.8 and p.z <= 34.5:
+		return true
+	# 3) Zona de Carga Norte y Bandas Exteriores (Estaciones 3 y 4)
+	if p.x >= -34.0 and p.x <= -21.5 and p.z >= 49.45 and p.z <= 55.5:
+		return true
+	# 4) Zona de Aire y Térmica Exterior (Intercambiador, Horno, Extracción, Soplador)
+	if p.x >= -42.5 and p.x <= -31.5 and p.z >= 21.5 and p.z <= 43.0:
+		return true
+	return false
+
+func is_no_epp_intrusion_active() -> bool:
+	return _no_epp_intrusion_active
+
+func evaluate_no_epp_plant_intrusion(p_pos: Vector3) -> bool:
+	if is_player_wearing_epp():
+		if _no_epp_intrusion_active:
+			_clear_no_epp_interception(true)
+		return false
+	var in_plant := is_position_in_restricted_plant(p_pos)
+	if not in_plant:
+		if _no_epp_intrusion_active:
+			_clear_no_epp_interception(false)
+		return false
+
+	var now_ms := Time.get_ticks_msec()
+	if not _no_epp_intrusion_active:
+		_no_epp_intrusion_active = true
+		if _guide_worker != null and is_instance_valid(_guide_worker):
+			_no_epp_saved_guide_pos = _guide_worker.global_position
+			_no_epp_saved_guide_had_target = bool(_guide_worker.get("guide_has_target"))
+			var wps_raw = _guide_worker.get("guide_waypoints")
+			_no_epp_saved_guide_waypoints.clear()
+			if wps_raw is Array:
+				for wp_item in wps_raw:
+					if wp_item is Vector3:
+						_no_epp_saved_guide_waypoints.append(wp_item)
+			_no_epp_saved_guide_target = _guide_worker.get("guide_target_pos") as Vector3 if _guide_worker.get("guide_target_pos") is Vector3 else _guide_worker.global_position
+
+		if (now_ms - _no_epp_last_alert_ms) >= 8000:
+			_no_epp_last_alert_ms = now_ms
+			var bus = get_node_or_null("/root/EventBus")
+			if bus != null:
+				if bus.has_signal("notification_posted"):
+					bus.notification_posted.emit(
+						"Acceso sin EPP prohibido",
+						"Sal a vestidores. El Supervisor SST se acerca.",
+						"error"
+					)
+				if bus.has_signal("safety_violation_committed"):
+					bus.safety_violation_committed.emit(
+						"INGRESO_SIN_EPP",
+						"Ingreso a la planta industrial sin equipo de protección personal (EPP).",
+						0.8
+					)
+
+		_dispatch_sst_intercept_to_player(p_pos)
+	elif _guide_worker != null and is_instance_valid(_guide_worker):
+		if bool(_guide_worker.get("sst_intercept_arrived")) and (now_ms - _no_epp_last_scold_ms) >= 12000:
+			_on_sst_intercept_arrived()
+	return true
+
+func _dispatch_sst_intercept_to_player(p_pos: Vector3) -> void:
+	if _guide_worker == null or not is_instance_valid(_guide_worker) or not _guide_worker.has_method("start_sst_intercept"):
+		_on_sst_intercept_arrived()
+		return
+
+	var g_pos: Vector3 = _guide_worker.global_position
+	var flat_dist := Vector2(p_pos.x - g_pos.x, p_pos.z - g_pos.z).length()
+	var approach_wps: Array[Vector3] = []
+
+	# Si el Supervisor SST está muy lejos (p. ej. en Portería u Oficinas), entra por el acceso más cercano a la zona del jugador
+	if flat_dist > 16.0:
+		var is_interior := (p_pos.x >= -31.5 and p_pos.x <= -14.8 and p_pos.z >= 22.8 and p_pos.z <= 49.45)
+		var entry_candidates: Array[Vector3] = []
+		if is_interior:
+			entry_candidates = [
+				Vector3(-18.69, 0.83, 48.8),
+				Vector3(-18.69, 0.83, 41.5),
+				Vector3(-18.69, 0.83, 33.5),
+				Vector3(-18.69, 0.83, 24.5),
+				Vector3(-15.6, 0.80, 25.4)
+			]
+		else:
+			entry_candidates = [
+				Vector3(-25.4, 0.63, 51.0),
+				Vector3(-18.69, 0.63, 50.8),
+				Vector3(-33.5, 0.04, 22.2),
+				Vector3(-44.6, 0.14, 28.4),
+				Vector3(-45.5, 0.06, 36.4)
+			]
+		var best_entry := entry_candidates[0]
+		var best_score := 999999.0
+		for cand in entry_candidates:
+			var d := Vector2(cand.x - p_pos.x, cand.z - p_pos.z).length()
+			if d < 4.0:
+				continue
+			var score := absf(d - 7.5)
+			if score < best_score:
+				best_score = score
+				best_entry = cand
+		_guide_worker.global_position = best_entry
+		if "velocity" in _guide_worker:
+			_guide_worker.velocity = Vector3.ZERO
+	elif g_pos.x >= -17.75 and g_pos.x <= -12.4 and g_pos.z >= 44.5 and g_pos.z <= 50.4 and p_pos.x < -17.75:
+		# Si Carlos está dentro de Vestidores y el jugador entró a la Nave, salir por la puerta de Vestidores hacia Puerta Doble Norte
+		approach_wps = [
+			Vector3(-13.9, 0.83, 47.60),
+			Vector3(-13.9, 0.63, 50.80),
+			Vector3(-18.69, 0.63, 50.10),
+			Vector3(-18.69, 0.83, 48.60)
+		]
+
+	_guide_worker.start_sst_intercept(_player_ref, approach_wps, Callable(self, "_on_sst_intercept_arrived"))
+
+func _on_sst_intercept_arrived() -> void:
+	_no_epp_last_scold_ms = Time.get_ticks_msec()
+	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+	if hud != null and hud.has_method("show_npc_dialogue"):
+		hud.show_npc_dialogue(
+			SST_SPEAKER_HEADER,
+			"¡Alto! No puedes estar aquí dentro de la planta sin tu equipo de protección personal (EPP). Por seguridad RETIE y OSHA debes salir de inmediato hacia los vestidores y equiparte en los lockers verdes.",
+			10.0
+		)
+
+func _clear_no_epp_interception(equipped_now: bool) -> void:
+	_no_epp_intrusion_active = false
+	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("clear_sst_intercept"):
+		_guide_worker.clear_sst_intercept()
+	if equipped_now or _guide_worker == null or not is_instance_valid(_guide_worker):
+		return
+	if briefing_completed and not epp_completed and target_station_id == 2 and _guide_worker.has_method("set_guide_route"):
+		var vest_pos: Vector3 = TOUR_ROUTE_POINTS[int(STATION_TO_ROUTE_IDX.get(2, 19))]
+		_guide_worker.set_guide_route([Vector3(-18.69, 0.83, 49.45), Vector3(-13.9, 0.63, 51.00), Vector3(-13.9, 0.83, 47.60), vest_pos], vest_pos)
+	elif _no_epp_saved_guide_had_target and not _no_epp_saved_guide_waypoints.is_empty() and _guide_worker.has_method("set_guide_route"):
+		_guide_worker.set_guide_route(_no_epp_saved_guide_waypoints, _no_epp_saved_guide_target)
+	elif not briefing_completed and _no_epp_saved_guide_pos != Vector3.INF and _guide_worker.has_method("snap_guide_to_position"):
+		_guide_worker.snap_guide_to_position(_no_epp_saved_guide_pos)
 
 func _on_golden_rules_completed() -> void:
 	if epp_completed:
@@ -1113,6 +1276,9 @@ func load_previous_checkpoint() -> Dictionary:
 	var prev_pos: Vector3 = prev_st["pos"]
 
 	# 3. Restaurar estado coherente del recorrido, estaciones visitadas, EPP, guía SST y diálogo limpio
+	_no_epp_intrusion_active = false
+	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("clear_sst_intercept"):
+		_guide_worker.clear_sst_intercept()
 	is_briefing_active = false
 	tutorial_skipped = false
 	induction_certified = false
@@ -1305,6 +1471,9 @@ func get_state_summary() -> Dictionary:
 	}
 
 func skip_tutorial_to_final_station() -> Dictionary:
+	_no_epp_intrusion_active = false
+	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("clear_sst_intercept"):
+		_guide_worker.clear_sst_intercept()
 	_stop_exterior_narration()
 	tutorial_skipped = true
 	is_briefing_active = false

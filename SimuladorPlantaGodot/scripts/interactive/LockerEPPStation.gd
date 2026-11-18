@@ -103,13 +103,18 @@ func _on_interlock_area_entered(body: Node3D) -> void:
 		return
 	if epp_equipped:
 		return
+	if is_inside_tree():
+		var tut := get_tree().root.find_child("TutorialInductionManager", true, false)
+		if tut != null and tut.has_method("evaluate_no_epp_plant_intrusion"):
+			tut.evaluate_no_epp_plant_intrusion(body.global_position)
+			return
 	if _violation_cooldown <= 0.0:
 		_violation_cooldown = 4.0
 		var bus = get_node_or_null("/root/EventBus")
 		if bus != null:
 			if bus.has_signal("notification_posted"):
 				bus.notification_posted.emit(
-					"Acceso bloqueado",
+					"Acceso sin EPP prohibido",
 					"Equipa tu EPP en vestidores antes de entrar.",
 					"error"
 				)

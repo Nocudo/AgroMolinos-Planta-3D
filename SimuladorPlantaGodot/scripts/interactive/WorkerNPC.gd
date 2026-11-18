@@ -43,6 +43,14 @@ var player_ref: Node3D = null
 var _dock_look_target: Vector3 = Vector3.ZERO
 var _scripted_pose_active: bool = false
 
+# Interceptación de emergencia SST cuando el jugador entra a la planta sin EPP
+var sst_intercept_active: bool = false
+var sst_intercept_arrived: bool = false
+var sst_intercept_speed: float = 5.4
+var _sst_intercept_waypoints: Array[Vector3] = []
+var _sst_intercept_callback: Callable = Callable()
+var _sst_intercept_spoke: bool = false
+
 func set_work_state(anim_name: String, look_target: Vector3, live_dialogue: String = "") -> void:
 	external_animation_control = true
 	_scripted_pose_active = false
@@ -181,6 +189,9 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		if _dock_look_target != Vector3.ZERO:
 			_face_point(_dock_look_target, delta * 5.5)
+	elif is_tour_guide and sst_intercept_active:
+		_process_sst_intercept_movement(delta)
+		_try_auto_step(delta)
 	elif is_tour_guide and guide_has_target:
 		_process_tour_guide_movement(delta)
 		_try_auto_step(delta)
@@ -377,7 +388,91 @@ func _find_unobstructed_floor_point(probe: Vector3) -> Vector3:
 		return Vector3(probe.x, floor_y + 0.02, probe.z)
 	return Vector3.INF
 
+func start_sst_intercept(target_player: Node3D, approach_waypoints: Array[Vector3] = [], on_arrived_cb: Callable = Callable()) -> void:
+	is_tour_guide = true
+	if target_player != null:
+		player_ref = target_player
+	sst_intercept_active = true
+	sst_intercept_arrived = false
+	_sst_intercept_spoke = false
+	_sst_intercept_waypoints = approach_waypoints.duplicate()
+	_sst_intercept_callback = on_arrived_cb
+	guide_has_target = false
+	is_explaining = false
+	_explain_timer = 0.0
+	_interact_anim_timer = 0.0
+	_guide_stuck_timer = 0.0
+	_stuck_anchor_xz = Vector2(global_position.x, global_position.z)
+
+func clear_sst_intercept() -> void:
+	sst_intercept_active = false
+	sst_intercept_arrived = false
+	_sst_intercept_spoke = false
+	_sst_intercept_waypoints.clear()
+	_sst_intercept_callback = Callable()
+
+func _process_sst_intercept_movement(delta: float) -> void:
+	if player_ref == null and is_inside_tree():
+		player_ref = get_tree().root.find_child("PlayerOperator", true, false) as Node3D
+	if player_ref == null or not is_instance_valid(player_ref):
+		clear_sst_intercept()
+		return
+
+	var p_pos := player_ref.global_position
+	var dist_to_player := Vector2(p_pos.x - global_position.x, p_pos.z - global_position.z).length()
+
+	if dist_to_player <= 2.1:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_sst_intercept_waypoints.clear()
+		_guide_stuck_timer = 0.0
+		_face_point(p_pos, delta * 9.0)
+		if not _sst_intercept_spoke:
+			_sst_intercept_spoke = true
+			sst_intercept_arrived = true
+			if anim_player != null and anim_player.has_animation("interact"):
+				_interact_anim_timer = 1.4
+				current_anim = "interact"
+				anim_player.play("interact", 0.18)
+				var ia := anim_player.get_animation("interact")
+				if ia != null:
+					ia.loop_mode = Animation.LOOP_NONE
+			if _sst_intercept_callback.is_valid():
+				_sst_intercept_callback.call()
+		elif _interact_anim_timer <= 0.0:
+			_play_locomotion_anim("idle", 0.2)
+		return
+
+	if sst_intercept_arrived and dist_to_player > 3.2:
+		sst_intercept_arrived = false
+
+	while _sst_intercept_waypoints.size() > 0:
+		var wp0 := _sst_intercept_waypoints[0]
+		if Vector2(wp0.x - global_position.x, wp0.z - global_position.z).length() <= 0.65:
+			_sst_intercept_waypoints.remove_at(0)
+		else:
+			break
+
+	var target_now := _sst_intercept_waypoints[0] if _sst_intercept_waypoints.size() > 0 else p_pos
+	var dir_vec := Vector3(target_now.x - global_position.x, 0.0, target_now.z - global_position.z)
+	_open_doors_ahead(dir_vec)
+	var remain := dir_vec.length()
+	if remain > 0.05:
+		var dir := dir_vec / remain
+		var spd := sst_intercept_speed if dist_to_player > 3.2 else minf(sst_intercept_speed, 3.8)
+		velocity.x = dir.x * spd
+		velocity.z = dir.z * spd
+		_update_guide_stuck_recovery(delta, target_now, dir)
+		_face_point(target_now, delta * 9.0)
+		var loc_anim := "run" if (dist_to_player > 4.2 and anim_player != null and anim_player.has_animation("run")) else "walk"
+		_play_locomotion_anim(loc_anim, 0.16)
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_locomotion_anim("idle", 0.2)
+
 func set_guide_route(waypoints: Array[Vector3], final_target: Vector3) -> void:
+	clear_sst_intercept()
 	is_tour_guide = true
 	guide_waypoints = waypoints.duplicate()
 	guide_target_pos = final_target
@@ -393,6 +488,7 @@ func set_guide_target(pos: Vector3) -> void:
 	set_guide_route([pos], pos)
 
 func snap_guide_to_position(pos: Vector3) -> void:
+	clear_sst_intercept()
 	global_position = pos
 	velocity = Vector3.ZERO
 	guide_waypoints.clear()
@@ -409,6 +505,8 @@ func snap_guide_to_position(pos: Vector3) -> void:
 func can_interact() -> bool:
 	if not is_tour_guide:
 		return true
+	if sst_intercept_active:
+		return sst_intercept_arrived
 	return not guide_has_target and not is_explaining and has_arrived_and_explained
 
 func _begin_arrival_explanation() -> void:
@@ -518,6 +616,12 @@ func interact(_tool_id: int = 1) -> String:
 
 	var bus = get_node_or_null("/root/EventBus")
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	if is_tour_guide and sst_intercept_active:
+		var warn_msg := "¡Alto! No puedes estar aquí dentro de la planta sin tu equipo de protección personal (EPP). Sal de inmediato hacia los vestidores y equípate en los lockers verdes."
+		var hud_i = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+		if hud_i != null and hud_i.has_method("show_npc_dialogue"):
+			hud_i.show_npc_dialogue(get_subtitle_header(), warn_msg, 10.0)
+		return warn_msg
 	# 1) Primero en Portería: iniciar la historia de la empresa antes de ofrecer el curso SST
 	if is_tour_guide and tut != null and not bool(tut.briefing_completed) and not bool(tut.get("porteria_story_completed")) and not bool(tut.get("porteria_story_active")):
 		if tut.has_method("start_porteria_story"):
