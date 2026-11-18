@@ -79,7 +79,7 @@ func _build_layout() -> void:
 	# 1. Tarjeta 3D del Personaje (al lado izquierdo de la hotbar, estilo papel-doll de Minecraft)
 	_build_avatar_card(root_hbox)
 
-	# 2. Hotbar estilo Minecraft (5 slots + título herramienta activa encima)
+	# 2. Hotbar estilo Minecraft (5 slots sin leyenda redundante encima)
 	var hotbar_vb := VBoxContainer.new()
 	hotbar_vb.name = "HotbarColumn"
 	hotbar_vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -87,31 +87,6 @@ func _build_layout() -> void:
 	hotbar_vb.alignment = BoxContainer.ALIGNMENT_END
 	hotbar_vb.add_theme_constant_override("separation", 5)
 	root_hbox.add_child(hotbar_vb)
-
-	var banner_panel := PanelContainer.new()
-	banner_panel.name = "ActiveToolBanner"
-	banner_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	banner_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var b_st := StyleBoxFlat.new()
-	b_st.bg_color = Color(0.05, 0.08, 0.13, 0.80)
-	b_st.border_color = Color(1.0, 0.84, 0.28, 0.72)
-	b_st.set_border_width_all(1)
-	b_st.set_corner_radius_all(5)
-	b_st.content_margin_left = 12.0
-	b_st.content_margin_right = 12.0
-	b_st.content_margin_top = 2.0
-	b_st.content_margin_bottom = 2.0
-	banner_panel.add_theme_stylebox_override("panel", b_st)
-	hotbar_vb.add_child(banner_panel)
-
-	_lbl_tool_banner = Label.new()
-	_lbl_tool_banner.name = "LblHotbarActiveTool"
-	_lbl_tool_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_lbl_tool_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_lbl_tool_banner.add_theme_font_size_override("font_size", 12)
-	_lbl_tool_banner.add_theme_color_override("font_color", Color(1.0, 0.90, 0.42, 1.0))
-	_lbl_tool_banner.text = "1 • Manos"
-	banner_panel.add_child(_lbl_tool_banner)
 
 	# Bandeja Minecraft exterior
 	var tray := PanelContainer.new()
