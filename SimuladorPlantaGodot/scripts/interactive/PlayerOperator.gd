@@ -188,8 +188,8 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 	_wearing_epp = all_equipped
 	if character_visual == null:
 		return
-	var tex_epp := load("res://assets/models/trabajador_logistica_trabajador_logistica_0.jpg") as Texture2D if ResourceLoader.exists("res://assets/models/trabajador_logistica_trabajador_logistica_0.jpg") else null
-	var tex_civil := load("res://assets/models/trabajador_operario_trabajador_operario_0.jpg") as Texture2D if ResourceLoader.exists("res://assets/models/trabajador_operario_trabajador_operario_0.jpg") else null
+	var tex_epp := load("res://assets/textures_lowres/worker_epp.png") as Texture2D if ResourceLoader.exists("res://assets/textures_lowres/worker_epp.png") else null
+	var tex_civil := load("res://assets/textures_lowres/worker_civil.png") as Texture2D if ResourceLoader.exists("res://assets/textures_lowres/worker_civil.png") else null
 	var mesh_instances := character_visual.find_children("*", "MeshInstance3D", true, false)
 	for child in mesh_instances:
 		var mi := child as MeshInstance3D

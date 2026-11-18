@@ -11,8 +11,8 @@ extends Control
 
 const HumanGaitAnimatorScript = preload("res://scripts/interactive/HumanGaitAnimator.gd")
 const OPERARIO_SCENE_PATH := "res://assets/models/trabajador_operario.glb"
-const TEX_CIVIL_PATH := "res://assets/models/trabajador_operario_trabajador_operario_0.jpg"
-const TEX_EPP_PATH := "res://assets/models/trabajador_logistica_trabajador_logistica_0.jpg"
+const TEX_CIVIL_PATH := "res://assets/textures_lowres/worker_civil.png"
+const TEX_EPP_PATH := "res://assets/textures_lowres/worker_epp.png"
 
 const TOOL_SPECS: Array[Dictionary] = [
 	{"id": 1, "short": "Manos", "full": "1 • Manos", "accent": Color(0.78, 0.88, 1.0, 1.0)},
