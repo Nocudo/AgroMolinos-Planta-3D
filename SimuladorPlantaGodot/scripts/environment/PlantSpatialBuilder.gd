@@ -311,6 +311,82 @@ func _signed_angle_xz(from_xz: Vector2, to_xz: Vector2) -> float:
 	var v := to_xz.normalized()
 	return atan2(u.y * v.x - u.x * v.y, u.dot(v))
 
+func _dist_point_to_seg_2d(p: Vector2, a: Vector2, b: Vector2) -> float:
+	var ab := b - a
+	var l2 := ab.length_squared()
+	if l2 < 1e-8:
+		return p.distance_to(a)
+	var t := clampf((p - a).dot(ab) / l2, 0.0, 1.0)
+	return p.distance_to(a + ab * t)
+
+func _extract_panel_xz_geometry(mi: MeshInstance3D) -> Dictionary:
+	var pts: Array[Vector2] = []
+	var mean := Vector2.ZERO
+	var min_y := INF
+	var max_y := -INF
+	if mi != null and mi.mesh != null:
+		var xf := mi.global_transform
+		for s in range(mi.mesh.get_surface_count()):
+			var arr := mi.mesh.surface_get_arrays(s)
+			if arr.size() <= Mesh.ARRAY_VERTEX:
+				continue
+			var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			for v in verts:
+				var w := xf * v
+				var p2 := Vector2(w.x, w.z)
+				pts.append(p2)
+				mean += p2
+				min_y = minf(min_y, w.y)
+				max_y = maxf(max_y, w.y)
+	if pts.is_empty():
+		var b := _get_world_aabb(mi) if mi != null else AABB()
+		var c := Vector2(b.get_center().x, b.get_center().z)
+		var dir_fb := Vector2(1.0, 0.0) if b.size.x >= b.size.z else Vector2(0.0, 1.0)
+		var half_l := maxf(b.size.x, b.size.z) * 0.5
+		return {
+			"valid": false, "end0": c - dir_fb * half_l, "end1": c + dir_fb * half_l,
+			"center": c, "dir": dir_fb, "len": half_l * 2.0, "thk": minf(b.size.x, b.size.z),
+			"min_y": b.position.y, "max_y": b.end.y
+		}
+	mean /= float(pts.size())
+	var cxx := 0.0
+	var czz := 0.0
+	var cxz := 0.0
+	for p in pts:
+		var d := p - mean
+		cxx += d.x * d.x
+		czz += d.y * d.y
+		cxz += d.x * d.y
+	var theta := 0.5 * atan2(2.0 * cxz, cxx - czz)
+	var dir := Vector2(cos(theta), sin(theta))
+	var perp := Vector2(-dir.y, dir.x)
+	var min_u := INF
+	var max_u := -INF
+	var min_v := INF
+	var max_v := -INF
+	for p in pts:
+		var d := p - mean
+		var u := d.dot(dir)
+		var v := d.dot(perp)
+		min_u = minf(min_u, u)
+		max_u = maxf(max_u, u)
+		min_v = minf(min_v, v)
+		max_v = maxf(max_v, v)
+	var mid_v := 0.5 * (min_v + max_v)
+	var e0 := mean + dir * min_u + perp * mid_v
+	var e1 := mean + dir * max_u + perp * mid_v
+	return {
+		"valid": true,
+		"end0": e0,
+		"end1": e1,
+		"center": 0.5 * (e0 + e1),
+		"dir": dir,
+		"len": max_u - min_u,
+		"thk": max_v - min_v,
+		"min_y": min_y,
+		"max_y": max_y
+	}
+
 func _create_door_node(parent_root: Node3D, world_center: Vector3, label_prefix: String) -> InteractiveDoorScript:
 	var door: InteractiveDoorScript = InteractiveDoorScript.new()
 	door.name = "Door_%s" % parent_root.name.validate_node_name()
@@ -319,6 +395,85 @@ func _create_door_node(parent_root: Node3D, world_center: Vector3, label_prefix:
 	door.global_position = world_center
 	door.global_basis = Basis.IDENTITY
 	return door
+
+func _build_aligned_single_hinged_door(
+	root: Node3D,
+	frame_node: Node3D,
+	leaf_node: Node3D,
+	label_prefix: String,
+	explicit_hinge_2d: Vector2,
+	has_explicit_hinge: bool
+) -> void:
+	var frame_panel := _find_largest_mesh(frame_node)
+	var leaf_panel := _find_largest_mesh(leaf_node)
+	if frame_panel == null or leaf_panel == null:
+		return
+
+	var f_geo := _extract_panel_xz_geometry(frame_panel)
+	var l_geo := _extract_panel_xz_geometry(leaf_panel)
+	var f_e0: Vector2 = f_geo["end0"]
+	var f_e1: Vector2 = f_geo["end1"]
+	var f_center_2d: Vector2 = f_geo["center"]
+	var l_e0: Vector2 = l_geo["end0"]
+	var l_e1: Vector2 = l_geo["end1"]
+
+	# Identificar el extremo real de bisagra en la hoja (el más cercano a las bisagras o al marco)
+	var d0 := l_e0.distance_to(explicit_hinge_2d) if has_explicit_hinge else _dist_point_to_seg_2d(l_e0, f_e0, f_e1)
+	var d1 := l_e1.distance_to(explicit_hinge_2d) if has_explicit_hinge else _dist_point_to_seg_2d(l_e1, f_e0, f_e1)
+	var leaf_hinge_2d: Vector2 = l_e0 if d0 <= d1 else l_e1
+	var leaf_free_2d: Vector2 = l_e1 if d0 <= d1 else l_e0
+
+	# Identificar la jamba de bisagra del marco y el vector exacto de cierre paralelo al plano real del marco
+	var frame_hinge_2d: Vector2 = f_e0 if leaf_hinge_2d.distance_to(f_e0) <= leaf_hinge_2d.distance_to(f_e1) else f_e1
+	var frame_latch_2d: Vector2 = f_e1 if frame_hinge_2d == f_e0 else f_e0
+
+	var u_leaf := (leaf_free_2d - leaf_hinge_2d).normalized()
+	var v_close := (frame_latch_2d - frame_hinge_2d).normalized()
+	var closed_angle := _signed_angle_xz(u_leaf, v_close)
+	var swing_sign := -signf(closed_angle) if absf(closed_angle) > deg_to_rad(10.0) else 1.0
+	var open_angle := closed_angle + swing_sign * deg_to_rad(90.0)
+
+	var f_center_3d := Vector3(f_center_2d.x, 0.5 * (float(f_geo["min_y"]) + float(f_geo["max_y"])), f_center_2d.y)
+	var hinge_pos_3d := Vector3(leaf_hinge_2d.x, float(f_geo["min_y"]), leaf_hinge_2d.y)
+
+	var door: InteractiveDoorScript = _create_door_node(root, f_center_3d, label_prefix)
+	var pivot := Node3D.new()
+	pivot.name = "HingePivot"
+	door.add_child(pivot)
+	pivot.global_position = hinge_pos_3d
+	pivot.global_basis = Basis.IDENTITY
+	leaf_node.reparent(pivot, true)
+
+	# Cerrar exactamente paralelo al marco y ajustar el asiento del pivote para centrado milimétrico en la jamba
+	pivot.rotation.y = closed_angle
+	var closed_geo := _extract_panel_xz_geometry(leaf_panel)
+	var shift_2d: Vector2 = f_center_2d - (closed_geo["center"] as Vector2)
+	pivot.global_position += Vector3(shift_2d.x, 0.0, shift_2d.y)
+
+	# Sellar cualquier holgura excesiva del CAD entre marco y hoja (p. ej. puertas de seguridad 0.99 m en vano 1.17 m)
+	var inner_frame_len := maxf(float(f_geo["len"]) - 0.06, 0.4)
+	var cur_leaf_len := maxf(float(closed_geo["len"]), 0.1)
+	if inner_frame_len > cur_leaf_len + 0.03:
+		var fit_ratio := clampf(inner_frame_len / cur_leaf_len, 1.0, 1.28)
+		var fit_node := Node3D.new()
+		fit_node.name = "LeafWidthFit"
+		pivot.add_child(fit_node)
+		var span_dir_3d := Vector3(v_close.x, 0.0, v_close.y).normalized()
+		var perp_3d := Vector3(-v_close.y, 0.0, v_close.x).normalized()
+		fit_node.global_transform = Transform3D(Basis(span_dir_3d, Vector3.UP, perp_3d), Vector3(f_center_2d.x, float(f_geo["min_y"]), f_center_2d.y))
+		leaf_node.reparent(fit_node, true)
+		fit_node.scale = Vector3(fit_ratio, 1.0, 1.0)
+		var post_geo := _extract_panel_xz_geometry(leaf_panel)
+		var post_shift: Vector2 = f_center_2d - (post_geo["center"] as Vector2)
+		pivot.global_position += Vector3(post_shift.x, 0.0, post_shift.y)
+
+	var f_aabb := _get_world_aabb(frame_panel)
+	var blocker_size := Vector3(
+		maxf(f_aabb.size.x, 0.16),
+		maxf(float(f_geo["max_y"]) - float(f_geo["min_y"]), 1.95),
+		maxf(f_aabb.size.z, 0.16)
+	)
+	door.configure_hinged_single(label_prefix, pivot, closed_angle, open_angle, f_center_3d, blocker_size)
 
 func _build_puertas_door(root: Node3D) -> void:
 	var container := _unwrap_container(root)
@@ -335,38 +490,7 @@ func _build_puertas_door(root: Node3D) -> void:
 		leaf_node = kids[1]
 		frame_node = kids[0]
 
-	var leaf_panel := _find_largest_mesh(leaf_node)
-	if leaf_panel == null:
-		return
-	var f_aabb := _get_world_aabb(frame_node)
-	var l_aabb := _get_world_aabb(leaf_panel)
-	var f_center := f_aabb.get_center()
-	var l_center := l_aabb.get_center()
-
-	var hinge_pos := Vector3(f_center.x, f_aabb.position.y, f_center.z)
-	var v_close := Vector2.ZERO
-	if f_aabb.size.x > f_aabb.size.z:
-		hinge_pos.x = clampf(l_center.x, f_aabb.position.x + 0.02, f_aabb.end.x - 0.02)
-		v_close = Vector2(signf(f_center.x - hinge_pos.x), 0.0)
-	else:
-		hinge_pos.z = clampf(l_center.z, f_aabb.position.z + 0.02, f_aabb.end.z - 0.02)
-		v_close = Vector2(0.0, signf(f_center.z - hinge_pos.z))
-
-	var u_glb := Vector2(l_center.x - hinge_pos.x, l_center.z - hinge_pos.z)
-	var closed_angle := _signed_angle_xz(u_glb, v_close)
-	var open_angle := 0.0
-
-	var door: InteractiveDoorScript = _create_door_node(root, f_center, "Puerta")
-	var pivot := Node3D.new()
-	pivot.name = "HingePivot"
-	door.add_child(pivot)
-	pivot.global_position = hinge_pos
-	pivot.global_basis = Basis.IDENTITY
-	leaf_node.reparent(pivot, true)
-
-	pivot.rotation.y = closed_angle
-	var closed_aabb := _get_world_aabb(leaf_panel)
-	door.configure_hinged_single("Puerta", pivot, closed_angle, open_angle, closed_aabb.get_center(), closed_aabb.size)
+	_build_aligned_single_hinged_door(root, frame_node, leaf_node, "Puerta", Vector2.ZERO, false)
 
 func _build_single_security_door(root: Node3D) -> void:
 	var container := _unwrap_container(root)
@@ -384,58 +508,25 @@ func _build_single_security_door(root: Node3D) -> void:
 	if tall_kids.size() < 2:
 		return
 
+	# En puertas de seguridad, el marco siempre tiene mayor altura total (≈ +5 cm) que la hoja
 	var frame_node: Node3D = tall_kids[0]
 	var leaf_node: Node3D = tall_kids[1]
-	if _collect_meshes(tall_kids[0]).size() > _collect_meshes(tall_kids[1]).size():
-		leaf_node = tall_kids[0]
+	var h0 := _get_world_aabb(tall_kids[0]).size.y
+	var h1 := _get_world_aabb(tall_kids[1]).size.y
+	if h1 > h0 + 0.01:
 		frame_node = tall_kids[1]
+		leaf_node = tall_kids[0]
 
-	var leaf_panel := _find_largest_mesh(leaf_node)
-	if leaf_panel == null:
-		return
-	var f_aabb := _get_world_aabb(frame_node)
-	var l_aabb := _get_world_aabb(leaf_panel)
-	var f_center := f_aabb.get_center()
-	var l_center := l_aabb.get_center()
-
-	var hinge_pos := Vector3(f_center.x, f_aabb.position.y, f_center.z)
-	if not hinge_pts.is_empty():
+	var has_hinge := not hinge_pts.is_empty()
+	var hinge_2d := Vector2.ZERO
+	if has_hinge:
 		var avg := Vector3.ZERO
 		for pt in hinge_pts:
 			avg += pt
 		avg /= float(hinge_pts.size())
-		hinge_pos.x = avg.x
-		hinge_pos.z = avg.z
+		hinge_2d = Vector2(avg.x, avg.z)
 
-	var v_close := (
-		Vector2(signf(f_center.x - hinge_pos.x), 0.0)
-		if f_aabb.size.x > f_aabb.size.z
-		else Vector2(0.0, signf(f_center.z - hinge_pos.z))
-	)
-	var delta_c := Vector2(l_center.x - hinge_pos.x, l_center.z - hinge_pos.z)
-	var u_glb := (
-		Vector2(signf(delta_c.x), 0.0)
-		if absf(delta_c.x) >= absf(delta_c.y)
-		else Vector2(0.0, signf(delta_c.y))
-	)
-	var closed_angle := _signed_angle_xz(u_glb, v_close)
-	var open_angle := 0.0
-
-	var door: InteractiveDoorScript = _create_door_node(root, f_center, "Puerta de Seguridad")
-	var pivot := Node3D.new()
-	pivot.name = "HingePivot"
-	door.add_child(pivot)
-	pivot.global_position = hinge_pos
-	pivot.global_basis = Basis.IDENTITY
-	leaf_node.reparent(pivot, true)
-
-	pivot.rotation.y = closed_angle
-	var blocker_size := Vector3(
-		maxf(f_aabb.size.x, 0.16),
-		maxf(f_aabb.size.y, 1.95),
-		maxf(f_aabb.size.z, 0.16)
-	)
-	door.configure_hinged_single("Puerta de Seguridad", pivot, closed_angle, open_angle, f_center, blocker_size)
+	_build_aligned_single_hinged_door(root, frame_node, leaf_node, "Puerta de Seguridad", hinge_2d, has_hinge)
 
 func _build_double_security_door(root: Node3D) -> void:
 	var container := _unwrap_container(root)
@@ -447,7 +538,7 @@ func _build_double_security_door(root: Node3D) -> void:
 	if kids.size() < 3:
 		return
 
-	# Smallest mesh-count full-span node is the frame
+	# El nodo de menos mallas (y mayor altura total) es el marco
 	kids.sort_custom(func(a: Node3D, b: Node3D) -> bool:
 		return _collect_meshes(a).size() < _collect_meshes(b).size()
 	)
@@ -455,39 +546,34 @@ func _build_double_security_door(root: Node3D) -> void:
 	var leaf_a := kids[1]
 	var leaf_b := kids[2]
 
-	var f_aabb := _get_world_aabb(frame_node)
-	var f_center := f_aabb.get_center()
-	var span_x := f_aabb.size.x > f_aabb.size.z
-
-	# Discover outward swing normal from whichever leaf starts ajar in the GLB
+	var frame_panel := _find_largest_mesh(frame_node)
 	var panel_a := _find_largest_mesh(leaf_a)
 	var panel_b := _find_largest_mesh(leaf_b)
-	if panel_a == null or panel_b == null:
+	if frame_panel == null or panel_a == null or panel_b == null:
 		return
-	var ca := _get_world_aabb(panel_a).get_center()
-	var cb := _get_world_aabb(panel_b).get_center()
-	var outward_dir := Vector2(0.0, 1.0) if span_x else Vector2(1.0, 0.0)
-	if span_x:
-		var da := ca.z - f_center.z
-		var db := cb.z - f_center.z
-		var best := da if absf(da) > absf(db) else db
-		if absf(best) > 0.04:
-			outward_dir = Vector2(0.0, signf(best))
-	else:
-		var da := ca.x - f_center.x
-		var db := cb.x - f_center.x
-		var best := da if absf(da) > absf(db) else db
-		if absf(best) > 0.04:
-			outward_dir = Vector2(signf(best), 0.0)
+
+	var f_geo := _extract_panel_xz_geometry(frame_panel)
+	var f_dir: Vector2 = f_geo["dir"]
+	var f_perp := Vector2(-f_dir.y, f_dir.x)
+	var f_center_2d: Vector2 = f_geo["center"]
+	var f_center := Vector3(f_center_2d.x, 0.5 * (float(f_geo["min_y"]) + float(f_geo["max_y"])), f_center_2d.y)
+	var f_aabb := _get_world_aabb(frame_panel)
+
+	var la_geo := _extract_panel_xz_geometry(panel_a)
+	var lb_geo := _extract_panel_xz_geometry(panel_b)
+	var da := ((la_geo["center"] as Vector2) - f_center_2d).dot(f_perp)
+	var db := ((lb_geo["center"] as Vector2) - f_center_2d).dot(f_perp)
+	var best_out := da if absf(da) > absf(db) else db
+	var outward_dir := f_perp * (signf(best_out) if absf(best_out) > 0.03 else 1.0)
 
 	var door: InteractiveDoorScript = _create_door_node(root, f_center, "Puerta Doble")
-	var data_a := _setup_double_leaf(door, "PivotA", leaf_a, panel_a, f_aabb, span_x, outward_dir)
-	var data_b := _setup_double_leaf(door, "PivotB", leaf_b, panel_b, f_aabb, span_x, outward_dir)
+	var data_a := _setup_double_leaf(door, "PivotA", leaf_a, panel_a, f_geo, outward_dir)
+	var data_b := _setup_double_leaf(door, "PivotB", leaf_b, panel_b, f_geo, outward_dir)
 	door.configure_hinged_double(
 		"Puerta Doble de Seguridad",
 		data_a["pivot"], data_a["closed"], data_a["open"], data_a["center"], data_a["size"],
 		data_b["pivot"], data_b["closed"], data_b["open"], data_b["center"], data_b["size"],
-		f_center, Vector3(maxf(f_aabb.size.x, 0.3), f_aabb.size.y, maxf(f_aabb.size.z, 0.3))
+		f_center, Vector3(maxf(f_aabb.size.x, 0.3), float(f_geo["max_y"]) - float(f_geo["min_y"]), maxf(f_aabb.size.z, 0.3))
 	)
 
 func _setup_double_leaf(
@@ -495,39 +581,56 @@ func _setup_double_leaf(
 	pivot_name: String,
 	leaf_node: Node3D,
 	leaf_panel: MeshInstance3D,
-	f_aabb: AABB,
-	span_x: bool,
+	f_geo: Dictionary,
 	outward_dir: Vector2
 ) -> Dictionary:
-	var f_center := f_aabb.get_center()
-	var l_center := _get_world_aabb(leaf_panel).get_center()
-	var hinge_pos := Vector3(f_center.x, f_aabb.position.y, f_center.z)
-	if span_x:
-		var near_min := absf(l_center.x - f_aabb.position.x) < absf(l_center.x - f_aabb.end.x)
-		hinge_pos.x = (f_aabb.position.x + 0.04) if near_min else (f_aabb.end.x - 0.04)
-	else:
-		var near_min := absf(l_center.z - f_aabb.position.z) < absf(l_center.z - f_aabb.end.z)
-		hinge_pos.z = (f_aabb.position.z + 0.04) if near_min else (f_aabb.end.z - 0.04)
+	var f_e0: Vector2 = f_geo["end0"]
+	var f_e1: Vector2 = f_geo["end1"]
+	var f_center_2d: Vector2 = f_geo["center"]
+	var l_geo := _extract_panel_xz_geometry(leaf_panel)
+	var l_e0: Vector2 = l_geo["end0"]
+	var l_e1: Vector2 = l_geo["end1"]
+	var l_c: Vector2 = l_geo["center"]
 
-	var u_glb := Vector2(l_center.x - hinge_pos.x, l_center.z - hinge_pos.z)
-	var v_close := (
-		Vector2(signf(f_center.x - hinge_pos.x), 0.0)
-		if span_x
-		else Vector2(0.0, signf(f_center.z - hinge_pos.z))
-	)
-	var closed_angle := _signed_angle_xz(u_glb, v_close)
-	var raw_open := _signed_angle_xz(u_glb, outward_dir)
+	var frame_hinge_2d: Vector2 = f_e0 if l_c.distance_to(f_e0) <= l_c.distance_to(f_e1) else f_e1
+	var leaf_hinge_2d: Vector2 = l_e0 if l_e0.distance_to(frame_hinge_2d) <= l_e1.distance_to(frame_hinge_2d) else l_e1
+	var leaf_free_2d: Vector2 = l_e1 if leaf_hinge_2d == l_e0 else l_e0
+
+	var u_leaf := (leaf_free_2d - leaf_hinge_2d).normalized()
+	var v_close := (f_center_2d - frame_hinge_2d).normalized()
+	var closed_angle := _signed_angle_xz(u_leaf, v_close)
+	var raw_open := _signed_angle_xz(u_leaf, outward_dir)
 	var arc := wrapf(raw_open - closed_angle, -PI, PI)
 	var open_angle := closed_angle + arc
 
 	var pivot := Node3D.new()
 	pivot.name = pivot_name
 	door.add_child(pivot)
-	pivot.global_position = hinge_pos
+	pivot.global_position = Vector3(leaf_hinge_2d.x, float(f_geo["min_y"]), leaf_hinge_2d.y)
 	pivot.global_basis = Basis.IDENTITY
 	leaf_node.reparent(pivot, true)
 
 	pivot.rotation.y = closed_angle
+	var closed_geo := _extract_panel_xz_geometry(leaf_panel)
+	var half_clear_len := maxf(float(f_geo["len"]) * 0.5 - 0.035, 0.4)
+	var cur_len := maxf(float(closed_geo["len"]), 0.1)
+	var target_center_2d: Vector2 = f_center_2d - v_close * (half_clear_len * 0.5 + 0.003)
+	var shift_2d: Vector2 = target_center_2d - (closed_geo["center"] as Vector2)
+	pivot.global_position += Vector3(shift_2d.x, 0.0, shift_2d.y)
+	if half_clear_len > cur_len + 0.025:
+		var fit_ratio := clampf(half_clear_len / cur_len, 1.0, 1.25)
+		var fit_node := Node3D.new()
+		fit_node.name = "LeafWidthFit"
+		pivot.add_child(fit_node)
+		var span_dir_3d := Vector3(v_close.x, 0.0, v_close.y).normalized()
+		var perp_3d := Vector3(-v_close.y, 0.0, v_close.x).normalized()
+		fit_node.global_transform = Transform3D(Basis(span_dir_3d, Vector3.UP, perp_3d), Vector3(target_center_2d.x, float(f_geo["min_y"]), target_center_2d.y))
+		leaf_node.reparent(fit_node, true)
+		fit_node.scale = Vector3(fit_ratio, 1.0, 1.0)
+		var post_geo := _extract_panel_xz_geometry(leaf_panel)
+		var post_shift: Vector2 = target_center_2d - (post_geo["center"] as Vector2)
+		pivot.global_position += Vector3(post_shift.x, 0.0, post_shift.y)
+
 	var closed_aabb := _get_world_aabb(leaf_panel)
 	return {
 		"pivot": pivot,
