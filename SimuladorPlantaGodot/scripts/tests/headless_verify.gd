@@ -1558,19 +1558,26 @@ func _qa_10_main_scene_integration() -> void:
 					var prog1: float = float(prod_flow.get_production_metrics().get("product_phase_progress", 0.0))
 					ok = _assert_true(prog1 != prog0 and float(prod_flow.get_production_metrics().get("line_flow_efficiency", 0.0)) >= 0.99,
 						"Con motor a 1743 RPM el flujo de producto debe avanzar (p0=%.3f, p1=%.3f)" % [prog0, prog1]) and ok
-					# Verificar que los sacos NO se cargan sin camión parqueado y SÍ los cargan los operarios al parquear en la puerta izquierda
+					# Verificar que los sacos NO se cargan sin camión parqueado y SÍ los cargan los operarios al parquear en la puerta enrollable derecha
 					var bag_log := prod_flow.find_child("MovingBag50kg", true, false) as Node3D
 					var bag_dock := prod_flow.find_child("DockCarriedBag50kg", true, false) as Node3D
 					var saved_ct: float = float(prod_flow.truck_cycle_time)
-					prod_flow.truck_cycle_time = 0.0 # u_bay2 = 0.38 -> sin camión en puerta izquierda
+					prod_flow.truck_cycle_time = 0.30 * float(prod_flow.TRUCK_CYCLE_DURATION) # u_south=0.30 y u_bay2=0.68 -> ningún camión parqueado en puerta derecha
 					prod_flow.step_production(0.25)
 					ok = _assert_true(bag_log != null and not bag_log.visible and bag_dock != null and not bag_dock.visible,
-						"Sin camión parqueado en la puerta izquierda ningún operario debe cargar sacos") and ok
-					prod_flow.truck_cycle_time = 0.65 * float(prod_flow.TRUCK_CYCLE_DURATION) # u_bay2 = 0.03 -> TruckBay2Mover parqueado
+						"Sin camión parqueado en la puerta derecha ningún operario debe cargar sacos") and ok
+					prod_flow.truck_cycle_time = 0.03 * float(prod_flow.TRUCK_CYCLE_DURATION) # u_south=0.03 -> TruckIntakeMover parqueado en puerta derecha
 					for _bi in range(12):
 						prod_flow.step_production(0.2)
 					ok = _assert_true(bag_log != null and bag_log.visible and bag_dock != null and bag_dock.visible,
-						"Con TruckBay2Mover parqueado en puerta izquierda los operarios deben cargar sacos al camión") and ok
+						"Con tractocamión parqueado en puerta derecha los operarios deben cargar sacos al camión") and ok
+					prod_flow.truck_cycle_time = 0.30 * float(prod_flow.TRUCK_CYCLE_DURATION) # Salida del primer camión (reinicia ciclo de carga)
+					prod_flow.step_production(0.25)
+					prod_flow.truck_cycle_time = 0.65 * float(prod_flow.TRUCK_CYCLE_DURATION) # u_bay2=0.03 -> TruckBay2Mover parqueado en puerta derecha
+					for _bi2 in range(10):
+						prod_flow.step_production(0.2)
+					ok = _assert_true(bag_log != null and bag_log.visible and bag_dock != null and bag_dock.visible,
+						"Con TruckBay2Mover parqueado en puerta derecha los operarios deben cargar sacos al camión") and ok
 					prod_flow.truck_cycle_time = 0.11 * float(prod_flow.TRUCK_CYCLE_DURATION) # TILTING_UNLOAD en TruckIntakeMover
 					prod_flow.step_production(0.1)
 					var m_int := prod_flow.find_child("TruckIntakeMover", true, false) as Node3D
