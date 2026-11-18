@@ -95,8 +95,8 @@ func _setup_physical_floor() -> void:
 		if floor_mesh.mesh is PlaneMesh:
 			var plane_mesh := (floor_mesh.mesh as PlaneMesh).duplicate() as PlaneMesh
 			plane_mesh.size = Vector2(2200.0, 2200.0)
-			plane_mesh.subdivide_width = 160
-			plane_mesh.subdivide_depth = 160
+			plane_mesh.subdivide_width = 64
+			plane_mesh.subdivide_depth = 64
 			floor_mesh.mesh = plane_mesh
 			floor_mesh.material_override = _create_simple_exterior_material()
 

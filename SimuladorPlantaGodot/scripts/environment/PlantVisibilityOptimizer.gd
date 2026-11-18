@@ -20,6 +20,10 @@ const DIST_MEDIUM: float = 62.0
 
 var _admin_nodes: Array[Node3D] = []
 var _nave_nodes: Array[Node3D] = []
+var _aux_room_nodes: Array[Node3D] = []
+var _nave_lights: Array[Light3D] = []
+var _sun_light: DirectionalLight3D = null
+var _sun_shadow_orig: bool = true
 var _exterior_trucks: Array[Node3D] = []
 var _lod_mesh_items: Array[Dictionary] = []
 
@@ -42,6 +46,7 @@ const _GLOW_PROTECTED_ROOTS: Array[String] = [
 
 var _static_batch_nodes_admin: Array[Node3D] = []
 var _static_batch_nodes_nave: Array[Node3D] = []
+var _static_batch_nodes_aux: Array[Node3D] = []
 
 func _ready() -> void:
 	call_deferred("_setup_optimizer")
@@ -221,21 +226,24 @@ func _optimize_plant_materials_and_lockers(scene_root: Node) -> void:
 					if not keep_cutout and sm.albedo_color.a >= 0.99:
 						sm.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 
-	# 3. Fusionar sub-mallas estáticas repetitivas de cada bloque de lockers (115 tiradores Pulls + 23 paneles de malla
-	#    + 23 divisiones internas -> 3 draw calls por bloque, preservando colisionadores StaticBody3D y gabinetes externos para glow)
+	# 3. Fusionar sub-mallas estáticas repetitivas de cada bloque de lockers (tiradores Pulls + paneles de malla
+	#    + divisiones internas + gabinetes exteriores -> 4 draw calls y 1 GlowOutlineShell por bloque, preservando StaticBody3D)
 	for lroot in locker_roots:
 		var pulls_list: Array[MeshInstance3D] = []
 		var fence_list: Array[MeshInstance3D] = []
 		var inner_list: Array[MeshInstance3D] = []
+		var cab_list: Array[MeshInstance3D] = []
 		var pulls_mat: Material = null
 		var fence_mat: Material = null
 		var inner_mat: Material = null
+		var cab_mat: Material = null
 		for ch in lroot.find_children("*", "MeshInstance3D", true, false):
 			var mi := ch as MeshInstance3D
 			if mi == null or not is_instance_valid(mi) or mi.mesh == null or mi.name == "GlowOutlineShell":
 				continue
-			if str(mi.name).begins_with("MergedLocker"):
+			if str(mi.name).begins_with("MergedLocker") or str(mi.name) == "LockerCabinetsBatch":
 				continue
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			var m0 := mi.get_active_material(0)
 			var m0_l := m0.resource_name.to_lower() if m0 != null else ""
 			var p_nm := str(mi.get_parent().name) if mi.get_parent() != null else ""
@@ -245,12 +253,16 @@ func _optimize_plant_materials_and_lockers(scene_root: Node) -> void:
 			elif "lockerdiamondmesh" in m0_l or "fencing" in m0_l or "diamond_mesh" in m0_l:
 				fence_list.append(mi)
 				if fence_mat == null: fence_mat = m0
+			elif str(mi.name).begins_with("Geom3D_3_WZSLOT"):
+				cab_list.append(mi)
+				if cab_mat == null: cab_mat = m0
 			elif str(mi.name) == "Geom3D" and "verde" in m0_l:
 				inner_list.append(mi)
 				if inner_mat == null: inner_mat = m0
 		_merge_static_meshes_under(lroot, pulls_list, "MergedLockerPulls", pulls_mat)
 		_merge_static_meshes_under(lroot, fence_list, "MergedLockerMeshPanels", fence_mat)
 		_merge_static_meshes_under(lroot, inner_list, "MergedLockerInnerDividers", inner_mat)
+		_merge_static_meshes_under(lroot, cab_list, "LockerCabinetsBatch", cab_mat)
 
 func _is_glow_protected_node(node: Node) -> bool:
 	var cur := node
@@ -357,6 +369,7 @@ func _fix_coplanar_zfighting_and_duplicates(scene_root: Node) -> void:
 func _batch_static_plant_architecture(scene_root: Node) -> void:
 	_static_batch_nodes_admin.clear()
 	_static_batch_nodes_nave.clear()
+	_static_batch_nodes_aux.clear()
 	var plant := scene_root.find_child("PlantaCompletaSketchUp", true, false) as Node3D
 	if plant == null:
 		return
@@ -376,7 +389,7 @@ func _batch_static_plant_architecture(scene_root: Node) -> void:
 			continue
 		if mi.get_meta("merged_into_batch", false) or mi.get_meta("dedup_hidden", false):
 			continue
-		if str(mi.name).begins_with("MergedLocker") or str(mi.name).begins_with("StaticBatch_"):
+		if str(mi.name).begins_with("MergedLocker") or str(mi.name) == "LockerCabinetsBatch" or str(mi.name).begins_with("StaticBatch_"):
 			continue
 		if _is_dynamic_or_truck_node(mi) or _is_glow_protected_node(mi):
 			continue
@@ -400,6 +413,8 @@ func _batch_static_plant_architecture(scene_root: Node) -> void:
 			sector = "ADMIN"
 		elif c.x < -18.2 and c.z > 18.0 and c.z < 52.0 and d < 35.0:
 			sector = "NAVE"
+		elif box.position.x >= -13.4 and box.end.x <= 12.0 and c.z > 24.0 and c.z < 50.5 and d < 25.0:
+			sector = "AUX"
 
 		var cell_x := int(floor(c.x / 16.0))
 		var cell_z := int(floor(c.z / 16.0))
@@ -449,6 +464,8 @@ func _batch_static_plant_architecture(scene_root: Node) -> void:
 				_static_batch_nodes_admin.append(b_mi)
 			elif sector_tag == "NAVE":
 				_static_batch_nodes_nave.append(b_mi)
+			elif sector_tag == "AUX":
+				_static_batch_nodes_aux.append(b_mi)
 
 	# Purgar del array LOD las mallas recién fusionadas para ahorrar iteración CPU en _process
 	var pruned_lod: Array[Dictionary] = []
@@ -553,6 +570,7 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 func _collect_sectors(scene_root: Node) -> void:
 	_admin_nodes.clear()
 	_nave_nodes.clear()
+	_aux_room_nodes.clear()
 	_exterior_trucks.clear()
 	
 	var plant := scene_root.find_child("PlantaCompletaSketchUp", true, false)
@@ -569,13 +587,17 @@ func _collect_sectors(scene_root: Node) -> void:
 				continue
 			var c := aabb.get_center()
 			var d := aabb.size.length()
+			var nm_s := str(n3d.name)
 			
 			# Sector Administrativo: bloque de oficinas, salas, cubículos (X > 12.0)
 			if c.x > 12.0 and d < 55.0:
 				_admin_nodes.append(n3d)
 			# Sector Nave de Producción: maquinaria, tolvas, molinos al oeste del muro de vestidores (X < -18.2, Z en [18, 52])
-			elif c.x < -18.2 and c.z > 18.0 and c.z < 52.0 and d < 35.0 and not str(n3d.name).begins_with("Watson Zone Slot Lockers"):
+			elif c.x < -18.2 and c.z > 18.0 and c.z < 52.0 and d < 35.0 and not nm_s.begins_with("Watson Zone Slot Lockers"):
 				_nave_nodes.append(n3d)
+			# Cuartos auxiliares/baños/lockers secundarios al Este del muro macizo de Vestidores (X >= -13.4, X <= 12.0)
+			elif aabb.position.x >= -13.4 and aabb.end.x <= 12.0 and c.z > 24.0 and c.z < 50.5 and d < 28.0 and nm_s != "Watson Zone Slot Lockers 20-Pack" and nm_s != "Watson Zone Slot Lockers 20-Pack_1":
+				_aux_room_nodes.append(n3d)
 	
 	var mill_unit := scene_root.find_child("MotorMillUnit", true, false) as Node3D
 	if mill_unit != null:
@@ -586,6 +608,19 @@ func _collect_sectors(scene_root: Node) -> void:
 	for nb in _static_batch_nodes_nave:
 		if is_instance_valid(nb) and not _nave_nodes.has(nb):
 			_nave_nodes.append(nb)
+	for axb in _static_batch_nodes_aux:
+		if is_instance_valid(axb) and not _aux_room_nodes.has(axb):
+			_aux_room_nodes.append(axb)
+
+	# Registrar luces de nave y sol para ahorrar sombreado/sombras al estar en cuarto cerrado de Vestidores
+	_nave_lights.clear()
+	_sun_light = scene_root.find_child("SunLight", true, false) as DirectionalLight3D
+	if _sun_light != null:
+		_sun_shadow_orig = _sun_light.shadow_enabled
+	for ln in ["HighBay_5000K_1", "HighBay_5000K_2", "HighBay_5000K_3", "HighBay_5000K_4", "HighBay_Spot_Milling", "LightCenter", "LightWest", "LightEast"]:
+		var lt := scene_root.find_child(ln, true, false) as Light3D
+		if lt != null and not _nave_lights.has(lt):
+			_nave_lights.append(lt)
 
 	# Solo registrar los nodos raíz de cada camión para ocultamiento atómico (nunca por partes)
 	for mover_name in ["TruckIntakeMover", "TruckDispatchMover", "TruckBay2Mover", "TruckStagingMover"]:
@@ -638,7 +673,9 @@ func _apply_cctv_override_visible() -> void:
 	_current_sector = "CCTV_OVERRIDE"
 	_set_nodes_visible(_admin_nodes, true)
 	_set_nodes_visible(_nave_nodes, true)
+	_set_nodes_visible(_aux_room_nodes, true)
 	_set_nodes_visible(_exterior_trucks, true)
+	_set_vestidores_light_mode(false)
 	for item in _lod_mesh_items:
 		var mi := item["node"] as MeshInstance3D
 		if mi == null or not is_instance_valid(mi):
@@ -715,31 +752,52 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 	
 	match _current_sector:
 		"VESTIDORES":
-			# Cuarto de lockers cerrado: ocultar tanto oficinas como nave pesada tras muros macizos
+			# Cuarto de lockers cerrado: ocultar oficinas, nave pesada, baños adyacentes y luces/sombras exteriores
 			_set_nodes_visible(_admin_nodes, false)
 			_set_nodes_visible(_nave_nodes, false)
+			_set_nodes_visible(_aux_room_nodes, false)
+			_set_vestidores_light_mode(true)
 		"NAVE_PRODUCCION":
 			# Ocultar oficinas administrativas (tras muros macizos a >30m)
 			_set_nodes_visible(_admin_nodes, false)
 			_set_nodes_visible(_nave_nodes, true)
+			_set_nodes_visible(_aux_room_nodes, false)
+			_set_vestidores_light_mode(false)
 		"SECTOR_ADMIN":
 			# Ocultar maquinaria de la nave de molienda
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, false)
+			_set_nodes_visible(_aux_room_nodes, false)
+			_set_vestidores_light_mode(false)
 		"EXTERIOR_EAST":
 			# Patio Este / Portería: maquinaria interior de la nave queda oculta tras muros (>30m), camiones 100% visibles
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, false)
+			_set_nodes_visible(_aux_room_nodes, true)
+			_set_vestidores_light_mode(false)
 		"EXTERIOR_WEST":
 			# Lado Oeste de la nave: mobiliario interior de oficinas queda oculto tras muros, camiones 100% visibles
 			_set_nodes_visible(_admin_nodes, false)
 			_set_nodes_visible(_nave_nodes, true)
+			_set_nodes_visible(_aux_room_nodes, true)
+			_set_vestidores_light_mode(false)
 		_:
 			# Patio central: ambos activos con LOD por distancia
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, true)
+			_set_nodes_visible(_aux_room_nodes, true)
+			_set_vestidores_light_mode(false)
 			
 	_update_trucks_visibility(p)
+
+func _set_vestidores_light_mode(in_vestidores: bool) -> void:
+	for lt in _nave_lights:
+		if lt != null and is_instance_valid(lt) and lt.visible == in_vestidores:
+			lt.visible = not in_vestidores
+	if _sun_light != null and is_instance_valid(_sun_light):
+		var want_sh: bool = false if in_vestidores else _sun_shadow_orig
+		if _sun_light.shadow_enabled != want_sh:
+			_sun_light.shadow_enabled = want_sh
 
 func _update_trucks_visibility(cam_pos: Vector3) -> void:
 	if _exterior_trucks.is_empty():
@@ -753,7 +811,9 @@ func _update_trucks_visibility(cam_pos: Vector3) -> void:
 		if trk == null or not is_instance_valid(trk):
 			continue
 		var want_vis: bool = true
-		if _current_sector == "NAVE_PRODUCCION" or _current_sector == "SECTOR_ADMIN" or _current_sector == "VESTIDORES":
+		if _current_sector == "VESTIDORES":
+			want_vis = false
+		elif _current_sector == "NAVE_PRODUCCION" or _current_sector == "SECTOR_ADMIN":
 			want_vis = (cam_pos.distance_to(trk.global_position) <= 46.0)
 		else:
 			# En exteriores mantener visibles todos los camiones cercanos/medios y ocultar mallas pesadas (>68 m tras edificios)

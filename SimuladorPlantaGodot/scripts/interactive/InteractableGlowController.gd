@@ -245,12 +245,10 @@ void vertex() {
 	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	float cam_dist = length(CAMERA_POSITION_WORLD - world_pos);
 	float w_thick = clamp(cam_dist * width_ratio, min_width, max_width);
-	vec3 w_norm = MODEL_NORMAL_MATRIX * NORMAL;
-	float w_len = length(w_norm);
-	if (w_len > 0.0001) {
-		w_norm /= w_len;
-		vec3 local_dir = (inverse(MODEL_MATRIX) * vec4(w_norm, 0.0)).xyz;
-		VERTEX += local_dir * w_thick;
+	float n_len = length(NORMAL);
+	if (n_len > 0.0001) {
+		float m_scale = max(length(MODEL_MATRIX[0].xyz), 0.0001);
+		VERTEX += (NORMAL / n_len) * (w_thick / m_scale);
 	}
 }
 
@@ -275,12 +273,10 @@ void vertex() {
 	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	float cam_dist = length(CAMERA_POSITION_WORLD - world_pos);
 	float w_thick = clamp(cam_dist * width_ratio, min_width, max_width);
-	vec3 w_norm = MODEL_NORMAL_MATRIX * NORMAL;
-	float w_len = length(w_norm);
-	if (w_len > 0.0001) {
-		w_norm /= w_len;
-		vec3 local_dir = (inverse(MODEL_MATRIX) * vec4(w_norm, 0.0)).xyz;
-		VERTEX += local_dir * w_thick;
+	float n_len = length(NORMAL);
+	if (n_len > 0.0001) {
+		float m_scale = max(length(MODEL_MATRIX[0].xyz), 0.0001);
+		VERTEX += (NORMAL / n_len) * (w_thick / m_scale);
 	}
 }
 
