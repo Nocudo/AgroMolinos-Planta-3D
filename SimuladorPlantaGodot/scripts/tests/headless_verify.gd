@@ -1844,13 +1844,17 @@ func _qa_10_main_scene_integration() -> void:
 									cnt_after_sl == cnt_before_sl and detail_hidden,
 									"Cruzar línea de seguridad no debe duplicar tarjeta en NotificationStack (%d==%d) ni repetir título en TabletNotifyLegend (detail_hidden=%s)" % [cnt_after_sl, cnt_before_sl, str(detail_hidden)]
 								) and ok
+							var br_col := hud_ctrl.find_child("BottomRightColumn", true, false) as Control
 							ok = _assert_true(
-								br_dock != null and br_dock.anchor_left == 1.0 and br_dock.anchor_top == 1.0 and br_dock.offset_bottom <= -86.0
+								br_col != null and br_col.anchor_left == 1.0 and br_col.anchor_top == 1.0
+								and br_dock != null and br_dock.get_parent() == br_col
+								and tips_card != null and tips_card.get_parent() == br_col
+								and br_dock.get_index() < tips_card.get_index()
 								and tab_leg != null and tab_leg.get_parent() == br_dock
 								and sl_ban != null and sl_ban.get_parent() == br_dock
 								and cnt_after_dup == cnt_before_dup
 								and unread_after_sv == unread_before_sv,
-								"TabletNotifyLegend y SafetyLineAlertBanner deben residir en BottomRightAlertsDock sin duplicar notificaciones ni contador de tablet"
+								"BottomRightAlertsDock y ControlsTipsCard deben apilarse dentro de BottomRightColumn sin superponerse ni duplicar alertas"
 							) and ok
 						# Regresión: Conversación interactiva con SST (Historia, Qué hacen, Misión, Visión) solo subtítulos sin voz
 						if tut_node != null:

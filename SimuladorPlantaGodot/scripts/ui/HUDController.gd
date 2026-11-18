@@ -56,6 +56,7 @@ var _safety_line_title: Label = null
 var _safety_line_detail: Label = null
 var _safety_line_pulse_t: float = 0.0
 var _hotbar_avatar = null
+var _bottom_right_column: VBoxContainer = null
 var _controls_tips_card: PanelContainer = null
 var _bottom_right_dock: VBoxContainer = null
 var _notification_stack: VBoxContainer = null
@@ -290,20 +291,29 @@ func get_current_location_label() -> String:
 	return _location_label.text if _location_label != null else ""
 
 func _setup_controls_tips_card() -> void:
+	# Columna maestra abajo-derecha: agrupa alertas/notificaciones arriba y tarjeta de Controles abajo para hacer físicamente imposible cualquier solape
+	_bottom_right_column = VBoxContainer.new()
+	_bottom_right_column.name = "BottomRightColumn"
+	_bottom_right_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bottom_right_column.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_bottom_right_column.anchor_left = 1.0
+	_bottom_right_column.anchor_right = 1.0
+	_bottom_right_column.anchor_top = 1.0
+	_bottom_right_column.anchor_bottom = 1.0
+	_bottom_right_column.offset_left = -304.0
+	_bottom_right_column.offset_right = -14.0
+	_bottom_right_column.offset_top = -540.0
+	_bottom_right_column.offset_bottom = -12.0
+	_bottom_right_column.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_bottom_right_column.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_bottom_right_column.alignment = BoxContainer.ALIGNMENT_END
+	_bottom_right_column.add_theme_constant_override("separation", 8)
+	add_child(_bottom_right_column)
+
 	_controls_tips_card = PanelContainer.new()
 	_controls_tips_card.name = "ControlsTipsCard"
 	_controls_tips_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_controls_tips_card.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_controls_tips_card.anchor_left = 1.0
-	_controls_tips_card.anchor_right = 1.0
-	_controls_tips_card.anchor_top = 1.0
-	_controls_tips_card.anchor_bottom = 1.0
-	_controls_tips_card.offset_left = -304.0
-	_controls_tips_card.offset_right = -14.0
-	_controls_tips_card.offset_top = -78.0
-	_controls_tips_card.offset_bottom = -12.0
-	_controls_tips_card.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_controls_tips_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_controls_tips_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color(0.04, 0.07, 0.12, 0.64)
@@ -315,7 +325,7 @@ func _setup_controls_tips_card() -> void:
 	st.content_margin_top = 6.0
 	st.content_margin_bottom = 6.0
 	_controls_tips_card.add_theme_stylebox_override("panel", st)
-	add_child(_controls_tips_card)
+	_bottom_right_column.add_child(_controls_tips_card)
 
 	var vb := VBoxContainer.new()
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -347,24 +357,18 @@ func _setup_controls_tips_card() -> void:
 	vb.add_child(rtl)
 
 func _setup_notification_stack() -> void:
-	# Contenedor único abajo-derecha encima de la tarjeta de controles: apila notificaciones, línea de seguridad y aviso de tablet sin solapes
+	# Contenedor único encima de la tarjeta de Controles dentro de BottomRightColumn (imposible superposición en cualquier resolución)
 	_bottom_right_dock = VBoxContainer.new()
 	_bottom_right_dock.name = "BottomRightAlertsDock"
 	_bottom_right_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bottom_right_dock.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_bottom_right_dock.anchor_left = 1.0
-	_bottom_right_dock.anchor_right = 1.0
-	_bottom_right_dock.anchor_top = 1.0
-	_bottom_right_dock.anchor_bottom = 1.0
-	_bottom_right_dock.offset_left = -304.0
-	_bottom_right_dock.offset_right = -14.0
-	_bottom_right_dock.offset_top = -480.0
-	_bottom_right_dock.offset_bottom = -86.0
-	_bottom_right_dock.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_bottom_right_dock.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_bottom_right_dock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bottom_right_dock.alignment = BoxContainer.ALIGNMENT_END
 	_bottom_right_dock.add_theme_constant_override("separation", 6)
-	add_child(_bottom_right_dock)
+	if _bottom_right_column != null:
+		_bottom_right_column.add_child(_bottom_right_dock)
+		_bottom_right_column.move_child(_bottom_right_dock, 0)
+	else:
+		add_child(_bottom_right_dock)
 
 	_notification_stack = VBoxContainer.new()
 	_notification_stack.name = "NotificationStack"
@@ -443,6 +447,11 @@ func _refresh_tablet_legend_redundancy() -> void:
 	var is_duplicated := _has_visible_alert_with_key(_last_tablet_warning_key)
 	_tablet_notify_detail.text = _last_tablet_warning_title
 	_tablet_notify_detail.visible = (not is_duplicated) and (_last_tablet_warning_title != "")
+	_tablet_notify_legend.reset_size()
+	if _bottom_right_dock != null:
+		_bottom_right_dock.queue_sort()
+	if _bottom_right_column != null:
+		_bottom_right_column.queue_sort()
 
 func _push_stacked_notification(title: String, message: String, severity: String) -> void:
 	if _notification_stack == null:
