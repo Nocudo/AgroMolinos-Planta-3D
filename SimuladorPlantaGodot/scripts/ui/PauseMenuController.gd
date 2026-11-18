@@ -89,7 +89,7 @@ func _build_ui() -> void:
 	header.add_theme_constant_override("separation", 2)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "PAUSA · AGROMOLINOS"
+	title_lbl.text = "PAUSA"
 	title_lbl.add_theme_font_size_override("font_size", 18)
 	title_lbl.add_theme_color_override("font_color", Color(0.25, 0.85, 1.0, 1.0))
 	header.add_child(title_lbl)
@@ -124,15 +124,15 @@ func _build_ui() -> void:
 	act_title.add_theme_color_override("font_color", Color(0.40, 0.75, 0.95, 0.90))
 	col_actions.add_child(act_title)
 
-	_btn_resume = _create_action_button("▶ REANUDAR [ESC]", Color(0.12, 0.28, 0.45, 0.95), Color(0.22, 0.78, 0.95, 0.90))
+	_btn_resume = _create_action_button("REANUDAR", Color(0.12, 0.28, 0.45, 0.95), Color(0.22, 0.78, 0.95, 0.90))
 	_btn_resume.pressed.connect(close_pause_menu)
 	col_actions.add_child(_btn_resume)
 
-	_btn_load_prev = _create_action_button("⏮ CARGAR PUNTO ANTERIOR", Color(0.08, 0.16, 0.24, 0.90), Color(0.35, 0.60, 0.80, 0.80))
+	_btn_load_prev = _create_action_button("CARGAR PUNTO ANTERIOR", Color(0.08, 0.16, 0.24, 0.90), Color(0.35, 0.60, 0.80, 0.80))
 	_btn_load_prev.pressed.connect(_on_load_previous_checkpoint_pressed)
 	col_actions.add_child(_btn_load_prev)
 
-	_btn_restart = _create_action_button("↺ REINICIAR SIMULACIÓN", Color(0.24, 0.16, 0.05, 0.90), Color(0.95, 0.68, 0.20, 0.85))
+	_btn_restart = _create_action_button("REINICIAR SIMULACIÓN", Color(0.24, 0.16, 0.05, 0.90), Color(0.95, 0.68, 0.20, 0.85))
 	_btn_restart.pressed.connect(restart_simulation)
 	col_actions.add_child(_btn_restart)
 
@@ -140,7 +140,7 @@ func _build_ui() -> void:
 	act_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col_actions.add_child(act_spacer)
 
-	_btn_quit = _create_action_button("⏻ SALIR", Color(0.25, 0.08, 0.08, 0.90), Color(0.90, 0.35, 0.35, 0.80))
+	_btn_quit = _create_action_button("SALIR", Color(0.25, 0.08, 0.08, 0.90), Color(0.90, 0.35, 0.35, 0.80))
 	_btn_quit.pressed.connect(quit_game)
 	col_actions.add_child(_btn_quit)
 
