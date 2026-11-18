@@ -500,8 +500,22 @@ func _qa_10_main_scene_integration() -> void:
 		if spatial != null:
 			var col_count: int = int(spatial.generated_colliders_count)
 			ok = _assert_true(col_count >= 150,
-				"Colisionadores trimesh insuficientes en planta: %d (esperado >= 150)" % col_count) and ok
-			detail = "Colliders=%d" % col_count
+				"Colisionadores cúbicos insuficientes en planta: %d (esperado >= 150)" % col_count) and ok
+			var plant_root_col := inst.find_child("PlantaCompletaSketchUp", true, false)
+			var box_shapes_cnt := 0
+			var concave_shapes_cnt := 0
+			if plant_root_col != null:
+				for cs_n in plant_root_col.find_children("*", "CollisionShape3D", true, false):
+					var cs := cs_n as CollisionShape3D
+					if cs == null or cs.shape == null:
+						continue
+					if cs.shape is BoxShape3D:
+						box_shapes_cnt += 1
+					elif cs.shape is ConcavePolygonShape3D:
+						concave_shapes_cnt += 1
+			ok = _assert_true(concave_shapes_cnt == 0 and box_shapes_cnt >= 150,
+				"Las hitboxes de planta deben ser cubos BoxShape3D sin trimesh complejos (boxes=%d, concave=%d)" % [box_shapes_cnt, concave_shapes_cnt]) and ok
+			detail = "BoxColliders=%d (Concave=%d)" % [box_shapes_cnt, concave_shapes_cnt]
 
 		var player := inst.find_child("PlayerOperator", true, false) as Node3D
 		if player != null:

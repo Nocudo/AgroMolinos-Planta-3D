@@ -75,6 +75,7 @@ var unstuck_teleport_count: int = 0
 func _ready() -> void:
 	floor_snap_length = 0.50
 	safe_margin = 0.02
+	wall_min_slide_angle = 0.0
 	floor_stop_on_slope = true
 	floor_max_angle = deg_to_rad(50.0)
 	if DisplayServer.get_name() != "headless":

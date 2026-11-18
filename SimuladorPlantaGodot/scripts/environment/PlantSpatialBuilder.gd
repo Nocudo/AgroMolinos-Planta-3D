@@ -712,6 +712,12 @@ func generate_plant_collisions(plant_node: Node3D) -> int:
 	if plant_node == null:
 		return 0
 
+	var door_pts: Array[Vector3] = []
+	if is_inside_tree():
+		for dn in get_tree().get_nodes_in_group("interactive_doors"):
+			if dn is Node3D:
+				door_pts.append((dn as Node3D).global_position)
+
 	var meshes := plant_node.find_children("*", "MeshInstance3D", true, false)
 	for child in meshes:
 		if generated_colliders_count >= max_plant_colliders:
@@ -724,8 +730,7 @@ func generate_plant_collisions(plant_node: Node3D) -> int:
 
 		var world_aabb: AABB = mesh_inst.global_transform * mesh_inst.mesh.get_aabb()
 
-		# Generar colisionador exacto para la acera/andén inclinado Oeste (Groundcover_Gravel en X<-40, Z>15)
-		# para que jugador, Supervisor SST y línea guía caminen sobre la superficie real sin hundirse.
+		# Acera/andén inclinado Oeste (Groundcover_Gravel en X<-40, Z>15): losas BoxShape3D escalonadas suaves (0 trimesh)
 		if world_aabb.position.x <= -42.0 and world_aabb.end.z >= 35.0 and world_aabb.end.y <= 0.60 and world_aabb.size.z >= 15.0:
 			var is_west_gravel := false
 			for s_i in range(mesh_inst.mesh.get_surface_count()):
@@ -734,9 +739,10 @@ func generate_plant_collisions(plant_node: Node3D) -> int:
 					is_west_gravel = true
 					break
 			if is_west_gravel:
-				mesh_inst.create_trimesh_collision()
-				generated_colliders_count += 1
+				if _add_ground_box_colliders(mesh_inst) > 0:
+					generated_colliders_count += 1
 				continue
+
 		var longest: float = world_aabb.get_longest_axis_size()
 		if longest < min_mesh_size_for_collision:
 			continue
@@ -752,10 +758,287 @@ func generate_plant_collisions(plant_node: Node3D) -> int:
 		if _should_skip_collision_by_name(mesh_inst):
 			continue
 
-		mesh_inst.create_trimesh_collision()
-		generated_colliders_count += 1
+		# Mallas arquitectónicas compuestas (cuartos, vanos de puertas, escaleras/marcos altos): descomponer en cubos BoxShape3D por tramo real
+		var touches_door := false
+		var door_test_box := world_aabb.grow(0.45)
+		for dp in door_pts:
+			if door_test_box.has_point(dp):
+				touches_door = true
+				break
+		var is_compound_shell := (
+			touches_door
+			or (world_aabb.size.x >= 2.2 and world_aabb.size.z >= 2.2)
+			or (world_aabb.size.y >= 2.6 and maxf(world_aabb.size.x, world_aabb.size.z) >= 2.6)
+		)
+		if is_compound_shell:
+			if _add_decomposed_wall_box_colliders(mesh_inst, door_pts) > 0:
+				generated_colliders_count += 1
+		else:
+			_add_single_box_collider(mesh_inst, world_aabb)
+			generated_colliders_count += 1
 
 	return generated_colliders_count
+
+func _add_single_box_collider(mesh_inst: MeshInstance3D, world_aabb: AABB) -> void:
+	var sb := StaticBody3D.new()
+	sb.name = "BoxColliderBody"
+	sb.top_level = true
+	sb.collision_layer = 1
+	sb.collision_mask = 1
+	mesh_inst.add_child(sb)
+	sb.global_transform = Transform3D(Basis.IDENTITY, world_aabb.get_center())
+
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(
+		maxf(world_aabb.size.x, 0.08),
+		maxf(world_aabb.size.y, 0.08),
+		maxf(world_aabb.size.z, 0.08)
+	)
+	cs.shape = box
+	sb.add_child(cs)
+
+func _add_ground_box_colliders(mesh_inst: MeshInstance3D) -> int:
+	var m := mesh_inst.mesh
+	if m == null:
+		return 0
+	var xf := mesh_inst.global_transform
+	var cell_sz := 1.6
+	var cells: Dictionary = {} # Vector2i -> Vector3(min_x, max_y, min_z) / Dictionary
+	for s in range(m.get_surface_count()):
+		var arr := m.surface_get_arrays(s)
+		if arr.size() <= Mesh.ARRAY_VERTEX:
+			continue
+		var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		for v in verts:
+			var wp := xf * v
+			if wp.y < -0.15 or wp.y > 0.70:
+				continue
+			var key := Vector2i(int(floor(wp.x / cell_sz)), int(floor(wp.z / cell_sz)))
+			if not cells.has(key):
+				cells[key] = wp.y
+			elif wp.y > float(cells[key]):
+				cells[key] = wp.y
+	if cells.is_empty():
+		return 0
+	var sb := StaticBody3D.new()
+	sb.name = "BoxGroundBody"
+	sb.top_level = true
+	sb.collision_layer = 1
+	sb.collision_mask = 1
+	mesh_inst.add_child(sb)
+	sb.global_transform = Transform3D.IDENTITY
+	var count := 0
+	for k in cells.keys():
+		var ci: Vector2i = k
+		var top_y: float = float(cells[k])
+		var thick := 0.22
+		var cs := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(cell_sz + 0.08, thick, cell_sz + 0.08)
+		cs.shape = box
+		cs.position = Vector3((float(ci.x) + 0.5) * cell_sz, top_y - thick * 0.5, (float(ci.y) + 0.5) * cell_sz)
+		sb.add_child(cs)
+		count += 1
+	return count
+
+func _add_decomposed_wall_box_colliders(mesh_inst: MeshInstance3D, door_pts: Array[Vector3]) -> int:
+	var m := mesh_inst.mesh
+	if m == null:
+		return 0
+	var xf := mesh_inst.global_transform
+	var plane_step := 0.30
+	var bin_step := 0.25
+	var x_planes: Dictionary = {} # px_key -> { z_bin -> {min_x, max_x, min_y, max_y, min_z, max_z} }
+	var z_planes: Dictionary = {} # pz_key -> { x_bin -> {min_x, max_x, min_y, max_y, min_z, max_z} }
+	var diag_cells: Dictionary = {} # Vector2i -> AABB
+
+	for s in range(m.get_surface_count()):
+		var arr := m.surface_get_arrays(s)
+		if arr.size() <= Mesh.ARRAY_VERTEX:
+			continue
+		var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var idx_arr: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr.size() > Mesh.ARRAY_INDEX and arr[Mesh.ARRAY_INDEX] is PackedInt32Array else PackedInt32Array()
+		var tri_count := (idx_arr.size() / 3) if idx_arr.size() >= 3 else (verts.size() / 3)
+		for t in range(tri_count):
+			var i0 := idx_arr[t * 3] if idx_arr.size() >= 3 else (t * 3)
+			var i1 := idx_arr[t * 3 + 1] if idx_arr.size() >= 3 else (t * 3 + 1)
+			var i2 := idx_arr[t * 3 + 2] if idx_arr.size() >= 3 else (t * 3 + 2)
+			if i0 >= verts.size() or i1 >= verts.size() or i2 >= verts.size():
+				continue
+			var v0 := xf * verts[i0]
+			var v1 := xf * verts[i1]
+			var v2 := xf * verts[i2]
+			var min_y := minf(v0.y, minf(v1.y, v2.y))
+			var max_y := maxf(v0.y, maxf(v1.y, v2.y))
+			# Solo muros que interceptan la banda caminable del cuerpo (evita dinteles sobre puertas y techos)
+			if max_y <= 0.30 or min_y >= 1.92:
+				continue
+			var n := (v1 - v0).cross(v2 - v0)
+			var n_len := n.length()
+			# Omitir triángulos minúsculos de barandas/tubos (< 0.10 m²) para evitar muros invisibles sobre escaleras abiertas
+			if n_len < 0.20:
+				continue
+			n /= n_len
+			if absf(n.y) >= 0.45:
+				continue
+
+			var min_x := minf(v0.x, minf(v1.x, v2.x))
+			var max_x := maxf(v0.x, maxf(v1.x, v2.x))
+			var min_z := minf(v0.z, minf(v1.z, v2.z))
+			var max_z := maxf(v0.z, maxf(v1.z, v2.z))
+			var cy_lo := maxf(min_y, 0.0)
+			var cy_hi := minf(max_y, 2.25)
+
+			if absf(n.x) >= 0.70:
+				var px_key := int(round(((v0.x + v1.x + v2.x) / 3.0) / plane_step))
+				if not x_planes.has(px_key):
+					x_planes[px_key] = {}
+				var z_dict: Dictionary = x_planes[px_key]
+				var zb0 := int(floor(min_z / bin_step))
+				var zb1 := int(floor(max_z / bin_step))
+				for zb in range(zb0, zb1 + 1):
+					var cz := (float(zb) + 0.5) * bin_step
+					var seg_z0 := maxf(min_z, float(zb) * bin_step)
+					var seg_z1 := minf(max_z, float(zb + 1) * bin_step)
+					if seg_z1 < seg_z0:
+						seg_z0 = cz - bin_step * 0.5
+						seg_z1 = cz + bin_step * 0.5
+					_accum_bin(z_dict, zb, min_x, max_x, cy_lo, cy_hi, seg_z0, seg_z1)
+			elif absf(n.z) >= 0.70:
+				var pz_key := int(round(((v0.z + v1.z + v2.z) / 3.0) / plane_step))
+				if not z_planes.has(pz_key):
+					z_planes[pz_key] = {}
+				var x_dict: Dictionary = z_planes[pz_key]
+				var xb0 := int(floor(min_x / bin_step))
+				var xb1 := int(floor(max_x / bin_step))
+				for xb in range(xb0, xb1 + 1):
+					var cx := (float(xb) + 0.5) * bin_step
+					var seg_x0 := maxf(min_x, float(xb) * bin_step)
+					var seg_x1 := minf(max_x, float(xb + 1) * bin_step)
+					if seg_x1 < seg_x0:
+						seg_x0 = cx - bin_step * 0.5
+						seg_x1 = cx + bin_step * 0.5
+					_accum_bin(x_dict, xb, seg_x0, seg_x1, cy_lo, cy_hi, min_z, max_z)
+			else:
+				var cx_d := (v0.x + v1.x + v2.x) / 3.0
+				var cz_d := (v0.z + v1.z + v2.z) / 3.0
+				var dk := Vector2i(int(floor(cx_d / 0.55)), int(floor(cz_d / 0.55)))
+				var tb := AABB(Vector3(min_x, cy_lo, min_z), Vector3(maxf(max_x - min_x, 0.12), maxf(cy_hi - cy_lo, 0.35), maxf(max_z - min_z, 0.12)))
+				if not diag_cells.has(dk):
+					diag_cells[dk] = tb
+				else:
+					diag_cells[dk] = (diag_cells[dk] as AABB).merge(tb)
+
+	var boxes: Array[AABB] = []
+	for px_key in x_planes.keys():
+		_merge_plane_bins(x_planes[px_key], door_pts, true, boxes)
+	for pz_key in z_planes.keys():
+		_merge_plane_bins(z_planes[pz_key], door_pts, false, boxes)
+	for dk in diag_cells.keys():
+		var db: AABB = diag_cells[dk]
+		if not _box_blocks_doorway(db, door_pts):
+			boxes.append(db)
+
+	if boxes.is_empty():
+		return 0
+
+	var sb := StaticBody3D.new()
+	sb.name = "BoxWallBody"
+	sb.top_level = true
+	sb.collision_layer = 1
+	sb.collision_mask = 1
+	mesh_inst.add_child(sb)
+	sb.global_transform = Transform3D.IDENTITY
+
+	for b in boxes:
+		var cs := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(
+			maxf(b.size.x, 0.14),
+			maxf(b.size.y, 0.40),
+			maxf(b.size.z, 0.14)
+		)
+		cs.shape = shape
+		cs.position = b.get_center()
+		sb.add_child(cs)
+	return boxes.size()
+
+func _accum_bin(dict: Dictionary, bin_id: int, x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> void:
+	if not dict.has(bin_id):
+		dict[bin_id] = [x0, x1, y0, y1, z0, z1]
+	else:
+		var a: Array = dict[bin_id]
+		if x0 < float(a[0]): a[0] = x0
+		if x1 > float(a[1]): a[1] = x1
+		if y0 < float(a[2]): a[2] = y0
+		if y1 > float(a[3]): a[3] = y1
+		if z0 < float(a[4]): a[4] = z0
+		if z1 > float(a[5]): a[5] = z1
+
+func _box_blocks_doorway(box: AABB, door_pts: Array[Vector3]) -> bool:
+	var c := box.get_center()
+	for dp in door_pts:
+		if absf(c.y - dp.y) <= 1.8 and Vector2(c.x - dp.x, c.z - dp.z).length() <= 0.56:
+			return true
+	return false
+
+func _merge_plane_bins(bin_dict: Dictionary, door_pts: Array[Vector3], is_x_wall: bool, out_boxes: Array[AABB]) -> void:
+	var keys: Array = bin_dict.keys()
+	keys.sort()
+	var active := false
+	var prev_k := -999999
+	var cur: Array = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+	for k_v in keys:
+		var k := int(k_v)
+		var a: Array = bin_dict[k]
+		var cx := 0.5 * (float(a[0]) + float(a[1]))
+		var cy := 0.5 * (float(a[2]) + float(a[3]))
+		var cz := 0.5 * (float(a[4]) + float(a[5]))
+		# Despejar cualquier bin que invada el centro libre de una puerta interactiva
+		var near_door := false
+		for dp in door_pts:
+			if absf(cy - dp.y) <= 1.8 and Vector2(cx - dp.x, cz - dp.z).length() <= 0.56:
+				near_door = true
+				break
+		if near_door:
+			if active:
+				_flush_merged_wall_box(cur, is_x_wall, out_boxes)
+				active = false
+			continue
+
+		if not active:
+			cur = a.duplicate()
+			active = true
+		elif k <= prev_k + 1:
+			if float(a[0]) < float(cur[0]): cur[0] = a[0]
+			if float(a[1]) > float(cur[1]): cur[1] = a[1]
+			if float(a[2]) < float(cur[2]): cur[2] = a[2]
+			if float(a[3]) > float(cur[3]): cur[3] = a[3]
+			if float(a[4]) < float(cur[4]): cur[4] = a[4]
+			if float(a[5]) > float(cur[5]): cur[5] = a[5]
+		else:
+			_flush_merged_wall_box(cur, is_x_wall, out_boxes)
+			cur = a.duplicate()
+		prev_k = k
+
+	if active:
+		_flush_merged_wall_box(cur, is_x_wall, out_boxes)
+
+func _flush_merged_wall_box(cur: Array, is_x_wall: bool, out_boxes: Array[AABB]) -> void:
+	var x0 := float(cur[0]); var x1 := float(cur[1])
+	var y0 := float(cur[2]); var y1 := float(cur[3])
+	var z0 := float(cur[4]); var z1 := float(cur[5])
+	var along_len := (z1 - z0) if is_x_wall else (x1 - x0)
+	# Ignorar jambas/cantos diminutos (< 18 cm) en los bordes de vanos para no estrechar puertas ni arcos interiores
+	if along_len < 0.18:
+		return
+	var sx := clampf(x1 - x0, 0.12, 0.40) if is_x_wall else along_len
+	var sy := maxf(y1 - y0, 0.55)
+	var sz := along_len if is_x_wall else clampf(z1 - z0, 0.12, 0.40)
+	var center := Vector3(0.5 * (x0 + x1), 0.5 * (y0 + y1), 0.5 * (z0 + z1))
+	out_boxes.append(AABB(center - Vector3(sx, sy, sz) * 0.5, Vector3(sx, sy, sz)))
 
 func _should_skip_collision_by_name(mesh_inst: MeshInstance3D) -> bool:
 	var curr: Node = mesh_inst

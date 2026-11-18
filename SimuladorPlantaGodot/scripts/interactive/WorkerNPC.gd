@@ -143,6 +143,7 @@ func _ready() -> void:
 	add_to_group("workers")
 	floor_snap_length = 0.50
 	safe_margin = 0.02
+	wall_min_slide_angle = 0.0
 	floor_stop_on_slope = true
 	floor_max_angle = deg_to_rad(50.0)
 	if label_role != null:
