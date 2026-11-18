@@ -493,7 +493,9 @@ func get_interact_prompt() -> String:
 		return "Hablar con " + get_clean_role_name()
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
 	if tut != null and bool(tut.get("porteria_story_active")):
-		return "Entrar a la empresa"
+		return "Continuar"
+	if tut != null and bool(tut.get("porteria_story_completed")) and not bool(tut.briefing_completed):
+		return "Elegir curso SST"
 	if tut != null and bool(tut.get("sst_course_active")) and not bool(tut.get("sst_course_completed")):
 		return "Iniciar curso SST"
 	if tut != null and int(tut.get("target_station_id")) == 2 and not bool(tut.get("epp_completed")):
@@ -516,15 +518,22 @@ func interact(_tool_id: int = 1) -> String:
 
 	var bus = get_node_or_null("/root/EventBus")
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	# 1) Primero en Portería: iniciar la historia de la empresa antes de ofrecer el curso SST
+	if is_tour_guide and tut != null and not bool(tut.briefing_completed) and not bool(tut.get("porteria_story_completed")) and not bool(tut.get("porteria_story_active")):
+		if tut.has_method("start_porteria_story"):
+			tut.start_porteria_story()
+		return "Conoce nuestra empresa antes de continuar."
+	# 2) Al continuar tras la historia: abrir la elección del curso SST
+	if is_tour_guide and tut != null and bool(tut.get("porteria_story_active")):
+		if tut.has_method("finish_porteria_story_and_enter"):
+			tut.finish_porteria_story_and_enter()
+		return "¿Deseas realizar el curso SST?"
+	# 3) Si la historia ya concluyó y falta elegir curso SST / recorrido directo
 	if is_tour_guide and tut != null and not bool(tut.briefing_completed):
 		tut.set("is_briefing_active", true)
 		if bus != null and bus.has_signal("induction_briefing_requested"):
 			bus.induction_briefing_requested.emit("Bienvenido a Agromolinos del Valle", "¿Deseas realizar el curso SST?", true)
 		return "¿Deseas realizar el curso SST?"
-	if is_tour_guide and tut != null and bool(tut.get("porteria_story_active")):
-		if tut.has_method("finish_porteria_story_and_enter"):
-			tut.finish_porteria_story_and_enter()
-		return "Ingresando a Agromolinos del Valle."
 	if is_tour_guide and tut != null and bool(tut.get("sst_course_active")) and not bool(tut.get("sst_course_completed")):
 		if Vector2(global_position.x - 27.0, global_position.z - 34.0).length() <= 6.0:
 			if bus != null and bus.has_signal("sst_course_modal_requested"):

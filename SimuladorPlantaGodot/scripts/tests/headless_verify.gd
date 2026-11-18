@@ -747,19 +747,21 @@ func _qa_10_main_scene_integration() -> void:
 				"El menú de bienvenida no debe abrirse solo al llegar; debe requerir hablar con el Supervisor SST") and ok
 			ok = _assert_true(not bool(guide.guide_has_target) and guide.can_interact(),
 				"El guía SST debe esperar listo en Portería para que el jugador hable con él") and ok
+			# 1) Primero en Portería: hablar con el Supervisor SST inicia la historia de la empresa (antes de preguntar por el curso)
 			guide.interact(1)
-			ok = _assert_true(bool(tut_node.is_briefing_active) and hud_ctrl.is_briefing_visible() and self.paused,
-				"Hablar con el Supervisor SST en Portería debe abrir el menú de bienvenida") and ok
+			ok = _assert_true(bool(tut_node.get("porteria_story_active")) and not bool(tut_node.is_briefing_active) and not hud_ctrl.is_briefing_visible() and not self.paused and not bool(guide.guide_has_target),
+				"Hablar primero con el Supervisor SST en Portería debe iniciar la historia de la empresa antes de preguntar por el curso SST") and ok
+			# 2) Luego de la historia: al continuar se abre la elección del Curso SST
+			tut_node.finish_porteria_story_and_enter()
+			ok = _assert_true(bool(tut_node.get("porteria_story_completed")) and not bool(tut_node.get("porteria_story_active")) and bool(tut_node.is_briefing_active) and hud_ctrl.is_briefing_visible() and self.paused,
+				"Al continuar tras la historia en Portería debe abrirse la elección del Curso SST") and ok
 			ok = _assert_true(hud_ctrl.find_child("BriefingCard", true, false) != null,
-				"Falta BriefingCard con explicación de controles y mecánicas") and ok
+				"Falta BriefingCard con elección del Curso SST") and ok
 			hud_ctrl.close_briefing_panel()
 			ok = _assert_true(not hud_ctrl.is_briefing_visible() and not self.paused,
-				"Cerrar pausa de bienvenida debe reanudar simulación sin quedar pausado") and ok
-			ok = _assert_true(not bool(tut_node.is_briefing_active) and bool(tut_node.briefing_completed) and bool(tut_node.get("porteria_story_active")) and not bool(guide.guide_has_target),
-				"Tras bienvenida en Portería debe iniciarse primero la historia de la empresa antes de entrar") and ok
-			tut_node.finish_porteria_story_and_enter()
-			ok = _assert_true(bool(tut_node.get("porteria_story_completed")) and not bool(tut_node.get("porteria_story_active")) and bool(guide.guide_has_target),
-				"Al terminar la historia en Portería, el guía SST debe iniciar el ingreso hacia la empresa/Vestidores") and ok
+				"Cerrar elección del Curso SST debe reanudar simulación sin quedar pausado") and ok
+			ok = _assert_true(not bool(tut_node.is_briefing_active) and bool(tut_node.briefing_completed) and bool(guide.guide_has_target),
+				"Tras elegir recorrido directo después de la historia, el guía SST debe iniciar el ingreso hacia Vestidores") and ok
 
 			# Auditoría Bloqueo de Interacción SST hasta llegar y explicar
 			ok = _assert_true(not guide.can_interact(),
@@ -1093,21 +1095,27 @@ func _qa_10_main_scene_integration() -> void:
 			ok = _assert_true(btn_course != null and btn_direct != null,
 				"Briefing inicial en Portería debe mostrar elección entre Curso SST RETIE y Recorrido Directo") and ok
 
-			hud_ctrl.show_briefing_panel("BIENVENIDA EN PORTERÍA", "Prueba de elección curso RETIE.", true)
-			ok = _assert_true(btn_course != null and btn_course.visible and btn_direct != null and btn_direct.visible,
-				"Ambos botones de elección inicial deben estar visibles al iniciar en Portería") and ok
 			tut_node.briefing_completed = false
+			tut_node.porteria_story_active = false
+			tut_node.porteria_story_completed = false
+			tut_node.sst_course_chosen = false
+			tut_node.sst_course_active = false
+			tut_node.sst_course_completed = false
 			tut_node.epp_completed = false
 			var locker_c := inst.find_child("LockerEPPStation", true, false)
 			if locker_c != null:
 				locker_c.set_epp_equipped(false)
-			hud_ctrl.close_briefing_panel_with_choice(true)
-			ok = _assert_true(bool(tut_node.get("sst_course_chosen")) and bool(tut_node.get("porteria_story_active")) and not bool(tut_node.get("sst_course_active")),
-				"Elegir Sí debe contar primero la historia en Portería antes de entrar al curso SST") and ok
+			# Primero historia en Portería -> elegir tema -> Continuar abre el panel del Curso SST
+			tut_node.start_porteria_story()
+			ok = _assert_true(bool(tut_node.get("porteria_story_active")) and not hud_ctrl.is_briefing_visible() and not bool(tut_node.get("sst_course_active")),
+				"Primero debe ejecutarse la historia de la empresa en Portería antes de ofrecer el curso SST") and ok
 			tut_node.select_company_topic("historia")
 			tut_node.select_company_topic("__continue__")
-			ok = _assert_true(bool(tut_node.get("sst_course_chosen")) and bool(tut_node.get("sst_course_active")) and bool(tut_node.get("porteria_story_completed")),
-				"Tras terminar la historia en Portería debe entrar a la empresa hacia Sala de Reuniones para el curso SST") and ok
+			ok = _assert_true(bool(tut_node.get("porteria_story_completed")) and not bool(tut_node.get("porteria_story_active")) and hud_ctrl.is_briefing_visible() and btn_course.visible and btn_direct.visible,
+				"Al elegir Continuar tras la historia debe abrirse la elección entre Curso SST RETIE y Recorrido Directo") and ok
+			hud_ctrl.close_briefing_panel_with_choice(true)
+			ok = _assert_true(bool(tut_node.get("sst_course_chosen")) and bool(tut_node.get("sst_course_active")) and bool(tut_node.briefing_completed),
+				"Elegir Sí tras la historia debe iniciar inmediatamente el recorrido hacia Sala de Reuniones para el curso SST") and ok
 
 			var desk := tut_node.find_child("CourseDeskInteractable", true, false)
 			ok = _assert_true(desk != null and desk.has_method("interact"),
@@ -1841,10 +1849,9 @@ func _qa_10_main_scene_integration() -> void:
 			) and ok
 			guide.interact(1)
 			ok = _assert_true(
-				bool(tut_node.is_briefing_active) and hud_ctrl.is_briefing_visible(),
-				"Tras volver a Portería, hablar con el Supervisor SST debe abrir normalmente el menú de bienvenida"
+				bool(tut_node.porteria_story_active) and not bool(tut_node.is_briefing_active) and not hud_ctrl.is_briefing_visible(),
+				"Tras volver a Portería, hablar con el Supervisor SST debe reiniciar primero la historia de la empresa"
 			) and ok
-			hud_ctrl.close_briefing_panel()
 			tut_node.load_previous_checkpoint()
 			ok = _assert_true(
 				not bool(tut_node.porteria_story_active) and not bool(hud_ctrl.get("_dialogue_keep_open")) and not bool(tut_node.briefing_completed),
