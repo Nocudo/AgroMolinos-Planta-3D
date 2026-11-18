@@ -761,8 +761,7 @@ func _qa_10_main_scene_integration() -> void:
 		var hazard_boxes: Array[Dictionary] = [
 			{"name": "Zone1_Milling_OSHA", "x0": -30.65, "x1": -21.35, "z0": 25.10, "z1": 48.60},
 			{"name": "Zone2_CCM460V_RETIE", "x0": -21.33, "x1": -19.63, "z0": 37.20, "z1": 39.80},
-			{"name": "Zone6_DispatchBay", "x0": -41.10, "x1": -32.90, "z0": 50.20, "z1": 55.40},
-			{"name": "Zone8_IntakeConveyor_OSHA", "x0": -32.75, "x1": -26.95, "z0": 49.05, "z1": 53.35},
+			{"name": "Zone8_IntakeConveyor_OSHA", "x0": -45.35, "x1": -26.95, "z0": 49.05, "z1": 54.65},
 			{"name": "Zone9_AirThermal_OSHA", "x0": -40.80, "x1": -31.60, "z0": 29.90, "z1": 39.90}
 		]
 		var hazard_crossings := 0
@@ -1271,6 +1270,18 @@ func _qa_10_main_scene_integration() -> void:
 			"Zone4_PedestrianWalkway_OSHA debe quedar centrado con la puerta de entrada X=-18.69 (actual=%s)" % [str(zone4_node.global_position) if zone4_node else "null"]) and ok
 		ok = _assert_true(zone8_node != null,
 			"Falta perímetro de seguridad Zone8_IntakeConveyor_OSHA en bandas exteriores de descarga/tolva") and ok
+		if zone8_node != null:
+			var z8_col := zone8_node.find_child("CollisionShape3D", true, false) as CollisionShape3D
+			var z8_sz: Vector3 = (z8_col.shape as BoxShape3D).size if (z8_col != null and z8_col.shape is BoxShape3D) else Vector3.ZERO
+			var z8_min_x := zone8_node.global_position.x - z8_sz.x * 0.5
+			var z8_max_x := zone8_node.global_position.x + z8_sz.x * 0.5
+			var z8_min_z := zone8_node.global_position.z - z8_sz.z * 0.5
+			var z8_max_z := zone8_node.global_position.z + z8_sz.z * 0.5
+			var z6_decal := inst.find_child("Zone6_DispatchBay", true, false).find_child("FloorDecal", true, false) as Node3D if inst.find_child("Zone6_DispatchBay", true, false) != null else null
+			ok = _assert_true(
+				z8_min_x <= -45.0 and z8_max_x >= -27.0 and z8_max_x <= -26.8 and z8_min_z <= 49.1 and z8_max_z >= 54.4 and (z6_decal == null or not z6_decal.visible),
+				"Perímetro unificado de zona de descarga debe encerrar todo el camión y bandas en un solo recuadro sin duplicar Zone6 (X=[%.2f..%.2f], Z=[%.2f..%.2f])" % [z8_min_x, z8_max_x, z8_min_z, z8_max_z]
+			) and ok
 		ok = _assert_true(zone9_node != null,
 			"Falta perímetro de seguridad Zone9_AirThermal_OSHA en zona exterior de aire y térmica") and ok
 		ok = _assert_true(breaker_node != null and breaker_node.find_child("DownloadedCabinetModel", true, false) != null and breaker_node.find_child("defaultMaterial3", true, false) == null,

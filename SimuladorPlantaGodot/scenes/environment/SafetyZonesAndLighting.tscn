@@ -124,10 +124,12 @@ roughness = 0.7
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_zone8"]
 material = SubResource("Mat_Zone8_YellowIntake")
-size = Vector2(5.8, 4.3)
+size = Vector2(18.4, 5.6)
+subdivide_width = 72
+subdivide_depth = 24
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_zone8"]
-size = Vector3(5.8, 3, 4.3)
+size = Vector3(18.4, 3.2, 5.6)
 
 [sub_resource type="StandardMaterial3D" id="Mat_Zone7_OrangeATEX"]
 transparency = 1
@@ -293,17 +295,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 shape = SubResource("BoxShape3D_zone5")
 
 [node name="Zone6_DispatchBay" type="Area3D" parent="DemarcacionZonas"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.0, 0.0, 52.8)
-collision_layer = 1
-collision_mask = 2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.15, 0.0, 51.85)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
 
 [node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone6_DispatchBay"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
+visible = false
 mesh = SubResource("PlaneMesh_zone6")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone6_DispatchBay"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 shape = SubResource("BoxShape3D_zone6")
+disabled = true
 
 [node name="Zone7_ATEX_DustZone" type="Area3D" parent="DemarcacionZonas"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 0.79, 32.7)
@@ -330,25 +336,25 @@ font_size = 16
 outline_size = 2
 
 [node name="Zone8_IntakeConveyor_OSHA" type="Area3D" parent="DemarcacionZonas"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.85, 0.115, 51.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.15, 0.0, 51.85)
 collision_layer = 1
 collision_mask = 2
 
 [node name="FloorDecal" type="MeshInstance3D" parent="DemarcacionZonas/Zone8_IntakeConveyor_OSHA"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.024, 0)
 mesh = SubResource("PlaneMesh_zone8")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DemarcacionZonas/Zone8_IntakeConveyor_OSHA"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_zone8")
 
 [node name="Label3D" type="Label3D" parent="DemarcacionZonas/Zone8_IntakeConveyor_OSHA"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.35, 0.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0.8)
 pixel_size = 0.0014
 billboard = 1
 double_sided = false
 modulate = Color(1, 0.86, 0.25, 0.9)
-text = "Zona 8 · Descarga & Bandas"
+text = "Zona de Descarga y Camión"
 font_size = 16
 outline_size = 2
 

@@ -33,8 +33,8 @@ const HAZARD_LINE_ZONES: Dictionary = {
 		"msg": "Maniobra de camiones. Mantén distancia."
 	},
 	"Zone8_IntakeConveyor_OSHA": {
-		"title": "⚠ ZONA 8 · BANDAS EXTERIORES",
-		"msg": "Perímetro tolva. Usa selección remota."
+		"title": "⚠ ZONA DE DESCARGA Y CAMIÓN",
+		"msg": "Perímetro de camión y bandas de descarga. Mantén distancia."
 	},
 	"Zone9_AirThermal_OSHA": {
 		"title": "⚠ ZONA 9 · AIRE & TÉRMICA",
@@ -50,7 +50,7 @@ const ZONE_DESCRIPTIONS: Dictionary = {
 	"Zone5_WarehouseRacks": "Zona 5: Almacén Sacos",
 	"Zone6_DispatchBay": "Zona 6: Bahía Descarga",
 	"Zone7_ATEX_DustZone": "Zona 7: Atmósfera ATEX 22",
-	"Zone8_IntakeConveyor_OSHA": "Zona 8: Bandas Exteriores",
+	"Zone8_IntakeConveyor_OSHA": "Zona de Descarga: Camión y Bandas",
 	"Zone9_AirThermal_OSHA": "Zona 9: Aire y Térmica"
 }
 
@@ -1229,6 +1229,16 @@ uniform float stripe_freq = 4.2;
 uniform float inner_alpha = 0.24;
 uniform float fault_pulse = 0.0;
 uniform vec3 laser_color : source_color = vec3(1.0, 0.09, 0.07);
+uniform float conform_north_pad = 0.0;
+
+void vertex() {
+	if (conform_north_pad > 0.5) {
+		vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		if (wp.x >= -40.50 && wp.x <= -26.75 && wp.z >= 48.80 && wp.z <= 53.25) {
+			VERTEX.y += 0.095;
+		}
+	}
+}
 
 void fragment() {
 	vec2 p = UV * zone_size;
@@ -1276,8 +1286,7 @@ void fragment() {
 	var zone_cfg: Dictionary = {
 		"Zone1_Milling_OSHA": {"type": "hazard", "size": Vector2(9.3, 23.5), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.96, 0.72, 0.10), "bw": 0.30, "alpha": 0.12, "y": 0.016, "rp": 1},
 		"Zone2_CCM460V_RETIE": {"type": "hazard", "size": Vector2(1.7, 2.6), "stripe": Color(0.98, 0.18, 0.15), "tint": Color(0.88, 0.15, 0.15), "bw": 0.22, "alpha": 0.30, "y": 0.024, "rp": 3},
-		"Zone6_DispatchBay": {"type": "hazard", "size": Vector2(8.2, 5.2), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.92, 0.72, 0.15), "bw": 0.34, "alpha": 0.24, "y": 0.024, "rp": 2},
-		"Zone8_IntakeConveyor_OSHA": {"type": "hazard", "size": Vector2(5.8, 4.3), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.95, 0.72, 0.10), "bw": 0.28, "alpha": 0.18, "y": 0.026, "rp": 2},
+		"Zone8_IntakeConveyor_OSHA": {"type": "hazard", "size": Vector2(18.4, 5.6), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.95, 0.72, 0.10), "bw": 0.34, "alpha": 0.16, "y": 0.024, "rp": 2, "conform_north_pad": 1.0},
 		"Zone9_AirThermal_OSHA": {"type": "hazard", "size": Vector2(9.2, 10.0), "stripe": Color(0.98, 0.76, 0.06), "tint": Color(0.96, 0.56, 0.08), "bw": 0.28, "alpha": 0.16, "y": 0.026, "rp": 2},
 		"Zone4_PedestrianWalkway_OSHA": {"type": "walkway", "size": Vector2(1.75, 24.5), "lane": Color(0.10, 0.56, 0.24), "line": Color(0.98, 0.86, 0.20), "corridor": 1.0, "y": 0.020, "rp": 2}
 	}
@@ -1302,6 +1311,7 @@ void fragment() {
 			sm.set_shader_parameter("base_tint", cfg["tint"])
 			sm.set_shader_parameter("border_width", float(cfg["bw"]))
 			sm.set_shader_parameter("inner_alpha", float(cfg["alpha"]))
+			sm.set_shader_parameter("conform_north_pad", float(cfg.get("conform_north_pad", 0.0)))
 		else:
 			sm.shader = sh_walkway
 			sm.set_shader_parameter("zone_size", cfg["size"])
