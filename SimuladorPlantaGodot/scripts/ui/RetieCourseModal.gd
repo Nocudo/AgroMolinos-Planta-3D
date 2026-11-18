@@ -212,10 +212,10 @@ func _build_ui() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	foot.add_child(spacer)
 
-	_btn_prev = _make_btn("← Anterior", Color(0.10, 0.18, 0.28), Color(0.32, 0.56, 0.78), _on_prev_pressed)
+	_btn_prev = _make_btn("Anterior", Color(0.10, 0.18, 0.28), Color(0.32, 0.56, 0.78), _on_prev_pressed)
 	foot.add_child(_btn_prev)
 
-	_btn_primary = _make_btn("Siguiente →", Color(0.08, 0.45, 0.34), Color(0.25, 0.95, 0.65), _on_primary_pressed)
+	_btn_primary = _make_btn("Siguiente", Color(0.08, 0.45, 0.34), Color(0.25, 0.95, 0.65), _on_primary_pressed)
 	_btn_primary.custom_minimum_size = Vector2(280, 40)
 	foot.add_child(_btn_primary)
 
@@ -323,15 +323,17 @@ func _refresh_view() -> void:
 	_quiz_box.visible = not is_info
 	if is_info:
 		var sl: Dictionary = INFO_SLIDES[_slide_idx]
+		_lbl_badge.visible = true
 		_lbl_badge.text = sl["badge"]
 		_lbl_title.text = sl["title"]
 		_rtl_info.text = sl["body"]
 		_btn_prev.visible = (_slide_idx > 0)
-		_btn_primary.text = "▸ Ir al Quiz Simple (3 Preguntas)" if _slide_idx == INFO_SLIDES.size() - 1 else "Siguiente (%d/%d) →" % [_slide_idx + 2, INFO_SLIDES.size()]
+		_btn_primary.text = "Ir al Quiz" if _slide_idx == INFO_SLIDES.size() - 1 else "Siguiente (%d/%d)" % [_slide_idx + 2, INFO_SLIDES.size()]
 		_style_btn(_btn_primary, Color(0.08, 0.45, 0.34), Color(0.25, 0.95, 0.65))
 	else:
-		_lbl_badge.text = "EVALUACIÓN RÁPIDA DE INDUCCIÓN  •  SALA DE REUNIONES RETIE"
-		_lbl_title.text = "Quiz Simple SST — Normatividad RETIE (3 Preguntas)"
+		_lbl_badge.visible = false
+		_lbl_badge.text = ""
+		_lbl_title.text = "QUIZ"
 		_btn_prev.visible = not _quiz_submitted
 		_refresh_quiz_styles()
 		if _quiz_submitted:
@@ -339,18 +341,18 @@ func _refresh_view() -> void:
 			var passed := (sc >= 2)
 			_lbl_quiz_feedback.visible = true
 			if passed:
-				_lbl_quiz_feedback.text = "✓ ¡Curso SST RETIE Aprobado (%d/3)! Bono de +0.5 pt otorgado. Ya puedes ir a Vestidores." % sc
+				_lbl_quiz_feedback.text = "Curso SST RETIE aprobado (%d/3). Bono de +0.5 pt otorgado. Ya puedes ir a Vestidores." % sc
 				_lbl_quiz_feedback.add_theme_color_override("font_color", Color(0.28, 0.95, 0.65))
-				_btn_primary.text = "▶ Continuar a Vestidores EPP (Est. 2)"
+				_btn_primary.text = "Continuar a Vestidores EPP"
 				_style_btn(_btn_primary, Color(0.08, 0.48, 0.35), Color(0.28, 0.95, 0.68))
 			else:
-				_lbl_quiz_feedback.text = "! Obtuviste %d/3. Necesitas mínimo 2/3 respuestas correctas para certificarte." % sc
+				_lbl_quiz_feedback.text = "Obtuviste %d/3. Necesitas mínimo 2/3 respuestas correctas para certificarte." % sc
 				_lbl_quiz_feedback.add_theme_color_override("font_color", Color(1.0, 0.65, 0.25))
-				_btn_primary.text = "↻ Reintentar Quiz Simple"
+				_btn_primary.text = "Reintentar Quiz"
 				_style_btn(_btn_primary, Color(0.45, 0.26, 0.05), Color(0.95, 0.72, 0.22))
 		else:
 			_lbl_quiz_feedback.visible = false
-			_btn_primary.text = "✓ Validar Respuestas del Quiz"
+			_btn_primary.text = "Validar Respuestas"
 			_style_btn(_btn_primary, Color(0.08, 0.38, 0.56), Color(0.28, 0.80, 1.0))
 
 func _refresh_quiz_styles() -> void:

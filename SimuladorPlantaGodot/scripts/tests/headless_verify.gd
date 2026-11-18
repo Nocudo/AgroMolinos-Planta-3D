@@ -1600,12 +1600,20 @@ func _qa_10_main_scene_integration() -> void:
 							tab_ctrl_es._on_emergency_stop_pressed()
 							var restored_es: bool = sm_ref.is_emergency_stop_engaged()
 							estop_toggled_ok = (after_es != was_es) and (restored_es == was_es)
+						var quiz_header_ok := false
+						if course_m != null:
+							course_m.set("_mode", "QUIZ")
+							course_m.call("_refresh_view")
+							var q_badge := course_m.get("_lbl_badge") as Label
+							var q_title := course_m.get("_lbl_title") as Label
+							quiz_header_ok = (q_badge != null and not q_badge.visible and q_title != null and q_title.text == "QUIZ")
 						ok = _assert_true(
 							not InputMap.has_action("e_stop")
 							and course_close_btn != null and course_close_btn.text == "Posponer"
+							and quiz_header_ok
 							and ctrl_tips_body != null and not ctrl_tips_body.text.contains("E-Stop")
 							and btn_estop != null and estop_toggled_ok,
-							"Parada de máquinas debe operarse desde BtnEmergencyStop en la Tablet (sin tecla e_stop ni [ESC] en Posponer)"
+							"Parada de máquinas debe operarse desde BtnEmergencyStop en la Tablet (sin tecla e_stop, sin [ESC] y título QUIZ limpio)"
 						) and ok
 
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
