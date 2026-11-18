@@ -615,8 +615,8 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_dialogue_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_dialogue_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_dialogue_panel.offset_left = 316.0
-	_dialogue_panel.offset_right = -316.0
+	_dialogue_panel.offset_left = 410.0
+	_dialogue_panel.offset_right = -410.0
 	_dialogue_panel.offset_bottom = -152.0
 	_dialogue_panel.offset_top = -214.0
 	var st := StyleBoxFlat.new()

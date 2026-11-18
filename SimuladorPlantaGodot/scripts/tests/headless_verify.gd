@@ -348,14 +348,10 @@ func _qa_7_in_game_tablet_and_oscilloscopes() -> void:
 		var frame := tablet.get_node_or_null("Frame") as PanelContainer
 		ok = _assert_true(chassis != null and frame != null, "Falta TabletChassis o Frame") and ok
 		if chassis != null and frame != null:
-			var tex_node := chassis.get_node_or_null("ChassisTexture") as TextureRect
-			ok = _assert_true(tex_node != null and tex_node.texture != null, "Textura de chasis de tablet no generada") and ok
-			var bottom_bar := chassis.get_node_or_null("DecorativeHardwareUI/BottomTabletControls")
-			ok = _assert_true(bottom_bar != null and bottom_bar.get_child_count() >= 10, "Faltan controles gráficos decorativos de tablet") and ok
-			if bottom_bar != null:
-				for ctrl_child in bottom_bar.get_children():
-					if ctrl_child is Control:
-						ok = _assert_true(ctrl_child.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Control decorativo de tablet debe ser no funcional (MOUSE_FILTER_IGNORE)") and ok
+			var shell_node := chassis.get_node_or_null("CleanOuterShell") as Panel
+			ok = _assert_true(shell_node != null, "Carcasa limpia de tablet (CleanOuterShell) no generada") and ok
+			ok = _assert_true(chassis.get_node_or_null("DecorativeHardwareUI") == null, "No deben existir botones ficticios decorativos en TabletChassis") and ok
+			ok = _assert_true(tablet.find_child("BtnClose", true, false) == null and tablet.btn_close == null, "No debe existir botón 'Salir' (BtnClose) en la tablet") and ok
 			var sz_ch_before := chassis.size
 			var sz_fr_before := frame.size
 			tablet._on_telemetry_vector_updated({
@@ -376,7 +372,7 @@ func _qa_7_in_game_tablet_and_oscilloscopes() -> void:
 			})
 			var min_fr := frame.get_combined_minimum_size()
 			ok = _assert_true(min_fr.x <= 1180.0 and min_fr.y <= 700.0, "Frame minimum size excede 1180x700 tras alerta larga: " + str(min_fr)) and ok
-			ok = _assert_true(chassis.size == sz_ch_before and chassis.size == Vector2(1320, 830), "Tamaño de TabletChassis cambió: " + str(chassis.size)) and ok
+			ok = _assert_true(chassis.size == sz_ch_before and chassis.size == Vector2(1228, 748), "Tamaño de TabletChassis cambió: " + str(chassis.size)) and ok
 			ok = _assert_true(frame.size == sz_fr_before and frame.size == Vector2(1180, 700), "Tamaño de Frame cambió: " + str(frame.size)) and ok
 
 			# Validar las 8 pestañas rectificadas (Tab 1 renombrada a "Cámaras", sin sección separada Cámaras CCTV, y telemetría de 15 máquinas + CCM)
@@ -386,7 +382,7 @@ func _qa_7_in_game_tablet_and_oscilloscopes() -> void:
 				"Telemetría IoT debe enlazar 15 máquinas + CCM (%d) y 4 operarios 3D (%d)" % [tablet._machine_tiles.size(), tablet._cards_3d_workers.size()]) and ok
 			for tab_i in range(8):
 				tablet._select_tab(tab_i)
-				ok = _assert_true(chassis.size == Vector2(1320, 830) and frame.size == Vector2(1180, 700), "Cambio de tamaño en pestaña %d" % tab_i) and ok
+				ok = _assert_true(chassis.size == Vector2(1228, 748) and frame.size == Vector2(1180, 700), "Cambio de tamaño en pestaña %d" % tab_i) and ok
 			tablet._select_tab(7)
 			var rub_root := tablet._cctv_handles.get("root", null) as Node
 			ok = _assert_true(rub_root != null and rub_root.name == "TabRubricaAcademica",
@@ -396,7 +392,7 @@ func _qa_7_in_game_tablet_and_oscilloscopes() -> void:
 			for grp in tablet.TCatalog.CAMERA_GROUPS_ORDER:
 				tablet._select_3d_group(grp)
 				total_cam_cards += (tablet._cards_by_3d_group.get(grp, []) as Array).size()
-				ok = _assert_true(chassis.size == Vector2(1320, 830) and frame.size == Vector2(1180, 700), "Tamaño invariante en grupo Cámaras 3D %s" % grp) and ok
+				ok = _assert_true(chassis.size == Vector2(1228, 748) and frame.size == Vector2(1180, 700), "Tamaño invariante en grupo Cámaras 3D %s" % grp) and ok
 			ok = _assert_true(total_cam_cards == 24, "Pestaña Cámaras debe incluir 20 cámaras de planta (15 máquinas + CCM + vistas) + 4 operarios (%d)" % total_cam_cards) and ok
 			tablet._select_tab(3)
 			tablet._on_register_worker("Carlos", "Ruiz", "28", "Grupo RH: O+", "Operario de Planta")
@@ -607,9 +603,9 @@ func _qa_10_main_scene_integration() -> void:
 			tab_ctrl.toggle_tablet()
 			ok = _assert_true(tab_ctrl.visible == true and tab_ctrl._active_tab_idx == 0 and tab_ctrl._warning_banner_card.visible == true, "Abrir tablet debe llevar directo al warning en Monitoreo IoT") and ok
 			ok = _assert_true(hud_tab_ctrl._tablet_notify_legend.visible == false, "Al abrir tablet la leyenda de notificación nueva debe ocultarse") and ok
-			ok = _assert_true(tab_ctrl.get_node("TabletChassis").size == Vector2(1320, 830) and tab_ctrl.get_node("Frame").size == Vector2(1180, 700), "Tamaño de tablet debe mantenerse invariante con warning visible") and ok
+			ok = _assert_true(tab_ctrl.get_node("TabletChassis").size == Vector2(1228, 748) and tab_ctrl.get_node("Frame").size == Vector2(1180, 700), "Tamaño de tablet debe mantenerse invariante con warning visible") and ok
 			var btn_close_qa := tab_ctrl.find_child("BtnClose", true, false) as Button
-			ok = _assert_true(btn_close_qa != null and btn_close_qa.text == "Salir", "BtnClose de tablet debe decir 'Salir' sin [TAB]") and ok
+			ok = _assert_true(btn_close_qa == null, "BtnClose ('Salir') debe estar eliminado de la tablet") and ok
 			tab_ctrl.toggle_tablet()
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		var listener_3d := inst.get_node_or_null("PlayerOperator/Head/AudioListener3D") as AudioListener3D

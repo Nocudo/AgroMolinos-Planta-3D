@@ -2,7 +2,7 @@ class_name IndustrialTabletController
 extends Control
 
 ## Controlador principal de la Tablet Industrial SCADA estilo Lab 3 (8 pestañas,
-## tamaño invariante 1320x830 chasis / 1180x700 pantalla) conectado al gemelo
+## tamaño invariante 1228x748 chasis / 1180x700 pantalla) conectado al gemelo
 ## digital AgroMolinos 10 HP, cámaras 3D interactivas, telemetría de 15 máquinas + CCM y RETIE.
 
 const SoundSynth = preload("res://scripts/core/IndustrialSoundSynthesizer.gd")
@@ -314,17 +314,21 @@ func _build_lab3_scada_ui() -> void:
 func _build_header_bar() -> void:
 	var hdr := HBoxContainer.new()
 	hdr.name = "Lab3Header"
-	hdr.add_theme_constant_override("separation", 10)
+	hdr.add_theme_constant_override("separation", 12)
 	_main_vbox.add_child(hdr)
 
-	var title_vb := VBoxContainer.new()
-	title_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_vb.add_theme_constant_override("separation", 1)
-	hdr.add_child(title_vb)
+	var title_hb := HBoxContainer.new()
+	title_hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_hb.add_theme_constant_override("separation", 10)
+	hdr.add_child(title_hb)
 
-	var main_t := TTheme.make_label("AGROMOLINOS", 15, Color.WHITE)
-	main_t.clip_text = true
-	title_vb.add_child(main_t)
+	var main_t := TTheme.make_label("AGROMOLINOS", 16, Color.WHITE)
+	main_t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_hb.add_child(main_t)
+
+	var sub_t := TTheme.make_label("SCADA", 11, TTheme.TEXT_MUTED)
+	sub_t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_hb.add_child(sub_t)
 
 	_header_status_panel = PanelContainer.new()
 	_header_status_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -349,18 +353,11 @@ func _build_header_bar() -> void:
 	btn_emergency_stop.pressed.connect(_on_emergency_stop_pressed)
 	hdr.add_child(btn_emergency_stop)
 
-	btn_close = Button.new()
-	btn_close.name = "BtnClose"
-	btn_close.text = "Salir"
-	btn_close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	btn_close.add_theme_font_size_override("font_size", 11)
-	TTheme.apply_btn_colors(btn_close, Color(0.14, 0.18, 0.24), TTheme.BORDER_SUBTLE)
-	btn_close.pressed.connect(_close_tablet)
-	hdr.add_child(btn_close)
+	btn_close = null
 
 func _build_tab_bar() -> void:
 	var bar_wrap := PanelContainer.new()
-	bar_wrap.add_theme_stylebox_override("panel", TTheme.make_panel_style(Color(0.04, 0.06, 0.10, 0.95), TTheme.BORDER_SUBTLE, 4, 4, 2, 1))
+	bar_wrap.add_theme_stylebox_override("panel", TTheme.make_panel_style(Color(0.045, 0.068, 0.112, 0.96), TTheme.BORDER_SUBTLE, 8, 5, 4, 1))
 	_main_vbox.add_child(bar_wrap)
 
 	var bar := HBoxContainer.new()
@@ -843,11 +840,19 @@ func _connect_event_bus() -> void:
 		bus.emergency_stop_reset.connect(_on_emergency_stop_reset)
 
 func _input(event: InputEvent) -> void:
+	if visible and event is InputEventKey:
+		var ke := event as InputEventKey
+		if ke.pressed and not ke.echo:
+			if ke.keycode == KEY_ESCAPE:
+				_close_tablet()
+				get_viewport().set_input_as_handled()
+				return
+			if ke.keycode == KEY_TAB:
+				toggle_tablet()
+				get_viewport().set_input_as_handled()
+				return
 	var focus_owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
 	if focus_owner is LineEdit:
-		if event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_TAB:
-			toggle_tablet()
-			get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("toggle_tablet"):
 		toggle_tablet()

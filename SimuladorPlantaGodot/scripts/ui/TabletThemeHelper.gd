@@ -32,6 +32,7 @@ static func make_panel_style(
 	sb.border_color = border
 	sb.set_border_width_all(border_w)
 	sb.set_corner_radius_all(radius)
+	sb.anti_aliasing = true
 	sb.content_margin_left = pad_x
 	sb.content_margin_right = pad_x
 	sb.content_margin_top = pad_y
@@ -50,6 +51,7 @@ static func make_pill_style(bg: Color, border: Color) -> StyleBoxFlat:
 	sb.border_color = border
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(12)
+	sb.anti_aliasing = true
 	sb.content_margin_left = 10
 	sb.content_margin_right = 10
 	sb.content_margin_top = 3
@@ -62,6 +64,7 @@ static func make_button_style(bg: Color, border: Color, radius: int = 6, pad_x: 
 	sb.border_color = border
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(radius)
+	sb.anti_aliasing = true
 	sb.content_margin_left = pad_x
 	sb.content_margin_right = pad_x
 	sb.content_margin_top = pad_y
@@ -79,16 +82,18 @@ static func apply_btn_colors(btn: Button, normal_bg: Color, border: Color, txt_c
 
 static func apply_tab_style(btn: Button, active: bool) -> void:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.08, 0.14, 0.24, 0.9) if active else Color(0.0, 0.0, 0.0, 0.0)
+	sb.bg_color = Color(0.09, 0.16, 0.28, 0.95) if active else Color(0.0, 0.0, 0.0, 0.0)
 	sb.border_color = ACCENT_CYAN if active else Color(0, 0, 0, 0)
 	sb.border_width_bottom = 2 if active else 0
-	sb.content_margin_left = 9
-	sb.content_margin_right = 9
-	sb.content_margin_top = 6
-	sb.content_margin_bottom = 6
+	sb.set_corner_radius_all(6)
+	sb.anti_aliasing = true
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 7
+	sb.content_margin_bottom = 7
 	btn.add_theme_stylebox_override("normal", sb)
 	var hover := sb.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(0.10, 0.17, 0.28, 0.75)
+	hover.bg_color = Color(0.11, 0.19, 0.32, 0.80)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", sb)
 	btn.add_theme_stylebox_override("focus", sb)
