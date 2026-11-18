@@ -79,24 +79,24 @@ var _carried_bag_logistics: Node3D = null
 var _carried_bag_dock: Node3D = null
 var _bag_load_timer: float = 0.0
 var _bay2_truck_parked_for_loading: bool = false
-var _logistics_carry_pos: Vector3 = Vector3(-20.2, 0.80, 26.6)
+var _logistics_carry_pos: Vector3 = Vector3(-20.2, 0.794, 26.6)
 var _logistics_returning_home: bool = false
 
-const _LOGISTICS_HOME_POS := Vector3(-20.2, 0.80, 26.6)
-const _DOCK_SOUTH_HOME_POS := Vector3(-16.0, 0.80, 24.55)
+const _LOGISTICS_HOME_POS := Vector3(-20.2, 0.794, 26.6)
+const _DOCK_SOUTH_HOME_POS := Vector3(-16.4, 0.794, 24.75)
 const _LOGISTICS_CARRY_WAYPOINTS: Array[Vector3] = [
-	Vector3(-23.8, 0.80, 27.8),
-	Vector3(-21.2, 0.80, 26.0),
-	Vector3(-17.8, 0.80, 25.75),
-	Vector3(-15.4, 0.80, 25.75),
-	Vector3(-14.1, 0.80, 25.65)
+	Vector3(-23.8, 0.794, 27.8),
+	Vector3(-21.2, 0.794, 26.0),
+	Vector3(-17.8, 0.794, 25.90),
+	Vector3(-16.3, 0.794, 25.90),
+	Vector3(-15.65, 0.794, 25.90)
 ]
 
 # Rutas 100 % sobre carreteras pavimentadas (ADOQUIN/baldosa, cero pasto) y reversa recta al muelle de la PUERTA DERECHA (Door_Roll-Up Door - Industrial_1)
 # Salida por vía Norte -> Portón Noreste (55.03, 9.58) -> Bulevar Este (X=71) -> Portón Principal (56.08, 38.04) -> Vía Sur -> Curva Oeste -> Reversa recta al muelle derecho
-const SOUTH_DOCK_POS := Vector3(-1.20, 0.0, 24.18)
+const SOUTH_DOCK_POS := Vector3(-2.85, 0.0, 23.82)
 const SOUTH_EXIT_ROUTE: Array[Vector3] = [
-	Vector3(-1.20, 0.0, 24.18),
+	Vector3(-2.85, 0.0, 23.82),
 	Vector3(10.5, 0.0, 22.0),
 	Vector3(20.0, 0.0, 18.2),
 	Vector3(30.0, 0.0, 15.8),
@@ -146,14 +146,14 @@ const SOUTH_ENTER_ROUTE: Array[Vector3] = [
 ]
 const SOUTH_REVERSE_ROUTE: Array[Vector3] = [
 	Vector3(14.8, 0.0, 21.95),
-	Vector3(6.8, 0.0, 23.06),
-	Vector3(-1.20, 0.0, 24.18)
+	Vector3(6.0, 0.0, 22.88),
+	Vector3(-2.85, 0.0, 23.82)
 ]
 
 # Segundo tractocamión articulado turnándose desfasado en la misma PUERTA DERECHA de carga (cero colisión, >25 m separación)
-const BAY2_DOCK_POS := Vector3(-1.20, 0.0, 24.18)
+const BAY2_DOCK_POS := Vector3(-2.85, 0.0, 23.82)
 const BAY2_EXIT_ROUTE: Array[Vector3] = [
-	Vector3(-1.20, 0.0, 24.18),
+	Vector3(-2.85, 0.0, 23.82),
 	Vector3(10.5, 0.0, 22.0),
 	Vector3(20.0, 0.0, 18.2),
 	Vector3(30.0, 0.0, 15.8),
@@ -195,8 +195,8 @@ const BAY2_ENTER_ROUTE: Array[Vector3] = [
 ]
 const BAY2_REVERSE_ROUTE: Array[Vector3] = [
 	Vector3(14.8, 0.0, 21.95),
-	Vector3(6.8, 0.0, 23.06),
-	Vector3(-1.20, 0.0, 24.18)
+	Vector3(6.0, 0.0, 22.88),
+	Vector3(-2.85, 0.0, 23.82)
 ]
 
 # Circuito cerrado holgado 100 % dentro del patio de grava Norte (cero pasto)
@@ -1464,8 +1464,8 @@ func _step_operator_bag_loading(delta: float, u_south: float, south_phase: Strin
 	var can_load_now: bool = south_docked or bay2_docked
 	_bay2_truck_parked_for_loading = can_load_now
 
-	# Culata del semirremolque acoplado al ras de la puerta enrollable derecha (X=-13.5, Z=25.35)
-	var trailer_rear_target := Vector3(-13.1, 1.18, 25.35)
+	# Culata del semirremolque acoplado al ras del muelle de la puerta enrollable derecha (X=-15.0, Z=25.45)
+	var trailer_rear_target := Vector3(-14.95, 1.18, 25.45)
 
 	if not can_load_now:
 		_bag_load_timer = 0.0
@@ -1481,7 +1481,7 @@ func _step_operator_bag_loading(delta: float, u_south: float, south_phase: Strin
 			if d_home > 0.18:
 				_logistics_returning_home = true
 				var step_p := wlog.global_position.move_toward(_LOGISTICS_HOME_POS, clampf(delta * 3.8, 0.05, 2.5))
-				step_p.y = 0.80
+				step_p.y = 0.794
 				if _logistics_loader.has_method("set_carry_pose"):
 					_logistics_loader.set_carry_pose(
 						step_p, _LOGISTICS_HOME_POS, "walk",
@@ -1491,7 +1491,7 @@ func _step_operator_bag_loading(delta: float, u_south: float, south_phase: Strin
 				_logistics_returning_home = false
 				if _logistics_loader.has_method("set_carry_pose"):
 					_logistics_loader.set_carry_pose(
-						_LOGISTICS_HOME_POS, Vector3(-15.4, 0.80, 25.4), "inspect",
+						_LOGISTICS_HOME_POS, Vector3(-15.65, 0.794, 25.45), "inspect",
 						"Sin camión parqueado en la puerta derecha; esperando arribo para iniciar el cargue."
 					)
 
@@ -1567,14 +1567,14 @@ func _step_operator_bag_loading(delta: float, u_south: float, south_phase: Strin
 			if l_has_bag:
 				_place_carried_bag(_carried_bag_logistics, _logistics_loader as Node3D, l_push, l_lift)
 
-	# 2) WorkerDockSouth: toma los sacos estibados junto a la puerta derecha y los carga directo al remolque (carril Z=24.85)
+	# 2) WorkerDockSouth: toma los sacos estibados junto a la puerta derecha y los carga directo al remolque sin salir de la losa (X <= -15.70)
 	if _south_spotter != null and is_instance_valid(_south_spotter) and _south_spotter.has_method("set_carry_pose"):
 		var cycle_d := 7.0
 		var td := fmod(_bag_load_timer, cycle_d)
-		var p_pick := Vector3(-16.1, 0.80, 24.55)
-		var p_edge := Vector3(-14.15, 0.80, 24.90)
+		var p_pick := Vector3(-16.4, 0.794, 24.75)
+		var p_edge := Vector3(-15.75, 0.794, 24.85)
 		var d_pos := p_pick
-		var d_look := Vector3(-16.8, 0.80, 24.30)
+		var d_look := Vector3(-17.1, 0.794, 24.55)
 		var d_anim := "interact"
 		var d_has_bag := false
 		var d_push := 0.0
@@ -1582,7 +1582,7 @@ func _step_operator_bag_loading(delta: float, u_south: float, south_phase: Strin
 
 		if td < 0.9:
 			d_pos = p_pick
-			d_look = Vector3(-16.8, 0.80, 24.30)
+			d_look = Vector3(-17.1, 0.794, 24.55)
 			d_anim = "interact"
 			d_has_bag = (td >= 0.45)
 		elif td < 3.2:
@@ -1597,7 +1597,7 @@ func _step_operator_bag_loading(delta: float, u_south: float, south_phase: Strin
 			d_look = Vector3(trailer_rear_target.x, trailer_rear_target.y, 25.10)
 			d_anim = "interact"
 			d_has_bag = (u_drop < 0.78)
-			d_push = u_drop * 0.90
+			d_push = u_drop * 0.68
 			d_lift = sin(u_drop * PI) * 0.24
 		else:
 			var u_ret := (td - 4.4) / 2.6

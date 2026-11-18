@@ -1624,8 +1624,33 @@ func _qa_10_main_scene_integration() -> void:
 					ok = _assert_true(bag_log != null and not bag_log.visible and bag_dock != null and not bag_dock.visible,
 						"Sin camión parqueado en la puerta derecha ningún operario debe cargar sacos") and ok
 					prod_flow.truck_cycle_time = 0.03 * float(prod_flow.TRUCK_CYCLE_DURATION) # u_south=0.03 -> TruckIntakeMover parqueado en puerta derecha
-					for _bi in range(12):
-						prod_flow.step_production(0.2)
+					var max_dock_worker_x := -999.0
+					var w_dock_s := inst.find_child("WorkerDockSouth", true, false) as Node3D
+					var w_log_s := inst.find_child("WorkerLogistics", true, false) as Node3D
+					for _bi in range(36):
+						prod_flow.step_production(0.25)
+						if w_dock_s != null:
+							max_dock_worker_x = maxf(max_dock_worker_x, w_dock_s.global_position.x)
+						if w_log_s != null:
+							max_dock_worker_x = maxf(max_dock_worker_x, w_log_s.global_position.x)
+					ok = _assert_true(bag_log != null and bag_dock != null and max_dock_worker_x <= -15.50,
+						"Operarios de carga deben permanecer sobre la losa firme (X <= -15.50) sin flotar fuera del muelle (max_x=%.2f)" % max_dock_worker_x) and ok
+					var m_south_dock := prod_flow.find_child("TruckIntakeMover", true, false) as Node3D
+					var south_rear_x := 999.0
+					if m_south_dock != null:
+						var tr_box_s := m_south_dock.find_child("Geom3D_447", true, false) as MeshInstance3D
+						if tr_box_s != null and tr_box_s.mesh != null:
+							var tb := tr_box_s.mesh.get_aabb()
+							for cx in [0, 1]:
+								for cy in [0, 1]:
+									for cz in [0, 1]:
+										var tp := tr_box_s.global_transform * (tb.position + Vector3(tb.size.x * cx, tb.size.y * cy, tb.size.z * cz))
+										south_rear_x = minf(south_rear_x, tp.x)
+					ok = _assert_true(south_rear_x <= -14.80 and south_rear_x >= -15.55,
+						"Tractocamión acoplado en zona de carga debe acercarse al ras del muelle (rear_x=%.2f en [-15.55..-14.80])" % south_rear_x) and ok
+					prod_flow.truck_cycle_time = 0.03 * float(prod_flow.TRUCK_CYCLE_DURATION)
+					prod_flow.set("_bag_load_timer", 2.0)
+					prod_flow.step_production(0.1)
 					ok = _assert_true(bag_log != null and bag_log.visible and bag_dock != null and bag_dock.visible,
 						"Con tractocamión parqueado en puerta derecha los operarios deben cargar sacos al camión") and ok
 					prod_flow.truck_cycle_time = 0.30 * float(prod_flow.TRUCK_CYCLE_DURATION) # Salida del primer camión (reinicia ciclo de carga)

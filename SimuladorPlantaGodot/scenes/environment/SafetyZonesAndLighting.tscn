@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://safety_zones_lighting_001"]
+[gd_scene load_steps=39 format=3 uid="uid://safety_zones_lighting_001"]
 
 [ext_resource type="Script" path="res://scripts/environment/PlantSpatialBuilder.gd" id="1_spatial"]
 
@@ -10,7 +10,10 @@ rough = true
 size = Vector3(600, 1, 600)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_nave_slab"]
-size = Vector3(41, 0.8, 26.2)
+size = Vector3(25.7, 0.8, 26.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nave_slab_east"]
+size = Vector3(15.3, 0.8, 22.6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ramp_south"]
 size = Vector3(8.5, 0.4, 2.5)
@@ -161,8 +164,12 @@ physics_material_override = SubResource("PhysicsMaterial_concrete")
 shape = SubResource("BoxShape3D_floor_600")
 
 [node name="FloorNaveSlab" type="CollisionShape3D" parent="SueloFisicoPBR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.6, 0.89, 36.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.25, 0.89, 36.4)
 shape = SubResource("BoxShape3D_nave_slab")
+
+[node name="FloorNaveSlabEast" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.75, 0.89, 38.2)
+shape = SubResource("BoxShape3D_nave_slab_east")
 
 [node name="RampSouthNave" type="CollisionShape3D" parent="SueloFisicoPBR"]
 transform = Transform3D(0.9956, -0.0936, 0, 0.0936, 0.9956, 0, 0, 0, 1, -24.4, 0.695, 22.2)
