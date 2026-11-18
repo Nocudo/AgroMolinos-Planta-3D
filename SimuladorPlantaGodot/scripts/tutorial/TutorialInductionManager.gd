@@ -15,8 +15,8 @@ const CCM_STATION_ID: int = 10
 const STATIONS: Array[Dictionary] = [
 	{"id": 1, "title": "Estación 1: Portería", "pos": Vector3(52.0, 0.02, 34.0), "desc": "Inicio del recorrido en Portería."},
 	{"id": 2, "title": "Estación 2: Vestidores EPP", "pos": Vector3(-15.9, 0.79, 47.88), "desc": "Equipa tu EPP en los lockers."},
-	{"id": 3, "title": "Estación 3: Zona de Carga y Banda de Descarga", "pos": Vector3(-25.6, 0.59, 51.2), "desc": "Recepción de camión y Banda 01 de descarga."},
-	{"id": 4, "title": "Estación 4: Banda Inclinada hacia Tolva", "pos": Vector3(-24.6, 0.59, 50.2), "desc": "Banda 02 elevadora hacia la tolva receptora."},
+	{"id": 3, "title": "Estación 3: Zona de Carga y Banda de Descarga", "pos": Vector3(-25.4, 0.59, 51.0), "desc": "Recepción de camión y Banda 01 de descarga."},
+	{"id": 4, "title": "Estación 4: Banda Inclinada hacia Tolva", "pos": Vector3(-24.2, 0.59, 50.1), "desc": "Banda 02 elevadora hacia la tolva receptora."},
 	{"id": 5, "title": "Estación 5: Tolva de Recepción T-301", "pos": Vector3(-18.69, 0.79, 46.6), "desc": "Tolva 03 dosificadora de grano crudo."},
 	{"id": 6, "title": "Estación 6: Banda hacia Sinfín Trituradora", "pos": Vector3(-18.69, 0.79, 44.8), "desc": "Banda 04 transportadora desde la tolva."},
 	{"id": 7, "title": "Estación 7: Tornillo Sin Fin Trituradora", "pos": Vector3(-18.69, 0.79, 43.1), "desc": "Tornillo 05 alimentador helicoidal de la trituradora."},
@@ -27,60 +27,65 @@ const STATIONS: Array[Dictionary] = [
 	{"id": 12, "title": "Estación 12: Ciclón Separador", "pos": Vector3(-18.69, 0.79, 33.4), "desc": "Ciclón 09 separador neumático de sólidos."},
 	{"id": 13, "title": "Estación 13: Ciclones Clasificadores", "pos": Vector3(-18.69, 0.79, 29.4), "desc": "Ciclones clasificadores y control de polvo ATEX 22."},
 	{"id": 14, "title": "Estación 14: Almacén de Sacos 50 kg", "pos": Vector3(-18.69, 0.79, 26.5), "desc": "Empaque, estiba en pallets y despacho."},
-	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-36.5, 0.02, 22.2), "desc": "Equipo 14 exterior de transferencia térmica."},
-	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-44.2, 0.02, 34.3), "desc": "Horno 12 exterior de aire caliente."},
-	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-44.2, 0.02, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
-	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-44.2, 0.02, 38.8), "desc": "Soplador 13 de impulsión neumática."},
-	{"id": 19, "title": "Estación 19: Ductos de Aire y Cierre", "pos": Vector3(-43.2, 0.02, 40.8), "desc": "Red 15 de ductos de aire y cierre exterior del recorrido."}
+	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-33.5, 0.02, 22.2), "desc": "Equipo 14 exterior de transferencia térmica."},
+	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-45.7, 0.12, 34.3), "desc": "Horno 12 exterior de aire caliente."},
+	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-45.6, 0.12, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
+	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-45.2, 0.12, 38.8), "desc": "Soplador 13 de impulsión neumática."},
+	{"id": 19, "title": "Estación 19: Ductos de Aire y Cierre", "pos": Vector3(-44.2, 0.12, 41.2), "desc": "Red 15 de ductos de aire y cierre exterior del recorrido."}
 ]
 
-# Ruta segura verificada: 0 muros, 0 cruces de líneas de seguridad (Zone1/2/6/8/9), 0 choques con camiones
+# Ruta peatonal natural sobre aceras y rampas reales: 0 muros, 0 invasión de calle vehicular, 0 cruces de líneas de seguridad (Zone1/2/6/8/9)
 const TOUR_ROUTE_POINTS: Array[Vector3] = [
 	Vector3(52.0, 0.04, 34.0),    # 0: Estación 1 - Portería
-	Vector3(48.0, 0.04, 34.0),    # 1: Salida garita Portería por sendero peatonal
-	Vector3(44.8, 0.22, 39.2),    # 2: Incorporación exterior a acera bloque administrativo
-	Vector3(37.2, 0.22, 43.2),    # 3: Acera concreto Este edificio administrativo (Y=0.20)
-	Vector3(34.5, 0.22, 48.5),    # 4: Acera exterior esquina Noreste edificio administrativo
-	Vector3(32.0, 0.22, 52.0),    # 5: Inicio acera Norte edificio administrativo (Y=0.20)
-	Vector3(24.0, 0.22, 52.25),   # 6: Acera Norte frente Sala de Reuniones (lejos de vía camiones Z=58.3)
-	Vector3(14.0, 0.22, 52.5),    # 7: Acera Norte frente oficinas administrativas
-	Vector3(2.0, 0.04, 53.4),     # 8: Sendero Oeste hacia plataforma exterior Bahía Norte
-	Vector3(-11.4, 0.04, 53.75),  # 9: Pie exterior Este de rampa Bahía Norte
-	Vector3(-14.0, 0.34, 53.75),  # 10: Ascenso rampa exterior Norte
-	Vector3(-16.6, 0.63, 53.55),  # 11: Cima de rampa exterior Bahía Norte
-	Vector3(-15.5, 0.63, 50.6),   # 12: Plataforma exterior Bahía Norte hacia Vestidores
-	Vector3(-13.9, 0.63, 49.85),  # 13: Frente exterior centrado a Puerta Norte Vestidores
-	Vector3(-13.9, 0.83, 49.45),  # 14: Umbral losa acceso Vestidores (Y=0.79)
-	Vector3(-13.9, 0.83, 47.55),  # 15: Centro exacto del vano puerta Vestidores
-	Vector3(-14.85, 0.83, 47.58), # 16: Estación 2 - Vestidores EPP (lockers)
-	Vector3(-13.9, 0.83, 47.55),  # 17: Salida de Vestidores por centro de vano
-	Vector3(-13.9, 0.83, 49.45),  # 18: Umbral losa salida Vestidores
-	Vector3(-13.9, 0.63, 49.85),  # 19: Plataforma exterior Norte
-	Vector3(-18.69, 0.63, 50.5),  # 20: Paso seguro hacia Zona de Carga (Y=0.59, fuera de Zone8)
-	Vector3(-25.6, 0.63, 51.2),   # 21: Estación 3 - Zona de Carga: 01 Banda de Descarga y Camión
-	Vector3(-24.6, 0.63, 50.2),   # 22: Estación 4 - Zona de Carga: 02 Banda Inclinada hacia Tolva
-	Vector3(-18.69, 0.63, 49.85), # 23: Regreso por plataforma segura frente a Puerta Doble Norte
-	Vector3(-18.69, 0.83, 49.45), # 24: Umbral Puerta Doble Norte hacia pasillo peatonal verde
-	Vector3(-18.69, 0.83, 46.6),  # 25: Estación 5 - 03 Tolva de Recepción T-301
-	Vector3(-18.69, 0.83, 44.8),  # 26: Estación 6 - 04 Banda hacia Sinfín Trituradora
-	Vector3(-18.69, 0.83, 43.1),  # 27: Estación 7 - 05 Tornillo Sin Fin Trituradora
-	Vector3(-18.69, 0.83, 41.8),  # 28: Estación 8 - 06 Trituradora y Motor 10 HP
-	Vector3(-18.69, 0.83, 40.3),  # 29: Estación 9 - 07 Tornillo Sin Fin al Secador
-	Vector3(-18.69, 0.83, 38.5),  # 30: Estación 10 - CCM Tablero Eléctrico 460 V
-	Vector3(-18.69, 0.83, 36.6),  # 31: Estación 11 - 08 Secador Rotatorio
-	Vector3(-18.69, 0.83, 33.4),  # 32: Estación 12 - 09 Ciclón Separador
-	Vector3(-18.69, 0.83, 29.4),  # 33: Estación 13 - 10 Ciclones Clasificadores (ATEX)
-	Vector3(-18.69, 0.83, 26.5),  # 34: Estación 14 - Almacén de Sacos 50 kg
-	Vector3(-18.69, 0.83, 22.2),  # 35: Salida Portón Sur hacia Rampa Sur
-	Vector3(-20.3, 0.83, 22.2),   # 36: Cima Rampa Sur
-	Vector3(-28.5, 0.04, 22.2),   # 37: Pie Rampa Sur
-	Vector3(-36.5, 0.04, 22.2),   # 38: Estación 15 - 14 Intercambiador de Calor (vista abierta Sur)
-	Vector3(-42.2, 0.04, 22.2),   # 39: Esquina exterior Sur-Oeste segura (fuera de Zone9 y lejos de camiones)
-	Vector3(-44.2, 0.04, 28.0),   # 40: Corredor exterior Oeste con vista despejada sobre murete
-	Vector3(-44.2, 0.04, 34.3),   # 41: Estación 16 - 12 Horno Térmico
-	Vector3(-44.2, 0.04, 36.4),   # 42: Estación 17 - 11 Unidad de Extracción
-	Vector3(-44.2, 0.04, 38.8),   # 43: Estación 18 - 13 Soplador
-	Vector3(-43.2, 0.04, 40.8)    # 44: Estación 19 - 15 Ductos de Aire y Cierre Exterior
+	Vector3(50.0, 0.04, 36.2),    # 1: Incorporación natural a acera peatonal diagonal real
+	Vector3(45.5, 0.04, 40.2),    # 2: Acera peatonal diagonal Este (centro de acera)
+	Vector3(41.0, 0.04, 44.2),    # 3: Acera peatonal diagonal media
+	Vector3(36.6, 0.04, 48.2),    # 4: Acera peatonal diagonal Sur-Este
+	Vector3(32.4, 0.04, 52.0),    # 5: Curva hacia acera peatonal Sur del edificio administrativo
+	Vector3(29.2, 0.04, 54.1),    # 6: Inicio acera peatonal Sur real (Concrete_Aggregate_Smoke)
+	Vector3(22.0, 0.04, 54.4),    # 7: Acera peatonal Sur frente a Sala de Reuniones
+	Vector3(14.0, 0.04, 54.4),    # 8: Acera peatonal Sur frente a oficinas
+	Vector3(6.0, 0.04, 54.3),     # 9: Tramo Oeste acera peatonal Sur
+	Vector3(2.8, 0.04, 54.0),     # 10: Extremo Oeste de acera peatonal Sur junto al sardinel
+	Vector3(1.6, 0.04, 53.75),    # 11: Giro pegado al borde del sardinel (sin pisar pasto ni alejarse a la carretera)
+	Vector3(-1.6, 0.04, 52.57),   # 12: Cruce corto pegado al andén de concreto Bahía Norte
+	Vector3(-9.4, 0.04, 52.57),   # 13: Pie exacto de la rampa visible de concreto (Geom3D_1548)
+	Vector3(-11.5, 0.34, 52.57),  # 14: Centro de la rampa visible de concreto Bahía Norte
+	Vector3(-13.6, 0.63, 52.57),  # 15: Cima de la rampa visible de concreto (Y=0.59)
+	Vector3(-13.9, 0.63, 51.05),  # 16: Plataforma abierta frente a Puerta Norte Vestidores
+	Vector3(-13.9, 0.83, 49.45),  # 17: Umbral losa acceso Vestidores (Y=0.79)
+	Vector3(-13.9, 0.83, 47.60),  # 18: Centro exacto del vano puerta Vestidores
+	Vector3(-14.85, 0.83, 47.58), # 19: Estación 2 - Vestidores EPP (lockers)
+	Vector3(-13.9, 0.83, 47.60),  # 20: Salida Vestidores por centro de vano
+	Vector3(-13.9, 0.83, 49.45),  # 21: Umbral losa salida Vestidores
+	Vector3(-13.9, 0.63, 51.00),  # 22: Plataforma de concreto Norte
+	Vector3(-18.69, 0.63, 51.00), # 23: Paso recto por plataforma hacia Zona de Carga
+	Vector3(-25.4, 0.63, 51.00),  # 24: Estación 3 - Zona de Carga: 01 Banda de Descarga (fuera de Zone8)
+	Vector3(-24.2, 0.63, 50.10),  # 25: Estación 4 - Zona de Carga: 02 Banda Inclinada hacia Tolva
+	Vector3(-18.69, 0.63, 50.10), # 26: Regreso recto por plataforma frente a Puerta Doble Norte
+	Vector3(-18.69, 0.83, 49.45), # 27: Umbral Puerta Doble Norte hacia pasillo peatonal verde (Zone4)
+	Vector3(-18.69, 0.83, 46.6),  # 28: Estación 5 - 03 Tolva de Recepción T-301
+	Vector3(-18.69, 0.83, 44.8),  # 29: Estación 6 - 04 Banda hacia Sinfín Trituradora
+	Vector3(-18.69, 0.83, 43.1),  # 30: Estación 7 - 05 Tornillo Sin Fin Trituradora
+	Vector3(-18.69, 0.83, 41.8),  # 31: Estación 8 - 06 Trituradora y Motor 10 HP
+	Vector3(-18.69, 0.83, 40.3),  # 32: Estación 9 - 07 Tornillo Sin Fin al Secador
+	Vector3(-18.69, 0.83, 38.5),  # 33: Estación 10 - CCM Tablero Eléctrico 460 V
+	Vector3(-18.69, 0.83, 36.6),  # 34: Estación 11 - 08 Secador Rotatorio
+	Vector3(-18.69, 0.83, 33.4),  # 35: Estación 12 - 09 Ciclón Separador
+	Vector3(-18.69, 0.83, 29.4),  # 36: Estación 13 - 10 Ciclones Clasificadores (ATEX)
+	Vector3(-18.69, 0.83, 26.5),  # 37: Estación 14 - Almacén de Sacos 50 kg
+	Vector3(-18.69, 0.83, 22.2),  # 38: Salida Portón Sur hacia Rampa Sur
+	Vector3(-20.3, 0.83, 22.2),   # 39: Cima Rampa Sur
+	Vector3(-28.5, 0.04, 22.2),   # 40: Pie Rampa Sur de concreto
+	Vector3(-33.5, 0.04, 22.2),   # 41: Estación 15 - 14 Intercambiador de Calor (sobre andén concreto)
+	Vector3(-41.8, 0.06, 22.4),   # 42: Cruce limpio libre de esquina de losa hacia acera curva Oeste
+	Vector3(-43.4, 0.13, 25.0),   # 43: Inicio acera peatonal curva Oeste (sobre andén elevado Y=0.095)
+	Vector3(-44.6, 0.13, 28.4),   # 44: Acera peatonal curva Oeste (fuera de Zone9 y fuera de calle)
+	Vector3(-45.5, 0.13, 32.0),   # 45: Acera peatonal curva Oeste tramo medio
+	Vector3(-45.7, 0.13, 34.3),   # 46: Estación 16 - 12 Horno Térmico (sobre acera Oeste)
+	Vector3(-45.6, 0.13, 36.4),   # 47: Estación 17 - 11 Unidad de Extracción (sobre acera Oeste)
+	Vector3(-45.2, 0.13, 38.8),   # 48: Estación 18 - 13 Soplador (sobre acera Oeste)
+	Vector3(-44.2, 0.13, 41.2)    # 49: Estación 19 - 15 Ductos de Aire y cierre sobre acera Oeste
 ]
 
 # Conversación natural con el Supervisor SST durante el recorrido (solo subtítulos, sin voz)
@@ -168,8 +173,8 @@ const PORTERIA_CONTINUE_CHOICE: Dictionary = {
 }
 
 const STATION_TO_ROUTE_IDX: Dictionary = {
-	1: 0, 2: 16, 3: 21, 4: 22, 5: 25, 6: 26, 7: 27, 8: 28, 9: 29, 10: 30,
-	11: 31, 12: 32, 13: 33, 14: 34, 15: 38, 16: 41, 17: 42, 18: 43, 19: 44
+	1: 0, 2: 19, 3: 24, 4: 25, 5: 28, 6: 29, 7: 30, 8: 31, 9: 32, 10: 33,
+	11: 34, 12: 35, 13: 36, 14: 37, 15: 41, 16: 46, 17: 47, 18: 48, 19: 49
 }
 
 # Equipos destacados en cada estación durante la presentación del tutorial (una máquina por estación en glow azul parpadeante)
@@ -202,17 +207,22 @@ const ALL_EQUIPMENT_GLOW_GROUPS: Array[String] = [
 	"locker", "breaker"
 ]
 
-const MEETING_ROOM_POS: Vector3 = Vector3(27.0, 0.41, 32.9)
+const MEETING_ROOM_POS: Vector3 = Vector3(27.0, 0.41, 33.1)
 const MEETING_COURSE_DESK_POS: Vector3 = Vector3(25.95, 1.08, 34.0)
+# Ruta exacta hacia Sala de Reuniones: sigue acera real de acceso y atraviesa perpendicularmente el centro de cada puerta (0 muros)
 const MEETING_COURSE_ROUTE: Array[Vector3] = [
-	Vector3(48.0, 0.04, 34.0),
-	Vector3(44.5, 0.04, 34.0),
-	Vector3(43.0, 0.41, 34.0),
-	Vector3(40.0, 0.41, 34.5),
-	Vector3(39.5, 0.41, 34.5),
-	Vector3(33.5, 0.41, 32.5),
-	Vector3(29.5, 0.41, 33.5),
-	Vector3(27.0, 0.41, 32.9)
+	Vector3(48.8, 0.04, 34.0),   # 0: Salida desde Portería
+	Vector3(49.0, 0.04, 31.1),   # 1: Incorporación a la acera peatonal real de acceso administrativo
+	Vector3(46.5, 0.04, 31.0),   # 2: Tramo recto sobre acera peatonal real
+	Vector3(44.6, 0.14, 32.0),   # 3: Ascenso por rampa de acceso sobre acera peatonal real
+	Vector3(42.8, 0.41, 33.1),   # 4: Acceso principal edificio administrativo
+	Vector3(41.2, 0.41, 34.75),  # 5: Alineación frente a puerta de recepción (vano X=39.8, Z=[34.35..35.15])
+	Vector3(38.6, 0.41, 34.75),  # 6: Paso limpio perpendicular por el centro de puerta de recepción
+	Vector3(35.2, 0.41, 32.42),  # 7: Alineación frente a puerta de corredor central (vano X=33.5, Z=[31.93..32.91])
+	Vector3(32.0, 0.41, 32.42),  # 8: Paso limpio perpendicular por el centro de puerta central
+	Vector3(30.6, 0.41, 33.62),  # 9: Alineación frente a puerta de Sala de Reuniones (vano X=29.4, Z=[33.25..34.00])
+	Vector3(28.2, 0.41, 33.62),  # 10: Paso limpio perpendicular por puerta de Sala de Reuniones
+	Vector3(27.0, 0.41, 33.1)    # 11: Sala de Reuniones (mesa curso SST)
 ]
 
 var loto_controller = null
@@ -240,6 +250,10 @@ var _guide_line_mesh_inst: MeshInstance3D = null
 var _guide_imm_mesh: ImmediateMesh = null
 var _line_refresh_timer: float = 0.0
 var _line_settled: bool = false
+var _guide_leg_sig: String = ""
+var _guide_prog_seg: int = 0
+var _guide_prog_t: float = 0.0
+var _guide_last_trim_dist: float = -1.0
 var _prompted_station_id: int = -1
 var tutorial_skipped: bool = false
 var _narration_active: bool = false
@@ -354,6 +368,7 @@ func _start_sst_course_walk() -> void:
 	sst_course_completed = false
 	_course_modal_auto_opened = false
 	_set_course_desk_active(false)
+	_reset_guide_line_progress()
 	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("set_guide_route"):
 		var wps: Array[Vector3] = []
 		for p in MEETING_COURSE_ROUTE:
@@ -384,12 +399,13 @@ func _on_sst_course_completed_event(passed: bool, score: int, total: int) -> voi
 
 	current_station_idx = 1
 	target_station_id = 2
+	_reset_guide_line_progress()
 	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("set_guide_route"):
 		var wps: Array[Vector3] = []
 		for idx in range(MEETING_COURSE_ROUTE.size() - 2, -1, -1):
 			wps.append(MEETING_COURSE_ROUTE[idx])
-		var vest_r_idx: int = int(STATION_TO_ROUTE_IDX.get(2, 16))
-		for idx in range(2, vest_r_idx + 1):
+		var vest_r_idx: int = int(STATION_TO_ROUTE_IDX.get(2, 19))
+		for idx in range(1, vest_r_idx + 1):
 			wps.append(TOUR_ROUTE_POINTS[idx])
 		_guide_worker.set_guide_route(wps, TOUR_ROUTE_POINTS[vest_r_idx])
 	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
@@ -481,6 +497,8 @@ func _process(delta: float) -> void:
 		if _line_refresh_timer >= 0.25:
 			_line_settled = true
 			_rebuild_floor_guide_line()
+	else:
+		_update_guide_line_progress()
 
 	var p_pos: Vector3 = _player_ref.global_position
 	if sst_course_active and not sst_course_completed:
@@ -686,8 +704,10 @@ func _advance_tour_target(next_id: int) -> void:
 	if not epp_completed and next_id > 2:
 		target_station_id = 2
 
+	_reset_guide_line_progress()
+
 	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("set_guide_route"):
-		var target_r_idx: int = int(STATION_TO_ROUTE_IDX.get(target_station_id, 16))
+		var target_r_idx: int = int(STATION_TO_ROUTE_IDX.get(target_station_id, 19))
 		var curr_r_idx: int = int(STATION_TO_ROUTE_IDX.get(current_station_idx, 0))
 		var wps: Array[Vector3] = []
 		if curr_r_idx <= target_r_idx:
@@ -704,6 +724,129 @@ func _advance_tour_target(next_id: int) -> void:
 	_rebuild_floor_guide_line()
 	_notify_glow_controller()
 
+func _reset_guide_line_progress() -> void:
+	_guide_leg_sig = ""
+	_guide_prog_seg = 0
+	_guide_prog_t = 0.0
+	_guide_last_trim_dist = -1.0
+
+func _get_active_guide_leg() -> Dictionary:
+	var active_color := Color(0.16, 0.94, 0.42, 0.88)
+	var ring_color := Color(1.0, 0.84, 0.14, 0.95)
+	var pts: Array[Vector3] = []
+
+	if sst_course_active and not sst_course_completed:
+		pts.append(TOUR_ROUTE_POINTS[0])
+		for p in MEETING_COURSE_ROUTE:
+			pts.append(p)
+		return {
+			"sig": "course_in",
+			"pts": pts,
+			"color": Color(0.20, 0.94, 0.45, 0.92),
+			"half_w": 0.22,
+			"ring_pos": MEETING_ROOM_POS,
+			"ring_color": Color(0.28, 0.98, 0.78, 0.95)
+		}
+
+	var target_r_idx: int = int(STATION_TO_ROUTE_IDX.get(target_station_id, 19))
+	var curr_r_idx: int = int(STATION_TO_ROUTE_IDX.get(current_station_idx, 0))
+	var sig := "tour_%d_%d" % [curr_r_idx, target_r_idx]
+
+	if sst_course_completed and target_station_id == 2 and not epp_completed:
+		sig = "course_out_2"
+		for i in range(MEETING_COURSE_ROUTE.size() - 1, -1, -1):
+			pts.append(MEETING_COURSE_ROUTE[i])
+		for i in range(1, mini(target_r_idx + 1, TOUR_ROUTE_POINTS.size())):
+			pts.append(TOUR_ROUTE_POINTS[i])
+	elif curr_r_idx < target_r_idx:
+		for i in range(curr_r_idx, mini(target_r_idx + 1, TOUR_ROUTE_POINTS.size())):
+			pts.append(TOUR_ROUTE_POINTS[i])
+	elif curr_r_idx > target_r_idx:
+		for i in range(curr_r_idx, maxi(target_r_idx - 1, -1), -1):
+			pts.append(TOUR_ROUTE_POINTS[i])
+	else:
+		if curr_r_idx >= 0 and curr_r_idx < TOUR_ROUTE_POINTS.size():
+			pts.append(TOUR_ROUTE_POINTS[curr_r_idx])
+
+	var r_pos: Vector3 = STATIONS[target_station_id - 1]["pos"] if (target_station_id >= 1 and target_station_id <= STATIONS.size()) else Vector3.ZERO
+	return {
+		"sig": sig,
+		"pts": pts,
+		"color": active_color,
+		"half_w": 0.20,
+		"ring_pos": r_pos,
+		"ring_color": ring_color
+	}
+
+func _polyline_dist_at(pts: Array[Vector3], seg_idx: int, t: float) -> float:
+	var acc: float = 0.0
+	var clamped_seg: int = clampi(seg_idx, 0, maxi(0, pts.size() - 2))
+	for i in range(clamped_seg):
+		acc += Vector2(pts[i + 1].x - pts[i].x, pts[i + 1].z - pts[i].z).length()
+	if clamped_seg < pts.size() - 1:
+		acc += Vector2(pts[clamped_seg + 1].x - pts[clamped_seg].x, pts[clamped_seg + 1].z - pts[clamped_seg].z).length() * clampf(t, 0.0, 1.0)
+	return acc
+
+func _update_guide_line_progress() -> void:
+	if tutorial_skipped or induction_certified:
+		return
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return
+	var leg: Dictionary = _get_active_guide_leg()
+	var sig: String = str(leg["sig"])
+	var pts: Array[Vector3] = leg["pts"]
+	if sig != _guide_leg_sig:
+		_guide_leg_sig = sig
+		_guide_prog_seg = 0
+		_guide_prog_t = 0.0
+		_guide_last_trim_dist = 0.0
+		_rebuild_floor_guide_line()
+		return
+	if pts.size() < 2:
+		return
+
+	var p: Vector3 = _player_ref.global_position
+	var max_seg: int = pts.size() - 2
+	var start_s: int = clampi(_guide_prog_seg, 0, max_seg)
+	var end_s: int = mini(start_s + 3, max_seg)
+
+	var best_seg: int = _guide_prog_seg
+	var best_t: float = _guide_prog_t
+	var best_dist_along: float = _polyline_dist_at(pts, _guide_prog_seg, _guide_prog_t)
+	var best_perp: float = 9999.0
+	var found_advance: bool = false
+
+	for s in range(start_s, end_s + 1):
+		var a: Vector3 = pts[s]
+		var b: Vector3 = pts[s + 1]
+		var ab2 := Vector2(b.x - a.x, b.z - a.z)
+		var len_sq: float = ab2.length_squared()
+		if len_sq < 0.0004:
+			continue
+		var ap2 := Vector2(p.x - a.x, p.z - a.z)
+		var t: float = clampf(ap2.dot(ab2) / len_sq, 0.0, 1.0)
+		var proj := a.lerp(b, t)
+		var perp: float = Vector2(p.x - proj.x, p.z - proj.z).length()
+		var dy: float = absf(p.y - proj.y)
+		if perp > 2.8 or dy > 0.90:
+			continue
+		var cand_along: float = _polyline_dist_at(pts, s, t)
+		if cand_along > best_dist_along + 0.02:
+			if not found_advance or perp < best_perp + 0.35:
+				found_advance = true
+				best_seg = s
+				best_t = t
+				best_dist_along = cand_along
+				best_perp = perp
+
+	if found_advance:
+		var seg_changed: bool = best_seg != _guide_prog_seg
+		_guide_prog_seg = best_seg
+		_guide_prog_t = best_t
+		if seg_changed or (best_dist_along - _guide_last_trim_dist) >= 0.25:
+			_guide_last_trim_dist = best_dist_along
+			_rebuild_floor_guide_line()
+
 func _rebuild_floor_guide_line() -> void:
 	if _guide_imm_mesh == null:
 		return
@@ -713,48 +856,41 @@ func _rebuild_floor_guide_line() -> void:
 	if tutorial_skipped or induction_certified:
 		return
 
-	# Sin línea azul en suelo: únicamente chevrons verdes del paso activo y aro ámbar en destino
-	var active_color := Color(0.16, 0.94, 0.42, 0.88)
-	var ring_color := Color(1.0, 0.84, 0.14, 0.95)
+	var leg: Dictionary = _get_active_guide_leg()
+	var sig: String = str(leg["sig"])
+	var pts: Array[Vector3] = leg["pts"]
+	if sig != _guide_leg_sig:
+		_guide_leg_sig = sig
+		_guide_prog_seg = 0
+		_guide_prog_t = 0.0
+		_guide_last_trim_dist = 0.0
+
+	var active_color: Color = leg["color"]
+	var half_w: float = float(leg["half_w"])
+	var ring_pos: Vector3 = leg["ring_pos"]
+	var ring_color: Color = leg["ring_color"]
 	var ray_ctx := _get_guide_ray_context()
 
 	_guide_imm_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	# Segmento activo y flechas chevron siguiendo pasillos/exterior (sin trazo azul global en suelo)
-	if sst_course_active and not sst_course_completed:
-		var course_col := Color(0.20, 0.94, 0.45, 0.92)
-		_append_ribbon_segment(TOUR_ROUTE_POINTS[0], MEETING_COURSE_ROUTE[0], 0.22, course_col, ray_ctx)
-		_append_chevrons_on_segment(TOUR_ROUTE_POINTS[0], MEETING_COURSE_ROUTE[0], course_col, ray_ctx)
-		for i in range(MEETING_COURSE_ROUTE.size() - 1):
-			_append_ribbon_segment(MEETING_COURSE_ROUTE[i], MEETING_COURSE_ROUTE[i + 1], 0.22, course_col, ray_ctx)
-			_append_chevrons_on_segment(MEETING_COURSE_ROUTE[i], MEETING_COURSE_ROUTE[i + 1], course_col, ray_ctx)
-		var m_ring := MEETING_ROOM_POS
-		m_ring.y = _sample_floor_y(m_ring, ray_ctx)
-		_append_target_ring(m_ring, 0.82, 1.05, Color(0.28, 0.98, 0.78, 0.95), ray_ctx)
-		_guide_imm_mesh.surface_end()
-		return
+	# Dibujar únicamente desde el avance actual del jugador hacia adelante (eliminando líneas ya recorridas)
+	if pts.size() >= 2:
+		var max_seg: int = pts.size() - 2
+		var start_seg: int = clampi(_guide_prog_seg, 0, max_seg)
+		var start_t: float = clampf(_guide_prog_t, 0.0, 1.0)
+		var first_p0: Vector3 = pts[start_seg].lerp(pts[start_seg + 1], start_t)
+		var first_p1: Vector3 = pts[start_seg + 1]
+		if Vector2(first_p1.x - first_p0.x, first_p1.z - first_p0.z).length() >= 0.12:
+			_append_ribbon_segment(first_p0, first_p1, half_w, active_color, ray_ctx)
+			_append_chevrons_on_segment(first_p0, first_p1, active_color, ray_ctx)
+		for i in range(start_seg + 1, pts.size() - 1):
+			_append_ribbon_segment(pts[i], pts[i + 1], half_w, active_color, ray_ctx)
+			_append_chevrons_on_segment(pts[i], pts[i + 1], active_color, ray_ctx)
 
-	if sst_course_completed and target_station_id == 2 and not epp_completed:
-		for i in range(MEETING_COURSE_ROUTE.size() - 1, 0, -1):
-			_append_ribbon_segment(MEETING_COURSE_ROUTE[i], MEETING_COURSE_ROUTE[i - 1], 0.20, active_color, ray_ctx)
-			_append_chevrons_on_segment(MEETING_COURSE_ROUTE[i], MEETING_COURSE_ROUTE[i - 1], active_color, ray_ctx)
-
-	var target_r_idx: int = int(STATION_TO_ROUTE_IDX.get(target_station_id, 16))
-	var curr_r_idx: int = int(STATION_TO_ROUTE_IDX.get(current_station_idx, 0))
-	if curr_r_idx < target_r_idx:
-		for i in range(curr_r_idx, mini(target_r_idx, TOUR_ROUTE_POINTS.size() - 1)):
-			_append_ribbon_segment(TOUR_ROUTE_POINTS[i], TOUR_ROUTE_POINTS[i + 1], 0.20, active_color, ray_ctx)
-			_append_chevrons_on_segment(TOUR_ROUTE_POINTS[i], TOUR_ROUTE_POINTS[i + 1], active_color, ray_ctx)
-	elif curr_r_idx > target_r_idx:
-		for i in range(curr_r_idx, maxi(target_r_idx, 0), -1):
-			_append_ribbon_segment(TOUR_ROUTE_POINTS[i], TOUR_ROUTE_POINTS[i - 1], 0.20, active_color, ray_ctx)
-			_append_chevrons_on_segment(TOUR_ROUTE_POINTS[i], TOUR_ROUTE_POINTS[i - 1], active_color, ray_ctx)
-
-	# 3. Anillo luminoso en la estación destino actual (recortado si algún muro o equipo está cerca)
-	if target_station_id >= 1 and target_station_id <= STATIONS.size():
-		var t_pos: Vector3 = STATIONS[target_station_id - 1]["pos"]
-		t_pos.y = _sample_floor_y(t_pos, ray_ctx)
-		_append_target_ring(t_pos, 0.82, 1.05, ring_color, ray_ctx)
+	# Anillo luminoso en el destino actual (recortado si algún muro o equipo está cerca)
+	var t_pos: Vector3 = ring_pos
+	t_pos.y = _sample_floor_y(t_pos, ray_ctx)
+	_append_target_ring(t_pos, 0.82, 1.05, ring_color, ray_ctx)
 
 	_guide_imm_mesh.surface_end()
 
@@ -1043,6 +1179,7 @@ func load_previous_checkpoint() -> Dictionary:
 			var action_hint := "Cuando quieras, presiona E para seguir." if prev_id < STATIONS.size() else "Presiona E para cerrar el recorrido."
 			hud.show_npc_dialogue(SST_SPEAKER_HEADER, "%s %s" % [get_station_natural_speech(prev_id), action_hint], 10.0)
 
+	_reset_guide_line_progress()
 	_rebuild_floor_guide_line()
 	_notify_glow_controller()
 

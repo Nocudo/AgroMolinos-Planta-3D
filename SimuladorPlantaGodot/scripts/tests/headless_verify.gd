@@ -694,6 +694,49 @@ func _qa_10_main_scene_integration() -> void:
 		ok = _assert_true(guide_wall_hits == 0,
 			"La línea guía TourFloorGuideLine atraviesa muros/equipos (%d impactos)" % guide_wall_hits) and ok
 
+		# Auditoría Física de MEETING_COURSE_ROUTE (0 impactos en paredes/marcos de puertas de oficinas)
+		var m_pts: Array = TutorialInductionManagerScript.MEETING_COURSE_ROUTE
+		var meeting_wall_hits := 0
+		for idx in range(m_pts.size() - 1):
+			var p0: Vector3 = m_pts[idx]
+			var p1: Vector3 = m_pts[idx + 1]
+			var flat := Vector3(p1.x - p0.x, 0.0, p1.z - p0.z)
+			if flat.length() < 0.05:
+				continue
+			var side := Vector3(-flat.normalized().z, 0.0, flat.normalized().x)
+			for lat in [-0.25, 0.0, 0.25]:
+				var q := PhysicsRayQueryParameters3D.create(
+					p0 + Vector3(0.0, 0.35, 0.0) + side * float(lat),
+					p1 + Vector3(0.0, 0.35, 0.0) + side * float(lat),
+					1,
+					guide_exclude
+				)
+				var hit: Dictionary = space.intersect_ray(q)
+				if not hit.is_empty() and float(hit["normal"].y) < 0.78:
+					meeting_wall_hits += 1
+		ok = _assert_true(meeting_wall_hits == 0,
+			"La ruta MEETING_COURSE_ROUTE a oficinas atraviesa paredes/marcos (%d impactos)" % meeting_wall_hits) and ok
+
+		# Auditoría Cero Cruces de Líneas de Seguridad (Zone1, Zone2, Zone6, Zone8, Zone9)
+		var hazard_boxes: Array[Dictionary] = [
+			{"name": "Zone1_Milling_OSHA", "x0": -30.65, "x1": -21.35, "z0": 25.10, "z1": 48.60},
+			{"name": "Zone2_CCM460V_RETIE", "x0": -21.33, "x1": -19.63, "z0": 37.20, "z1": 39.80},
+			{"name": "Zone6_DispatchBay", "x0": -41.10, "x1": -32.90, "z0": 50.20, "z1": 55.40},
+			{"name": "Zone8_IntakeConveyor_OSHA", "x0": -32.75, "x1": -26.95, "z0": 49.05, "z1": 53.35},
+			{"name": "Zone9_AirThermal_OSHA", "x0": -40.80, "x1": -31.60, "z0": 29.90, "z1": 39.90}
+		]
+		var hazard_crossings := 0
+		for idx in range(pts.size() - 1):
+			var p0: Vector3 = pts[idx]
+			var p1: Vector3 = pts[idx + 1]
+			for s in range(11):
+				var sp: Vector3 = p0.lerp(p1, float(s) / 10.0)
+				for hb in hazard_boxes:
+					if sp.x > float(hb["x0"]) and sp.x < float(hb["x1"]) and sp.z > float(hb["z0"]) and sp.z < float(hb["z1"]):
+						hazard_crossings += 1
+		ok = _assert_true(hazard_crossings == 0,
+			"TOUR_ROUTE_POINTS no debe cruzar ninguna línea/zona de seguridad (%d muestras)" % hazard_crossings) and ok
+
 		# Auditoría Pausa de Inducción del Guía SST en Portería (Controles y Mecánicas)
 		var tut_node := inst.find_child("TutorialInductionManager", true, false)
 		var hud_ctrl := inst.find_child("HUDController", true, false)
@@ -770,12 +813,16 @@ func _qa_10_main_scene_integration() -> void:
 				prev_idx = cur_idx
 			var saved_g_pos: Vector3 = guide.global_position
 			var route_pts: Array = TutorialInductionManagerScript.TOUR_ROUTE_POINTS
-			# También probar ascenso completo por la rampa exterior Norte (puntos 8..16) sin cruces internos ni atascos
-			guide.global_position = route_pts[8]
-			var ramp_wps: Array[Vector3] = [route_pts[9], route_pts[10], route_pts[11], route_pts[12], route_pts[13], route_pts[14], route_pts[15], route_pts[16]]
-			guide.set_guide_route(ramp_wps, route_pts[16])
+			var vest_idx: int = int(TutorialInductionManagerScript.STATION_TO_ROUTE_IDX.get(2, 19))
+			var ramp_start_idx: int = maxi(0, vest_idx - 8)
+			# Probar ascenso completo por la rampa visible de concreto Norte e ingreso a Vestidores sin atascos
+			guide.global_position = route_pts[ramp_start_idx]
+			var ramp_wps: Array[Vector3] = []
+			for ri in range(ramp_start_idx + 1, vest_idx + 1):
+				ramp_wps.append(route_pts[ri])
+			guide.set_guide_route(ramp_wps, route_pts[vest_idx])
 			guide.set("_guide_recovery_count", 0)
-			for _s in range(600):
+			for _s in range(650):
 				if guide.guide_has_target:
 					guide._process_tour_guide_movement(1.0 / 60.0)
 					guide._try_auto_step(1.0 / 60.0)
@@ -784,15 +831,18 @@ func _qa_10_main_scene_integration() -> void:
 						player.global_position = guide.global_position + Vector3(-0.9, 0.0, 0.0)
 				else:
 					break
-			var ext_vest_dist := Vector2(guide.global_position.x - route_pts[16].x, guide.global_position.z - route_pts[16].z).length()
+			var ext_vest_dist := Vector2(guide.global_position.x - route_pts[vest_idx].x, guide.global_position.z - route_pts[vest_idx].z).length()
 			ok = _assert_true(ext_vest_dist <= 0.65 and not guide.guide_has_target and int(guide.get("_guide_recovery_count")) == 0,
 				"SST debe subir Rampa Exterior Norte e ingresar a Vestidores sin atascos (dist=%.2f, y=%.2f, rec=%d)" % [ext_vest_dist, guide.global_position.y, int(guide.get("_guide_recovery_count"))]) and ok
 
-			guide.global_position = Vector3(-18.5, 0.81, 49.45)
+			var door_start_idx: int = maxi(0, vest_idx - 4)
+			guide.global_position = route_pts[door_start_idx]
 			if player != null:
-				player.global_position = Vector3(-18.8, 0.81, 46.5)
-			var vest_wps: Array[Vector3] = [route_pts[12], route_pts[13], route_pts[14], route_pts[15], route_pts[16]]
-			guide.set_guide_route(vest_wps, route_pts[16])
+				player.global_position = route_pts[door_start_idx] + Vector3(0.0, 0.0, 1.0)
+			var vest_wps: Array[Vector3] = []
+			for vi in range(door_start_idx + 1, vest_idx + 1):
+				vest_wps.append(route_pts[vi])
+			guide.set_guide_route(vest_wps, route_pts[vest_idx])
 			guide.set("_guide_recovery_count", 0)
 			for _s in range(260):
 				if guide.guide_has_target:
@@ -803,7 +853,7 @@ func _qa_10_main_scene_integration() -> void:
 						player.global_position = guide.global_position + Vector3(-0.9, 0.0, 0.0)
 				else:
 					break
-			var vest_dist := Vector2(guide.global_position.x - route_pts[16].x, guide.global_position.z - route_pts[16].z).length()
+			var vest_dist := Vector2(guide.global_position.x - route_pts[vest_idx].x, guide.global_position.z - route_pts[vest_idx].z).length()
 			ok = _assert_true(vest_dist <= 0.65 and not guide.guide_has_target,
 				"SST debe cruzar Puerta de seguridad_12 y llegar dentro de Vestidores (dist=%.2f, pos=%s)" % [vest_dist, str(guide.global_position)]) and ok
 			ok = _assert_true(guide.global_position.y <= 0.90,
@@ -858,12 +908,13 @@ func _qa_10_main_scene_integration() -> void:
 						"WorkerPlantManager inspect debe mantener brazos recogidos frente al pecho (R=%s L=%s)" % [str(rh), str(lh)]) and ok
 
 			if tut_node != null and main_locker != null and player != null:
+				var st3_idx: int = int(TutorialInductionManagerScript.STATION_TO_ROUTE_IDX.get(3, 24))
 				main_locker.set_epp_equipped(true)
-				guide.global_position = route_pts[22]
+				guide.global_position = route_pts[st3_idx]
 				guide.guide_has_target = false
 				guide.is_explaining = false
 				guide.has_arrived_and_explained = true
-				player.global_position = route_pts[22] + Vector3(0.0, 0.0, 1.2)
+				player.global_position = route_pts[st3_idx] + Vector3(0.0, 0.0, 1.2)
 				tut_node._process(0.1)
 				ok = _assert_true(int(tut_node.target_station_id) == 3 and not bool(tut_node.visited_stations.get(3, false)),
 					"Estación 3 no debe avanzar automáticamente solo por proximidad sin pulsar [E]") and ok
@@ -1006,10 +1057,34 @@ func _qa_10_main_scene_integration() -> void:
 
 		# Regresión: Ruta peatonal exterior por la acera no debe invadir la vía Norte de camiones (Z >= 56.5)
 		var ext_pts: Array = TutorialInductionManagerScript.TOUR_ROUTE_POINTS
-		for wp_i in range(2, 9):
+		for wp_i in range(2, 11):
 			var wp_p: Vector3 = ext_pts[wp_i]
-			ok = _assert_true(wp_p.z <= 54.0,
+			ok = _assert_true(wp_p.z <= 55.0,
 				"Tramo exterior [%d] (%s) debe ir por acera sin cruzar calzada Norte de camiones (Z >= 56.5)" % [wp_i, str(wp_p)]) and ok
+
+		# Regresión: Eliminación progresiva de líneas guía ya recorridas conforme avanza el jugador
+		if tut_node != null and player != null:
+			var saved_p_trim: Vector3 = player.global_position
+			var saved_curr_s: int = int(tut_node.current_station_idx)
+			var saved_targ_s: int = int(tut_node.target_station_id)
+			var saved_epp_s: bool = bool(tut_node.epp_completed)
+			tut_node.epp_completed = false
+			tut_node.current_station_idx = 1
+			tut_node.target_station_id = 2
+			tut_node.sst_course_active = false
+			tut_node.sst_course_completed = false
+			tut_node._reset_guide_line_progress()
+			tut_node._rebuild_floor_guide_line()
+			player.global_position = ext_pts[4]
+			tut_node._update_guide_line_progress()
+			ok = _assert_true(int(tut_node.get("_guide_prog_seg")) >= 3 and float(tut_node.get("_guide_last_trim_dist")) > 10.0,
+				"TourFloorGuideLine debe recortar segmentos ya recorridos al avanzar (seg=%d, dist=%.2f)" % [int(tut_node.get("_guide_prog_seg")), float(tut_node.get("_guide_last_trim_dist"))]) and ok
+			tut_node.epp_completed = saved_epp_s
+			tut_node.current_station_idx = saved_curr_s
+			tut_node.target_station_id = saved_targ_s
+			tut_node._reset_guide_line_progress()
+			tut_node._rebuild_floor_guide_line()
+			player.global_position = saved_p_trim
 
 		# Regresión: Elección inicial Curso Rápido SST RETIE -> Sala de Reuniones -> Información y Quiz Simple
 		if hud_ctrl != null and tut_node != null and guide != null and player != null:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3 uid="uid://safety_zones_lighting_001"]
+[gd_scene load_steps=38 format=3 uid="uid://safety_zones_lighting_001"]
 
 [ext_resource type="Script" path="res://scripts/environment/PlantSpatialBuilder.gd" id="1_spatial"]
 
@@ -22,13 +22,16 @@ size = Vector3(3.4, 0.8, 2.5)
 size = Vector3(32.5, 0.4, 31)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ramp_admin_east"]
-size = Vector3(2.8, 0.4, 2.8)
+size = Vector3(2.8, 0.4, 4.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_north_bay"]
-size = Vector3(23.3, 0.6, 4.2)
+size = Vector3(13.58, 0.6, 4.22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_north_bay_east"]
+size = Vector3(9.72, 0.6, 2.92)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ramp_north_bay"]
-size = Vector3(5.6, 0.4, 2.2)
+size = Vector3(4.0, 0.4, 1.34)
 
 [sub_resource type="StandardMaterial3D" id="Mat_ConcreteEpoxy"]
 albedo_color = Color(0.235, 0.251, 0.263, 1)
@@ -174,15 +177,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.8, 0.67, 36.6)
 shape = SubResource("BoxShape3D_admin_slab")
 
 [node name="RampEastAdmin" type="CollisionShape3D" parent="SueloFisicoPBR"]
-transform = Transform3D(0.9901, 0.1405, 0, -0.1405, 0.9901, 0, 0, 0, 1, 45.1, 0.485, 34.0)
+transform = Transform3D(0.9901, 0.1405, 0, -0.1405, 0.9901, 0, 0, 0, 1, 45.1, 0.485, 33.0)
 shape = SubResource("BoxShape3D_ramp_admin_east")
 
 [node name="PlatformNorthBay" type="CollisionShape3D" parent="SueloFisicoPBR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.3, 0.79, 51.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.16, 0.79, 51.11)
 shape = SubResource("BoxShape3D_north_bay")
 
+[node name="PlatformNorthBayEast" type="CollisionShape3D" parent="SueloFisicoPBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.51, 0.79, 50.46)
+shape = SubResource("BoxShape3D_north_bay_east")
+
 [node name="RampNorthBay" type="CollisionShape3D" parent="SueloFisicoPBR"]
-transform = Transform3D(0.9934, 0.1147, 0, -0.1147, 0.9934, 0, 0, 0, 1, -14.0, 0.61, 53.7)
+transform = Transform3D(0.9882, 0.1534, 0, -0.1534, 0.9882, 0, 0, 0, 1, -11.47, 0.597, 52.57)
 shape = SubResource("BoxShape3D_ramp_north_bay")
 
 [node name="FloorMesh" type="MeshInstance3D" parent="SueloFisicoPBR"]
