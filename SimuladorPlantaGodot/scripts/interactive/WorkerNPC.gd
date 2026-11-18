@@ -90,39 +90,45 @@ func get_subtitle_header() -> String:
 	var cargo := _subtitle_role_title(worker_role_name)
 	return "%s (%s):" % [pname, cargo]
 
+func get_clean_role_name() -> String:
+	var raw := worker_role_name.strip_edges()
+	var cut := raw.split(" — ")[0].split(" / ")[0].split(" (")[0].strip_edges()
+	return cut if not cut.is_empty() else "Operario"
+
 func _subtitle_role_title(full_role: String) -> String:
 	var raw := full_role.strip_edges()
 	var low := raw.to_lower()
+	var nm := str(name).to_lower()
 	if "supervisor sst" in low or is_tour_guide:
 		return "Supervisor SST"
 	if "electromec" in low:
 		return "Técnico Electromecánico"
-	if "muelle sur" in low:
-		return "Auxiliar de Muelle Sur"
-	if "bahía oeste" in low or "bahia oeste" in low or "despacho" in low:
-		return "Auxiliar de Despacho"
+	if "carga" in low or "south" in nm:
+		return "Operario de Carga"
+	if "señalero" in low or "despacho" in low or "west" in nm:
+		return "Operario Señalero"
 	if "almac" in low or "logíst" in low or "logist" in low:
 		return "Operario de Logística"
 	if "jefe de planta" in low:
 		return "Jefe de Planta"
-	return _compact_role_label(raw)
+	return get_clean_role_name()
 
 func _compact_role_label(full_role: String) -> String:
 	var raw := full_role.strip_edges()
+	var nm := str(name).to_lower()
 	if raw.contains("Supervisor SST"):
 		return "Supervisor SST"
 	if raw.contains("Electromecánico"):
 		return "Electromecánico"
-	if raw.contains("Muelle Sur"):
-		return "Muelle Sur"
-	if raw.contains("Bahía Oeste"):
-		return "Bahía Oeste"
+	if raw.contains("Carga") or "south" in nm:
+		return "Operario Carga"
+	if raw.contains("Señalero") or "west" in nm:
+		return "Operario Señalero"
 	if raw.contains("Almacén"):
-		return "Almacén"
+		return "Operario Logística"
 	if raw.contains("Jefe de Planta"):
 		return "Jefe de Planta"
-	var cut := raw.split(" / ")[0].split(" — ")[0].split(" (")[0].strip_edges()
-	return cut.substr(0, 18)
+	return get_clean_role_name().substr(0, 18)
 
 func _ready() -> void:
 	add_to_group("interactable")
@@ -470,7 +476,7 @@ func _toggle_idle_animation() -> void:
 
 func get_interact_prompt() -> String:
 	if not is_tour_guide:
-		return "Hablar con " + worker_role_name
+		return "Hablar con " + get_clean_role_name()
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
 	if tut != null and bool(tut.get("porteria_story_active")):
 		return "Entrar a la empresa"

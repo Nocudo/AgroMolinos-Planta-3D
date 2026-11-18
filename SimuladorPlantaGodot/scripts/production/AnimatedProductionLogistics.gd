@@ -867,8 +867,8 @@ func _spawn_dock_operators(scene_root: Node) -> void:
 	if host.find_child("WorkerDockSouth", false, false) == null:
 		var ws := WorkerLogisticsScene.instantiate()
 		ws.name = "WorkerDockSouth"
-		ws.worker_role_name = "Operario de Carga — Muelle Sur"
-		ws.worker_dialogue = "Muelle de carga izquierdo. Aquí coordinamos el acople del tractocamión y cargamos las estibas de manera segura."
+		ws.worker_role_name = "Operario de Carga"
+		ws.worker_dialogue = "Aquí coordinamos el acople del tractocamión y cargamos las estibas de manera segura."
 		ws.primary_animation = "inspect"
 		ws.secondary_animation = "idle"
 		ws.external_animation_control = true
@@ -878,7 +878,7 @@ func _spawn_dock_operators(scene_root: Node) -> void:
 	if host.find_child("WorkerDockWest", false, false) == null:
 		var ww := WorkerLogisticsScene.instantiate()
 		ww.name = "WorkerDockWest"
-		ww.worker_role_name = "Operario Señalero — Bahía Oeste"
+		ww.worker_role_name = "Operario Señalero"
 		ww.worker_dialogue = "Supervisión de maniobra en reversa y despacho de carga desde plataforma peatonal elevada."
 		ww.primary_animation = "inspect"
 		ww.secondary_animation = "idle"

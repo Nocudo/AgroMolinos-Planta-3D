@@ -824,11 +824,9 @@ func _get_minimal_prompt_for(target: Node) -> String:
 			if target.guide_has_target:
 				return "En camino..."
 			return "Hablando..."
-		if target.is_tour_guide:
-			if target.has_method("get_interact_prompt"):
-				return target.get_interact_prompt()
-			return "Hablar"
-		return "Hablar con " + target.worker_role_name
+		if target.has_method("get_interact_prompt"):
+			return target.get_interact_prompt()
+		return "Hablar con " + target.worker_role_name.split(" — ")[0].split(" / ")[0].split(" (")[0].strip_edges()
 	elif target is PhysicalCableConductor:
 		return "Reparar falla · Kit LOTO" if target.is_cut else "Inducir falla · Alicates"
 	elif target is PhysicalBreakerPanel:
