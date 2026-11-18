@@ -11,12 +11,19 @@ echo   API Grafica: Vulkan 1.3 Forward+
 echo ========================================================
 echo.
 
-:: Detectar ejecutable GUI de Godot 4.x preferentemente (sin comodin en directorio intermedio)
+:: Detectar ejecutable GUI de Godot 4.x (prioridad 0: motor portable incluido en USB/carpeta)
 set "GODOT_EXE="
-for /d %%d in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine*") do (
-    if not defined GODOT_EXE (
-        for /f "delims=" %%f in ('dir /b /s "%%d\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
-            if not defined GODOT_EXE set "GODOT_EXE=%%f"
+if exist "%~dp0godot_portable" (
+    for /f "delims=" %%f in ('dir /b /s "%~dp0godot_portable\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
+        if not defined GODOT_EXE set "GODOT_EXE=%%f"
+    )
+)
+if not defined GODOT_EXE (
+    for /d %%d in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine*") do (
+        if not defined GODOT_EXE (
+            for /f "delims=" %%f in ('dir /b /s "%%d\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
+                if not defined GODOT_EXE set "GODOT_EXE=%%f"
+            )
         )
     )
 )
@@ -62,6 +69,10 @@ if not defined GODOT_EXE (
 )
 
 echo Motor detectado: "%GODOT_EXE%"
+if not exist "%~dp0SimuladorPlantaGodot\.godot\imported" (
+    echo Primera ejecucion detectada: importando recursos 3D una sola vez...
+    "%GODOT_EXE%" --headless --import --path "%~dp0SimuladorPlantaGodot"
+)
 echo Iniciando juego interactivo con Godot 4.7...
 if /i "%GODOT_EXE:~-4%"==".cmd" (
     start "" cmd /c ""%GODOT_EXE%" --path "%~dp0SimuladorPlantaGodot""

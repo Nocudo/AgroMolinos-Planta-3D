@@ -11,10 +11,17 @@ echo ========================================================
 echo.
 
 set "GODOT_EXE="
-for /d %%d in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine*") do (
-    if not defined GODOT_EXE (
-        for /f "delims=" %%f in ('dir /b /s "%%d\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
-            if not defined GODOT_EXE set "GODOT_EXE=%%f"
+if exist "%~dp0godot_portable" (
+    for /f "delims=" %%f in ('dir /b /s "%~dp0godot_portable\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
+        if not defined GODOT_EXE set "GODOT_EXE=%%f"
+    )
+)
+if not defined GODOT_EXE (
+    for /d %%d in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine*") do (
+        if not defined GODOT_EXE (
+            for /f "delims=" %%f in ('dir /b /s "%%d\Godot_v4.*win64.exe" 2^>nul ^| findstr /v /i "_console"') do (
+                if not defined GODOT_EXE set "GODOT_EXE=%%f"
+            )
         )
     )
 )
