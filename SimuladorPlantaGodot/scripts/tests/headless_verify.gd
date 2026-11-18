@@ -2013,6 +2013,34 @@ func _qa_10_main_scene_integration() -> void:
 				"Al cambiar de máquina en TabRiesgos deben cambiar Causas, Consecuencias y Prevención con textos específicos por equipo"
 			) and ok
 
+			# Regresión: Tarjetas de efectos fisiológicos IEC 60479-1 deben cambiar de color según probabilidad
+			var tab_fis := inst.find_child("TabFisiologia", true, false)
+			var fis_colors_ok := false
+			if tab_fis != null:
+				var sliders := tab_fis.find_children("*", "HSlider", true, false)
+				var card_fib := tab_fis.find_child("EffCard_Fibrilación", true, false) as PanelContainer
+				var card_tet := tab_fis.find_child("EffCard_Tetanización", true, false) as PanelContainer
+				if sliders.size() >= 2 and card_fib != null and card_tet != null:
+					var s_ma := sliders[0] as HSlider
+					var s_ms := sliders[1] as HSlider
+					s_ma.value = 0.3
+					s_ms.value = 800.0
+					var st_low := card_fib.get_theme_stylebox("panel") as StyleBoxFlat
+					var col_low := st_low.border_color if st_low != null else Color.BLACK
+					s_ma.value = 25.0
+					s_ms.value = 500.0
+					var st_mid := card_tet.get_theme_stylebox("panel") as StyleBoxFlat
+					var col_mid := st_mid.border_color if st_mid != null else Color.BLACK
+					s_ma.value = 460.0
+					s_ms.value = 500.0
+					var st_hi := card_fib.get_theme_stylebox("panel") as StyleBoxFlat
+					var col_hi := st_hi.border_color if st_hi != null else Color.BLACK
+					fis_colors_ok = (col_low.g > col_low.r) and (col_hi.r > col_hi.g) and (col_low != col_hi) and (col_mid != col_low)
+			ok = _assert_true(
+				fis_colors_ok,
+				"Tarjetas fisiológicas IEC 60479-1 deben cambiar dinámicamente de color verde -> cian/ámbar/naranja -> rojo según probabilidad"
+			) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

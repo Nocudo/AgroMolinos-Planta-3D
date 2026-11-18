@@ -400,14 +400,63 @@ static func build_physiology_tab() -> Dictionary:
 	diag_vb.add_child(lbl_desc)
 	diag_vb.add_child(lbl_joule)
 
+	var eff_cards: Array[PanelContainer] = []
 	var eff_labels: Array[Label] = []
+	var eff_pcts: Array[Label] = []
 	for eff_name in ["Percepción", "Tetanización", "Paro respiratorio", "Fibrilación", "Quemadura"]:
 		var ec := PanelContainer.new()
+		ec.name = "EffCard_" + eff_name.replace(" ", "_")
 		ec.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_SUBCARD, TTheme.BORDER_SUBTLE, 5, 8, 5))
 		left_vb.add_child(ec)
+		var ehb := HBoxContainer.new()
+		ehb.add_theme_constant_override("separation", 8)
+		ec.add_child(ehb)
 		var el := TTheme.make_label(eff_name, 10, TTheme.TEXT_WHITE)
-		ec.add_child(el)
+		el.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ehb.add_child(el)
+		var ep := TTheme.make_label("0%", 10, TTheme.ACCENT_EMERALD)
+		ep.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		ehb.add_child(ep)
+		eff_cards.append(ec)
 		eff_labels.append(el)
+		eff_pcts.append(ep)
+
+	var apply_eff_style := func(idx: int, title_prefix: String, state_txt: String, prob: float):
+		var p := clampf(prob, 0.0, 1.0)
+		var accent: Color
+		var bg: Color
+		if p < 0.10:
+			accent = Color(0.10, 0.78, 0.52, 1.0)
+			bg = Color(0.04, 0.14, 0.10, 0.92)
+		elif p < 0.35:
+			accent = Color(0.22, 0.74, 0.97, 1.0)
+			bg = Color(0.05, 0.12, 0.19, 0.92)
+		elif p < 0.60:
+			accent = Color(0.96, 0.72, 0.14, 1.0)
+			bg = Color(0.18, 0.13, 0.04, 0.92)
+		elif p < 0.80:
+			accent = Color(0.98, 0.46, 0.12, 1.0)
+			bg = Color(0.20, 0.09, 0.04, 0.94)
+		else:
+			accent = Color(0.95, 0.25, 0.25, 1.0)
+			bg = Color(0.22, 0.05, 0.06, 0.95)
+		var st := StyleBoxFlat.new()
+		st.bg_color = bg
+		st.border_color = Color(accent.r, accent.g, accent.b, 0.85)
+		st.border_width_left = 3
+		st.border_width_top = 1
+		st.border_width_right = 1
+		st.border_width_bottom = 1
+		st.set_corner_radius_all(5)
+		st.content_margin_left = 8.0
+		st.content_margin_right = 8.0
+		st.content_margin_top = 4.0
+		st.content_margin_bottom = 4.0
+		eff_cards[idx].add_theme_stylebox_override("panel", st)
+		eff_labels[idx].text = "%s: %s" % [title_prefix, state_txt]
+		eff_labels[idx].add_theme_color_override("font_color", Color(0.94, 0.97, 1.0, 1.0))
+		eff_pcts[idx].text = "%d%%" % int(round(p * 100.0))
+		eff_pcts[idx].add_theme_color_override("font_color", accent)
 
 	var right_vb := VBoxContainer.new()
 	right_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -466,11 +515,40 @@ static func build_physiology_tab() -> Dictionary:
 			lbl_desc.text = "Riesgo inmediato de fibrilación ventricular."
 			diag_card.add_theme_stylebox_override("panel", TTheme.make_left_stripe_card(TTheme.ACCENT_RED))
 
-		eff_labels[0].text = "Percepción: %s" % ("Activa" if ma >= 0.5 else "Nula")
-		eff_labels[1].text = "Tetanización: %s" % ("Severa" if ma >= 10.0 else "Ausente")
-		eff_labels[2].text = "Paro respiratorio: %s" % ("Alto" if ma >= 25.0 and ms >= 300.0 else "Bajo")
-		eff_labels[3].text = "Fibrilación: %s" % ("Probable" if ma >= 45.0 and ms >= 180.0 else "No alcanzada")
-		eff_labels[4].text = "Quemadura: %s" % ("Grave" if e_j > 5.0 else "Leve o nula")
+		# Probabilidades continuas según umbrales fisiológicos IEC 60479-1
+		var p_perc := 0.0
+		if ma >= 0.5:
+			p_perc = clampf(0.25 + 0.75 * ((ma - 0.5) / 9.5), 0.25, 1.0)
+		var txt_perc := "Nula" if p_perc < 0.10 else ("Leve" if p_perc < 0.50 else ("Activa" if p_perc < 0.85 else "Intensa"))
+
+		var p_tet := 0.0
+		if ma >= 5.0:
+			var t_factor := clampf(ms / 250.0, 0.35, 1.0)
+			p_tet = clampf(((ma - 5.0) / 22.0) * t_factor, 0.08, 1.0)
+		var txt_tet := "Ausente" if p_tet < 0.10 else ("Leve" if p_tet < 0.35 else ("Moderada" if p_tet < 0.65 else "Severa"))
+
+		var p_resp := 0.0
+		if ma >= 12.0 and ms >= 80.0:
+			var r_time := clampf((ms - 80.0) / 420.0, 0.15, 1.0)
+			p_resp = clampf(((ma - 12.0) / 38.0) * r_time, 0.06, 1.0)
+		var txt_resp := "Muy bajo" if p_resp < 0.10 else ("Bajo" if p_resp < 0.35 else ("Moderado" if p_resp < 0.60 else ("Alto" if p_resp < 0.80 else "Crítico")))
+
+		var c1_ma := 40.0 + 460.0 * exp(-ms / 180.0)
+		var p_fib := 0.0
+		if ma >= c1_ma * 0.75:
+			p_fib = clampf((ma - c1_ma * 0.75) / (c1_ma * 1.15), 0.05, 0.99)
+		var txt_fib := "No alcanzada" if p_fib < 0.10 else ("Umbral c1" if p_fib < 0.35 else ("Probable c2" if p_fib < 0.65 else "Muy probable c3"))
+
+		var p_burn := 0.0
+		if e_j >= 0.05:
+			p_burn = clampf(log(1.0 + e_j * 3.0) / log(1.0 + 18.0), 0.08, 1.0)
+		var txt_burn := "Leve o nula" if p_burn < 0.10 else ("Leve" if p_burn < 0.35 else ("Moderada" if p_burn < 0.65 else "Grave"))
+
+		apply_eff_style.call(0, "Percepción", txt_perc, p_perc)
+		apply_eff_style.call(1, "Tetanización", txt_tet, p_tet)
+		apply_eff_style.call(2, "Paro respiratorio", txt_resp, p_resp)
+		apply_eff_style.call(3, "Fibrilación", txt_fib, p_fib)
+		apply_eff_style.call(4, "Quemadura", txt_burn, p_burn)
 
 	sld_ma.value_changed.connect(update_iec)
 	sld_ms.value_changed.connect(update_iec)
