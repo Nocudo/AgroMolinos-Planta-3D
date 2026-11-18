@@ -723,6 +723,20 @@ func generate_plant_collisions(plant_node: Node3D) -> int:
 			continue
 
 		var world_aabb: AABB = mesh_inst.global_transform * mesh_inst.mesh.get_aabb()
+
+		# Generar colisionador exacto para la acera/andén inclinado Oeste (Groundcover_Gravel en X<-40, Z>15)
+		# para que jugador, Supervisor SST y línea guía caminen sobre la superficie real sin hundirse.
+		if world_aabb.position.x <= -42.0 and world_aabb.end.z >= 35.0 and world_aabb.end.y <= 0.60 and world_aabb.size.z >= 15.0:
+			var is_west_gravel := false
+			for s_i in range(mesh_inst.mesh.get_surface_count()):
+				var sm_g := mesh_inst.mesh.surface_get_material(s_i)
+				if sm_g != null and "groundcover_gravel" in sm_g.resource_name.to_lower():
+					is_west_gravel = true
+					break
+			if is_west_gravel:
+				mesh_inst.create_trimesh_collision()
+				generated_colliders_count += 1
+				continue
 		var longest: float = world_aabb.get_longest_axis_size()
 		if longest < min_mesh_size_for_collision:
 			continue

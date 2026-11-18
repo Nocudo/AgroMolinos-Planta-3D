@@ -28,10 +28,10 @@ const STATIONS: Array[Dictionary] = [
 	{"id": 13, "title": "Estación 13: Ciclones Clasificadores", "pos": Vector3(-18.69, 0.79, 29.4), "desc": "Ciclones clasificadores y control de polvo ATEX 22."},
 	{"id": 14, "title": "Estación 14: Almacén de Sacos 50 kg", "pos": Vector3(-18.69, 0.79, 26.5), "desc": "Empaque, estiba en pallets y despacho."},
 	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-33.5, 0.02, 22.2), "desc": "Equipo 14 exterior de transferencia térmica."},
-	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-45.7, 0.12, 34.3), "desc": "Horno 12 exterior de aire caliente."},
-	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-45.6, 0.12, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
-	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-45.2, 0.12, 38.8), "desc": "Soplador 13 de impulsión neumática."},
-	{"id": 19, "title": "Estación 19: Ductos de Aire y Cierre", "pos": Vector3(-44.2, 0.12, 41.2), "desc": "Red 15 de ductos de aire y cierre exterior del recorrido."}
+	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-45.7, 0.04, 34.3), "desc": "Horno 12 exterior de aire caliente."},
+	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-45.6, 0.04, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
+	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-45.2, 0.06, 38.8), "desc": "Soplador 13 de impulsión neumática."},
+	{"id": 19, "title": "Estación 19: Ductos de Aire y Cierre", "pos": Vector3(-44.2, 0.13, 41.2), "desc": "Red 15 de ductos de aire y cierre exterior del recorrido."}
 ]
 
 # Ruta peatonal natural sobre aceras y rampas reales: 0 muros, 0 invasión de calle vehicular, 0 cruces de líneas de seguridad (Zone1/2/6/8/9)
@@ -79,13 +79,13 @@ const TOUR_ROUTE_POINTS: Array[Vector3] = [
 	Vector3(-28.5, 0.04, 22.2),   # 40: Pie Rampa Sur de concreto
 	Vector3(-33.5, 0.04, 22.2),   # 41: Estación 15 - 14 Intercambiador de Calor (sobre andén concreto)
 	Vector3(-41.8, 0.06, 22.4),   # 42: Cruce limpio libre de esquina de losa hacia acera curva Oeste
-	Vector3(-43.4, 0.13, 25.0),   # 43: Inicio acera peatonal curva Oeste (sobre andén elevado Y=0.095)
-	Vector3(-44.6, 0.13, 28.4),   # 44: Acera peatonal curva Oeste (fuera de Zone9 y fuera de calle)
-	Vector3(-45.5, 0.13, 32.0),   # 45: Acera peatonal curva Oeste tramo medio
-	Vector3(-45.7, 0.13, 34.3),   # 46: Estación 16 - 12 Horno Térmico (sobre acera Oeste)
-	Vector3(-45.6, 0.13, 36.4),   # 47: Estación 17 - 11 Unidad de Extracción (sobre acera Oeste)
-	Vector3(-45.2, 0.13, 38.8),   # 48: Estación 18 - 13 Soplador (sobre acera Oeste)
-	Vector3(-44.2, 0.13, 41.2)    # 49: Estación 19 - 15 Ductos de Aire y cierre sobre acera Oeste
+	Vector3(-43.4, 0.10, 25.0),   # 43: Inicio acera peatonal curva Oeste (sobre andén físico Geom3D_775)
+	Vector3(-44.6, 0.14, 28.4),   # 44: Acera peatonal curva Oeste (fuera de Zone9 y fuera de calle)
+	Vector3(-45.5, 0.06, 32.0),   # 45: Acera peatonal curva Oeste tramo medio
+	Vector3(-45.7, 0.06, 34.3),   # 46: Estación 16 - 12 Horno Térmico (sobre acera Oeste)
+	Vector3(-45.6, 0.06, 36.4),   # 47: Estación 17 - 11 Unidad de Extracción (sobre acera Oeste)
+	Vector3(-45.2, 0.08, 38.8),   # 48: Estación 18 - 13 Soplador (sobre acera Oeste)
+	Vector3(-44.2, 0.15, 41.2)    # 49: Estación 19 - 15 Ductos de Aire y cierre sobre acera Oeste
 ]
 
 # Conversación natural con el Supervisor SST durante el recorrido (solo subtítulos, sin voz)
