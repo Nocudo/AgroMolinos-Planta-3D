@@ -29,7 +29,7 @@ const HAZARD_LINE_ZONES: Dictionary = {
 		"msg": "Despeje 1 m RETIE. Aplica LOTO."
 	},
 	"Zone6_DispatchBay": {
-		"title": "⚠ ZONA 6 · BAHÍA CARGA",
+		"title": "⚠ ZONA 6 · BAHÍA DESCARGA",
 		"msg": "Maniobra de camiones. Mantén distancia."
 	},
 	"Zone8_IntakeConveyor_OSHA": {
@@ -48,7 +48,7 @@ const ZONE_DESCRIPTIONS: Dictionary = {
 	"Zone3_ReceptionHopper_ISO": "Zona 3: Recepción y Tolva",
 	"Zone4_PedestrianWalkway_OSHA": "Zona 4: Pasillo Central",
 	"Zone5_WarehouseRacks": "Zona 5: Almacén Sacos",
-	"Zone6_DispatchBay": "Zona 6: Bahía Despacho",
+	"Zone6_DispatchBay": "Zona 6: Bahía Descarga",
 	"Zone7_ATEX_DustZone": "Zona 7: Atmósfera ATEX 22",
 	"Zone8_IntakeConveyor_OSHA": "Zona 8: Bandas Exteriores",
 	"Zone9_AirThermal_OSHA": "Zona 9: Aire y Térmica"

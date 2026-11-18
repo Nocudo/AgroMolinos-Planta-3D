@@ -594,6 +594,16 @@ func _qa_10_main_scene_integration() -> void:
 			var spot_s := inst.find_child("WorkerDockSouth", true, false)
 			var spot_w := inst.find_child("WorkerDockWest", true, false)
 			ok = _assert_true(spot_s != null and spot_w != null, "Estaciones de camiones deben incluir operarios señaleros en tierra") and ok
+			if spot_w != null and spot_s != null:
+				var w_lbl := spot_w.find_child("RoleLabel3D", true, false) as Label3D
+				ok = _assert_true(
+					String(spot_w.get("worker_role_name")) == "Operario de Descarga" and String(spot_w.get_subtitle_header()) == "Mateo Silva (Operario de Descarga):" and String(spot_w.get_interact_prompt()) == "Hablar con Operario de Descarga" and w_lbl != null and w_lbl.text == "Operario Descarga",
+					"Operario de zona de descarga (WorkerDockWest) debe identificarse como Operario de Descarga, no de carga (%s / %s)" % [String(spot_w.get_subtitle_header()), w_lbl.text if w_lbl else "null"]
+				) and ok
+				ok = _assert_true(
+					String(spot_s.get("worker_role_name")) == "Operario de Carga" and String(spot_s.get_subtitle_header()) == "Jorge Gómez (Operario de Carga):",
+					"Operario de zona de carga derecha (WorkerDockSouth) debe mantenerse como Operario de Carga (%s)" % String(spot_s.get_subtitle_header())
+				) and ok
 
 		# Auditoría de Audio Industrial (Paso 5)
 		ok = _assert_true(IndustrialSoundSynthesizerScript.create_motor_hum_loop().data.size() > 10000,

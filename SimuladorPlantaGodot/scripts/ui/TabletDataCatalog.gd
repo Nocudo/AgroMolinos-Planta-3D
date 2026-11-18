@@ -270,7 +270,7 @@ const PLANT_MACHINES_SPEC: Array[Dictionary] = [
 	{
 		"id": "ZONA8_EXTERIOR",
 		"glow_group": "banda_descarga",
-		"title": "Zona de Carga Exterior",
+		"title": "Zona de Descarga Exterior",
 		"subtitle": "Vista General",
 		"group": "G5",
 		"target_node": "",

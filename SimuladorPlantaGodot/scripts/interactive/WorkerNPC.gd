@@ -85,10 +85,10 @@ func _resolve_person_name() -> String:
 		return "Andrés Rojas"
 	if "manager" in nm.to_lower() or "jefe" in role_l:
 		return "Ing. Diana Morales"
+	if "descarga" in role_l or "oeste" in role_l or "west" in nm.to_lower():
+		return "Mateo Silva"
 	if "muelle sur" in role_l or "south" in nm.to_lower():
 		return "Jorge Gómez"
-	if "oeste" in role_l or "west" in nm.to_lower():
-		return "Mateo Silva"
 	if "logistic" in nm.to_lower() or "almac" in role_l:
 		return "Luis Herrera"
 	return "Operario"
@@ -111,9 +111,11 @@ func _subtitle_role_title(full_role: String) -> String:
 		return "Supervisor SST"
 	if "electromec" in low:
 		return "Técnico Electromecánico"
+	if "descarga" in low or "west" in nm:
+		return "Operario de Descarga"
 	if "carga" in low or "south" in nm:
 		return "Operario de Carga"
-	if "señalero" in low or "despacho" in low or "west" in nm:
+	if "señalero" in low or "despacho" in low:
 		return "Operario Señalero"
 	if "almac" in low or "logíst" in low or "logist" in low:
 		return "Operario de Logística"
@@ -128,9 +130,11 @@ func _compact_role_label(full_role: String) -> String:
 		return "Supervisor SST"
 	if raw.contains("Electromecánico"):
 		return "Electromecánico"
+	if raw.contains("Descarga") or "west" in nm:
+		return "Operario Descarga"
 	if raw.contains("Carga") or "south" in nm:
 		return "Operario Carga"
-	if raw.contains("Señalero") or "west" in nm:
+	if raw.contains("Señalero"):
 		return "Operario Señalero"
 	if raw.contains("Almacén"):
 		return "Operario Logística"

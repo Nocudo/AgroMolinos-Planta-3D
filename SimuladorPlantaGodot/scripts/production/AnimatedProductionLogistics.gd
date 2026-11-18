@@ -886,8 +886,8 @@ func _spawn_dock_operators(scene_root: Node) -> void:
 	if host.find_child("WorkerDockWest", false, false) == null:
 		var ww := WorkerLogisticsScene.instantiate()
 		ww.name = "WorkerDockWest"
-		ww.worker_role_name = "Operario Señalero"
-		ww.worker_dialogue = "Supervisión de maniobra en reversa y despacho de carga desde plataforma peatonal elevada."
+		ww.worker_role_name = "Operario de Descarga"
+		ww.worker_dialogue = "Supervisión de maniobra en reversa y descarga de grano hacia la banda de recepción desde la plataforma elevada."
 		ww.primary_animation = "inspect"
 		ww.secondary_animation = "idle"
 		ww.external_animation_control = true
@@ -1082,7 +1082,7 @@ func _update_truck_logistics(delta: float) -> void:
 	var bay2_spotter = null if (south_loading_now or bay2_loading_now or south_spotter != null) else _south_spotter
 	var bay2_state := _update_single_truck_rig(_bay2_rig, u_bay2, delta, false, bay2_spotter, "Muelle de Carga Derecho", false)
 	_update_single_truck_rig(_staging_rig, u_staging, delta, false, null, "Patio Norte", false)
-	_update_single_truck_rig(_west_rig, u_west, delta, false, _west_spotter, "Bahía Oeste (Est. 11)", true)
+	_update_single_truck_rig(_west_rig, u_west, delta, false, _west_spotter, "Zona de Descarga (Bahía Norte)", true)
 
 	_step_operator_bag_loading(delta, u_south, str(south_state.get("phase", "")), u_bay2, str(bay2_state.get("phase", "")))
 
@@ -1149,16 +1149,16 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		engine_pitch = 0.86
 		engine_vol = -7.5
 		spotter_anim = "inspect"
-		spotter_msg = "Aquí estamos pesando el camión en la báscula antes de autorizar la carga."
+		spotter_msg = "Aquí estamos pesando el camión en la báscula antes de autorizar la descarga de grano." if is_west_box else "Aquí estamos pesando el camión en la báscula antes de autorizar la carga."
 	elif u < u_dock_end:
 		phase = "TILTING_UNLOAD"
 		var local_p := (u - u_weigh_end) / maxf(u_dock_end - u_weigh_end, 0.001)
 		# El semirremolque contenedor permanece siempre acoplado a la quinta rueda (nunca se levanta ni se separa)
 		tilt_deg = 0.0
-		engine_pitch = 0.92 if is_intake else 0.88
-		engine_vol = -5.5 if is_intake else -7.0
+		engine_pitch = 0.92 if (is_intake or is_west_box) else 0.88
+		engine_vol = -5.5 if (is_intake or is_west_box) else -7.0
 		spotter_anim = "interact" if sin(local_p * PI * 2.0) > 0.0 else "inspect"
-		spotter_msg = "Estamos descargando el grano hacia la tolva, mantén distancia en la bahía." if is_intake else "Estamos subiendo las estibas de sacos de 50 kilos al camión de despacho."
+		spotter_msg = "Estamos descargando el grano hacia la banda de descarga; mantén distancia en la bahía." if (is_intake or is_west_box) else "Estamos subiendo las estibas de sacos de 50 kilos al camión de carga."
 	elif u < u_exit_end:
 		phase = "EXITING_STATION"
 		route_s = _trapezoid_u((u - u_dock_end) / maxf(u_exit_end - u_dock_end, 0.001), 0.10 if is_west_box else 0.12)
