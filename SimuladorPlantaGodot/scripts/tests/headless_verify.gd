@@ -711,8 +711,11 @@ func _qa_10_main_scene_integration() -> void:
 			hud_ctrl.close_briefing_panel()
 			ok = _assert_true(not hud_ctrl.is_briefing_visible() and not self.paused,
 				"Cerrar pausa de bienvenida debe reanudar simulación sin quedar pausado") and ok
-			ok = _assert_true(not bool(tut_node.is_briefing_active) and bool(tut_node.briefing_completed) and bool(guide.guide_has_target),
-				"Al cerrar la explicación, el guía SST debe iniciar el recorrido hacia Vestidores") and ok
+			ok = _assert_true(not bool(tut_node.is_briefing_active) and bool(tut_node.briefing_completed) and bool(tut_node.get("porteria_story_active")) and not bool(guide.guide_has_target),
+				"Tras bienvenida en Portería debe iniciarse primero la historia de la empresa antes de entrar") and ok
+			tut_node.finish_porteria_story_and_enter()
+			ok = _assert_true(bool(tut_node.get("porteria_story_completed")) and not bool(tut_node.get("porteria_story_active")) and bool(guide.guide_has_target),
+				"Al terminar la historia en Portería, el guía SST debe iniciar el ingreso hacia la empresa/Vestidores") and ok
 
 			# Auditoría Bloqueo de Interacción SST hasta llegar y explicar
 			ok = _assert_true(not guide.can_interact(),
@@ -1022,8 +1025,12 @@ func _qa_10_main_scene_integration() -> void:
 			if locker_c != null:
 				locker_c.set_epp_equipped(false)
 			hud_ctrl.close_briefing_panel_with_choice(true)
-			ok = _assert_true(bool(tut_node.get("sst_course_chosen")) and bool(tut_node.get("sst_course_active")),
-				"Elegir BtnCourseSST debe activar modo curso SST en Sala de Reuniones") and ok
+			ok = _assert_true(bool(tut_node.get("sst_course_chosen")) and bool(tut_node.get("porteria_story_active")) and not bool(tut_node.get("sst_course_active")),
+				"Elegir Sí debe contar primero la historia en Portería antes de entrar al curso SST") and ok
+			tut_node.select_company_topic("historia")
+			tut_node.select_company_topic("__continue__")
+			ok = _assert_true(bool(tut_node.get("sst_course_chosen")) and bool(tut_node.get("sst_course_active")) and bool(tut_node.get("porteria_story_completed")),
+				"Tras terminar la historia en Portería debe entrar a la empresa hacia Sala de Reuniones para el curso SST") and ok
 
 			var desk := tut_node.find_child("CourseDeskInteractable", true, false)
 			ok = _assert_true(desk != null and desk.has_method("interact"),
@@ -1605,11 +1612,12 @@ func _qa_10_main_scene_integration() -> void:
 							tut_node.tutorial_skipped = false
 							tut_node.epp_completed = false
 							tut_node.target_station_id = 2
+							tut_node.porteria_story_active = true
 							tut_node._start_exterior_narration()
 							var choices_row := hud_ctrl.find_child("DialogueChoicesRow", true, false) as HBoxContainer
 							ok = _assert_true(
-								choices_row != null and choices_row.visible and choices_row.get_child_count() == 4 and str(tut_node.get("_tts_voice_id")) == "",
-								"Conversación SST debe mostrar 4 opciones de empresa (Historia/Qué hacen/Misión/Visión) solo subtítulos sin voz"
+								choices_row != null and choices_row.visible and choices_row.get_child_count() == 5 and str(tut_node.get("_tts_voice_id")) == "",
+								"Conversación SST en Portería debe mostrar 5 opciones (Historia/Qué hacen/Misión/Visión + Entrar a la empresa) solo subtítulos sin voz"
 							) and ok
 							var asked_ok := bool(tut_node.select_company_topic("mision"))
 							tut_node._advance_conversation_beat()
@@ -1619,6 +1627,7 @@ func _qa_10_main_scene_integration() -> void:
 								"Elegir tema Misión debe mostrar respuesta conversacional en subtítulos (%s)" % (dlg_b.text if dlg_b != null else "")
 							) and ok
 							tut_node._stop_exterior_narration()
+							tut_node.porteria_story_active = false
 							tut_node.tutorial_skipped = saved_skip
 							tut_node.epp_completed = saved_epp
 						# Regresión: Indicador superior centrado de ubicación en tiempo real (solo ubicación)

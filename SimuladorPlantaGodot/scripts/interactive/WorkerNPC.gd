@@ -450,6 +450,8 @@ func get_interact_prompt() -> String:
 	if not is_tour_guide:
 		return "[E] Hablar con " + worker_role_name
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	if tut != null and bool(tut.get("porteria_story_active")):
+		return "[E] Entrar a la empresa"
 	if tut != null and bool(tut.get("sst_course_active")) and not bool(tut.get("sst_course_completed")):
 		return "[E] Iniciar Curso Rápido SST (RETIE)"
 	if tut != null and int(tut.get("target_station_id")) == 2 and not bool(tut.get("epp_completed")):
@@ -472,6 +474,10 @@ func interact(_tool_id: int = 1) -> String:
 
 	var bus = get_node_or_null("/root/EventBus")
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	if is_tour_guide and tut != null and bool(tut.get("porteria_story_active")):
+		if tut.has_method("finish_porteria_story_and_enter"):
+			tut.finish_porteria_story_and_enter()
+		return "Ingresando a Agromolinos del Valle."
 	if is_tour_guide and tut != null and bool(tut.get("sst_course_active")) and not bool(tut.get("sst_course_completed")):
 		if Vector2(global_position.x - 27.0, global_position.z - 34.0).length() <= 6.0:
 			if bus != null and bus.has_signal("sst_course_modal_requested"):

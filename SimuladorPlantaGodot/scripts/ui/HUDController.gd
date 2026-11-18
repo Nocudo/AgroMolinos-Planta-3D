@@ -135,7 +135,7 @@ func _input(event: InputEvent) -> void:
 			var modal_open := (briefing_overlay != null and briefing_overlay.visible) or (tablet_n != null and bool(tablet_n.visible)) or (_course_modal != null and bool(_course_modal.visible))
 			if not modal_open and not get_tree().paused:
 				var kc := (event as InputEventKey).keycode
-				var key_map := {KEY_6: 6, KEY_KP_6: 6, KEY_7: 7, KEY_KP_7: 7, KEY_8: 8, KEY_KP_8: 8, KEY_9: 9, KEY_KP_9: 9}
+				var key_map := {KEY_6: 6, KEY_KP_6: 6, KEY_7: 7, KEY_KP_7: 7, KEY_8: 8, KEY_KP_8: 8, KEY_9: 9, KEY_KP_9: 9, KEY_0: 0, KEY_KP_0: 0}
 				if key_map.has(kc):
 					var chosen_num: int = int(key_map[kc])
 					for ce in _dialogue_choice_entries:
@@ -569,9 +569,10 @@ func set_dialogue_choices(options: Array, active_id: String, asked_ids: Array, c
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.add_theme_font_size_override("font_size", 11)
-		var bg := Color(0.08, 0.34, 0.44, 0.94) if is_active else (Color(0.07, 0.11, 0.16, 0.72) if is_asked else Color(0.08, 0.14, 0.22, 0.90))
-		var bd := Color(0.32, 0.90, 1.0, 0.98) if is_active else (Color(0.32, 0.42, 0.52, 0.55) if is_asked else Color(0.45, 0.78, 0.95, 0.78))
-		var fg := Color(1.0, 1.0, 1.0, 1.0) if is_active else (Color(0.62, 0.70, 0.78, 0.85) if is_asked else Color(0.92, 0.96, 1.0, 0.96))
+		var is_continue: bool = (tid == "__continue__")
+		var bg := Color(0.08, 0.42, 0.28, 0.96) if is_continue else (Color(0.08, 0.34, 0.44, 0.94) if is_active else (Color(0.07, 0.11, 0.16, 0.72) if is_asked else Color(0.08, 0.14, 0.22, 0.90)))
+		var bd := Color(0.28, 0.92, 0.65, 0.98) if is_continue else (Color(0.32, 0.90, 1.0, 0.98) if is_active else (Color(0.32, 0.42, 0.52, 0.55) if is_asked else Color(0.45, 0.78, 0.95, 0.78)))
+		var fg := Color(1.0, 1.0, 1.0, 1.0) if (is_continue or is_active) else (Color(0.62, 0.70, 0.78, 0.85) if is_asked else Color(0.92, 0.96, 1.0, 0.96))
 		var st := StyleBoxFlat.new()
 		st.bg_color = bg
 		st.border_color = bd

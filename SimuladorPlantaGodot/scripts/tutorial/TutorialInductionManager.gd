@@ -151,15 +151,21 @@ const STATION_NATURAL_SPEECH: Dictionary = {
 	19: "Por último, arriba ves la red de ductos de aire que enlaza todo el sistema térmico con la nave. Con esto terminamos el recorrido y ya puedes explorar o usar la tablet."
 }
 
-# Líneas de apertura y transición de la conversación exterior (solo subtítulos)
+# Líneas de apertura de la conversación de historia en Portería (antes de entrar a la empresa)
 const EXTERIOR_NARRATION_SEGMENTS: Array[Dictionary] = [
 	{
 		"min_progress": 0.0,
 		"min_elapsed": 0.0,
 		"speaker": "Carlos Mendoza (Supervisor SST):",
-		"text": "Acompáñame por el sendero. Mientras caminamos, elige un tema abajo si quieres preguntarme sobre Agromolinos del Valle."
+		"text": "Bienvenido a Agromolinos del Valle. Antes de entrar a la empresa, puedes preguntarme por nuestra historia, qué hacemos, nuestra misión o nuestra visión. Cuando quieras ingresar, elige Entrar a la empresa o presiona 0."
 	}
 ]
+
+const PORTERIA_CONTINUE_CHOICE: Dictionary = {
+	"id": "__continue__",
+	"key_num": 0,
+	"label": "Entrar a la empresa"
+}
 
 const STATION_TO_ROUTE_IDX: Dictionary = {
 	1: 0, 2: 16, 3: 21, 4: 22, 5: 25, 6: 26, 7: 27, 8: 28, 9: 29, 10: 30,
@@ -226,6 +232,8 @@ var _epp_reminder_cooldown: float = 0.0
 var sst_course_chosen: bool = false
 var sst_course_active: bool = false
 var sst_course_completed: bool = false
+var porteria_story_active: bool = false
+var porteria_story_completed: bool = false
 var _course_modal_auto_opened: bool = false
 var _course_desk_node = null
 var _guide_line_mesh_inst: MeshInstance3D = null
@@ -338,7 +346,7 @@ func _set_course_desk_active(active: bool) -> void:
 
 func _on_sst_course_mode_selected(start_course: bool) -> void:
 	sst_course_chosen = start_course
-	sst_course_active = start_course
+	sst_course_active = false
 	_course_modal_auto_opened = false
 	_notify_glow_controller()
 
@@ -352,7 +360,6 @@ func _start_sst_course_walk() -> void:
 		for p in MEETING_COURSE_ROUTE:
 			wps.append(p)
 		_guide_worker.set_guide_route(wps, MEETING_ROOM_POS)
-	_start_exterior_narration()
 	_rebuild_floor_guide_line()
 
 func _on_sst_course_completed_event(passed: bool, score: int, total: int) -> void:
@@ -386,31 +393,76 @@ func _on_sst_course_completed_event(passed: bool, score: int, total: int) -> voi
 		for idx in range(2, vest_r_idx + 1):
 			wps.append(TOUR_ROUTE_POINTS[idx])
 		_guide_worker.set_guide_route(wps, TOUR_ROUTE_POINTS[vest_r_idx])
-	_start_exterior_narration()
+	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+	if hud != null and hud.has_method("show_npc_dialogue"):
+		hud.show_npc_dialogue(
+			SST_SPEAKER_HEADER,
+			"Excelente trabajo en el curso. Ahora acompáñame a los vestidores para ponerte tu equipo de protección y empezar el recorrido por las máquinas desde la zona de carga.",
+			7.0
+		)
 	_rebuild_floor_guide_line()
+
+func _start_porteria_story() -> void:
+	porteria_story_active = true
+	porteria_story_completed = false
+	_conv_asked_topics.clear()
+	if _guide_worker != null and is_instance_valid(_guide_worker):
+		_guide_worker.set("guide_has_target", false)
+		_guide_worker.set("is_explaining", false)
+		_guide_worker.set("has_arrived_and_explained", true)
+	_start_exterior_narration()
+	var bus = get_node_or_null("/root/EventBus")
+	if bus != null and bus.has_signal("notification_posted"):
+		bus.notification_posted.emit(
+			"PORTERÍA",
+			"Conoce la empresa o pulsa [0] para entrar.",
+			"info"
+		)
+	_notify_glow_controller()
+
+func finish_porteria_story_and_enter() -> void:
+	if not porteria_story_active and porteria_story_completed:
+		return
+	porteria_story_active = false
+	porteria_story_completed = true
+	_stop_exterior_narration()
+	var bus = get_node_or_null("/root/EventBus")
+	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+	if sst_course_chosen and not sst_course_completed:
+		_start_sst_course_walk()
+		if hud != null and hud.has_method("show_npc_dialogue"):
+			hud.show_npc_dialogue(
+				SST_SPEAKER_HEADER,
+				"Perfecto, acompáñame. Entremos a la empresa abriendo las puertas hacia la sala de reuniones para hacer el curso SST.",
+				6.5
+			)
+		if bus != null and bus.has_signal("notification_posted"):
+			bus.notification_posted.emit(
+				"CURSO SST",
+				"Sigue al Inspector hacia Sala de Reuniones.",
+				"info"
+			)
+	else:
+		_advance_tour_target(2)
+		if hud != null and hud.has_method("show_npc_dialogue"):
+			hud.show_npc_dialogue(
+				SST_SPEAKER_HEADER,
+				"Perfecto, acompáñame hacia los vestidores para ponerte tu equipo de protección y empezar el recorrido por las máquinas.",
+				6.5
+			)
+		if bus != null and bus.has_signal("notification_posted"):
+			bus.notification_posted.emit(
+				"RECORRIDO GUIADO",
+				"Sigue al Inspector hacia Vestidores.",
+				"info"
+			)
+	_notify_glow_controller()
 
 func _on_briefing_closed(resume_tour_on_close: bool) -> void:
 	is_briefing_active = false
 	if resume_tour_on_close and not briefing_completed:
 		briefing_completed = true
-		var bus = get_node_or_null("/root/EventBus")
-		if sst_course_chosen and not sst_course_completed:
-			_start_sst_course_walk()
-			if bus != null and bus.has_signal("notification_posted"):
-				bus.notification_posted.emit(
-					"CURSO SST",
-					"Sigue al Inspector. Presiona [E] en la mesa.",
-					"info"
-				)
-		else:
-			_advance_tour_target(2)
-			_start_exterior_narration()
-			if bus != null and bus.has_signal("notification_posted"):
-				bus.notification_posted.emit(
-					"RECORRIDO GUIADO",
-					"Sigue al Inspector hacia Vestidores.",
-					"info"
-				)
+		_start_porteria_story()
 	_notify_glow_controller()
 
 func complete_initial_briefing() -> void:
@@ -521,6 +573,8 @@ func is_ready_for_meeting_course() -> bool:
 	return Vector2(p_pos.x - MEETING_ROOM_POS.x, p_pos.z - MEETING_ROOM_POS.z).length() <= 4.2 and absf(p_pos.y - MEETING_ROOM_POS.y) <= 0.55
 
 func get_interact_advance_prompt() -> String:
+	if porteria_story_active and not is_briefing_active:
+		return "[E] Entrar a la empresa"
 	if is_ready_for_meeting_course():
 		return "[E] Curso SST (RETIE)"
 	if not is_ready_for_interact_advance():
@@ -530,6 +584,9 @@ func get_interact_advance_prompt() -> String:
 	return "[E] Finalizar Recorrido (%d/%d)" % [STATIONS.size(), STATIONS.size()]
 
 func try_advance_station_by_interact() -> String:
+	if porteria_story_active and not is_briefing_active:
+		finish_porteria_story_and_enter()
+		return "Ingresando a Agromolinos del Valle."
 	if is_ready_for_meeting_course():
 		var bus_m = get_node_or_null("/root/EventBus")
 		if bus_m != null and bus_m.has_signal("sst_course_modal_requested"):
@@ -921,6 +978,8 @@ func get_state_summary() -> Dictionary:
 		"sst_course_chosen": sst_course_chosen,
 		"sst_course_active": sst_course_active,
 		"sst_course_completed": sst_course_completed,
+		"porteria_story_active": porteria_story_active,
+		"porteria_story_completed": porteria_story_completed,
 		"narration_active": _narration_active,
 		"narration_segment": _narration_idx + 1
 	}
@@ -930,6 +989,8 @@ func skip_tutorial_to_final_station() -> Dictionary:
 	tutorial_skipped = true
 	is_briefing_active = false
 	briefing_completed = true
+	porteria_story_active = false
+	porteria_story_completed = true
 	sst_course_active = false
 	_course_modal_auto_opened = true
 	_prompted_station_id = -1
@@ -1035,14 +1096,23 @@ func _sync_conversation_choices_ui() -> void:
 		if hud.has_method("clear_dialogue_choices"):
 			hud.clear_dialogue_choices()
 		return
+	var opts: Array = []
+	for t in SST_COMPANY_TOPICS:
+		opts.append(t)
+	opts.append(PORTERIA_CONTINUE_CHOICE)
 	hud.set_dialogue_choices(
-		SST_COMPANY_TOPICS,
+		opts,
 		_conv_active_topic_id,
 		_conv_asked_topics,
 		Callable(self, "select_company_topic")
 	)
 
 func select_company_topic(topic_id: String) -> bool:
+	if topic_id == "__continue__":
+		if porteria_story_active or _narration_active:
+			finish_porteria_story_and_enter()
+			return true
+		return false
 	if not _narration_active or tutorial_skipped or epp_completed:
 		return false
 	var chosen: Dictionary = {}
@@ -1073,7 +1143,7 @@ func select_company_topic(topic_id: String) -> bool:
 	if _conv_asked_topics.size() >= SST_COMPANY_TOPICS.size():
 		_conv_beat_queue.append({
 			"speaker": SST_SPEAKER_HEADER,
-			"text": "Ya conoces bien quiénes somos en Agromolinos del Valle. Sigamos adelante con el recorrido.",
+			"text": "Ya conoces bien quiénes somos en Agromolinos del Valle. Cuando estés listo, elige Entrar a la empresa o presiona 0.",
 			"dur": 5.0
 		})
 	_advance_conversation_beat()
