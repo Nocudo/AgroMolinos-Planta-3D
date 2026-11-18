@@ -787,6 +787,102 @@ static func build_cctv_rubric_tab(_on_cam_cb: Callable) -> Dictionary:
 		"score_lbl": score_lbl, "hist_vb": hist_vb, "station_labels": station_labels
 	}
 
+static func build_notifications_history_tab(on_filter_cb: Callable, on_clear_cb: Callable) -> Dictionary:
+	var outer := PanelContainer.new()
+	outer.name = "TabHistorialNotificaciones"
+	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	outer.add_theme_stylebox_override("panel", TTheme.make_panel_style())
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	outer.add_child(vb)
+
+	# Encabezado con filtros por severidad y botón Limpiar
+	var hdr := HBoxContainer.new()
+	hdr.add_theme_constant_override("separation", 8)
+	vb.add_child(hdr)
+
+	var title_lbl := TTheme.make_label("Historial de Notificaciones", 14, TTheme.ACCENT_CYAN)
+	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr.add_child(title_lbl)
+
+	var filter_btns: Dictionary = {}
+	for fspec in [
+		{"id": "ALL", "txt": "Todas"},
+		{"id": "CRITICAL", "txt": "Críticas"},
+		{"id": "WARNING", "txt": "Alertas"},
+		{"id": "SUCCESS", "txt": "Éxito"},
+		{"id": "INFO", "txt": "Info"}
+	]:
+		var fb := Button.new()
+		fb.name = "BtnHistFilter_" + str(fspec["id"])
+		fb.text = str(fspec["txt"])
+		fb.add_theme_font_size_override("font_size", 10)
+		var is_all := str(fspec["id"]) == "ALL"
+		TTheme.apply_btn_colors(fb, TTheme.ACCENT_BLUE if is_all else TTheme.BG_SUBCARD, TTheme.ACCENT_CYAN if is_all else TTheme.BORDER_SUBTLE)
+		fb.pressed.connect(func(): on_filter_cb.call(str(fspec["id"])))
+		hdr.add_child(fb)
+		filter_btns[str(fspec["id"])] = fb
+
+	var btn_clear := Button.new()
+	btn_clear.name = "BtnClearNotifHistory"
+	btn_clear.text = "Limpiar"
+	btn_clear.add_theme_font_size_override("font_size", 10)
+	TTheme.apply_btn_colors(btn_clear, Color(0.32, 0.10, 0.12), TTheme.ACCENT_RED)
+	btn_clear.pressed.connect(on_clear_cb)
+	hdr.add_child(btn_clear)
+
+	# Fila resumen de contadores por categoría
+	var kpi_row := HBoxContainer.new()
+	kpi_row.add_theme_constant_override("separation", 10)
+	vb.add_child(kpi_row)
+
+	var kpi_labels: Dictionary = {}
+	for kspec in [
+		{"key": "ALL", "label": "Total registradas", "col": TTheme.ACCENT_CYAN},
+		{"key": "CRITICAL", "label": "Críticas / Fallas", "col": TTheme.ACCENT_RED},
+		{"key": "WARNING", "label": "Advertencias", "col": TTheme.ACCENT_AMBER},
+		{"key": "INFO_OK", "label": "Informativas / Éxito", "col": TTheme.ACCENT_EMERALD}
+	]:
+		var kc := PanelContainer.new()
+		kc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		kc.add_theme_stylebox_override("panel", TTheme.make_left_stripe_card(kspec["col"] as Color, TTheme.BG_SUBCARD))
+		kpi_row.add_child(kc)
+		var khb := HBoxContainer.new()
+		khb.add_theme_constant_override("separation", 6)
+		kc.add_child(khb)
+		var kt := TTheme.make_label(str(kspec["label"]), 10, TTheme.TEXT_MUTED)
+		kt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var kv := TTheme.make_label("0", 14, kspec["col"] as Color, HORIZONTAL_ALIGNMENT_RIGHT)
+		khb.add_child(kt)
+		khb.add_child(kv)
+		kpi_labels[str(kspec["key"])] = kv
+
+	# Lista desplazable con todas las notificaciones (la más reciente arriba)
+	var list_panel := PanelContainer.new()
+	list_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_panel.add_theme_stylebox_override("panel", TTheme.make_panel_style(Color(0.035, 0.055, 0.095, 0.92), TTheme.BORDER_SUBTLE, 8, 10, 10))
+	vb.add_child(list_panel)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	list_panel.add_child(scroll)
+
+	var list_vb := VBoxContainer.new()
+	list_vb.name = "NotifHistoryList"
+	list_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_vb.add_theme_constant_override("separation", 6)
+	scroll.add_child(list_vb)
+
+	return {
+		"root": outer,
+		"list_vb": list_vb,
+		"filter_btns": filter_btns,
+		"kpi_labels": kpi_labels
+	}
+
 static func _style_line_edit(le: LineEdit) -> void:
 	le.add_theme_stylebox_override("normal", TTheme.make_panel_style(TTheme.BG_INPUT, TTheme.BORDER_SUBTLE, 6, 8, 5))
 	le.add_theme_stylebox_override("focus", TTheme.make_panel_style(TTheme.BG_INPUT, TTheme.ACCENT_CYAN, 6, 8, 5))

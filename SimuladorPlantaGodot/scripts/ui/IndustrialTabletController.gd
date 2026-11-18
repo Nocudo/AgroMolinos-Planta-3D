@@ -14,7 +14,7 @@ const TSecTabs = preload("res://scripts/ui/TabletSecondaryTabsBuilder.gd")
 
 const TAB_NAMES: Array[String] = [
 	"Monitoreo IoT", "Cámaras", "RETIE", "Operarios",
-	"Riesgos", "Fisiología IEC", "Hardware & IA", "Rúbrica"
+	"Riesgos", "Fisiología IEC", "Hardware & IA", "Rúbrica", "Historial"
 ]
 
 const MACHINE_CHART_CONFIGS: Dictionary = {
@@ -257,11 +257,17 @@ var _containers_3d: Dictionary = {}
 var _cards_by_3d_group: Dictionary = {}
 var _cards_3d_workers: Array = []
 
-# Handles UI secundarios Tabs 3..8
+# Handles UI secundarios Tabs 3..9
 var _retie_handles: Dictionary = {}
 var _workers_handles: Dictionary = {}
 var _hw_ai_handles: Dictionary = {}
 var _cctv_handles: Dictionary = {}
+var _notif_hist_handles: Dictionary = {}
+var _notification_history: Array[Dictionary] = []
+var _notif_hist_filter: String = "ALL"
+var _last_history_key: String = ""
+var _last_history_ms: int = -10000
+const MAX_NOTIFICATION_HISTORY: int = 250
 
 func _ready() -> void:
 	visible = false
@@ -303,16 +309,19 @@ func _build_lab3_scada_ui() -> void:
 	var f_handles := TSecTabs.build_physiology_tab()
 	_hw_ai_handles = TSecTabs.build_hardware_ai_tab()
 	_cctv_handles = TSecTabs.build_cctv_rubric_tab(_select_cctv_camera)
+	_notif_hist_handles = TSecTabs.build_notifications_history_tab(_on_notif_history_filter_selected, _on_clear_notif_history)
 
 	_bind_shared_handles()
 
 	_tab_pages = [
 		p1, p2, _retie_handles["root"], _workers_handles["root"],
-		r_handles["root"], f_handles["root"], _hw_ai_handles["root"], _cctv_handles["root"]
+		r_handles["root"], f_handles["root"], _hw_ai_handles["root"], _cctv_handles["root"],
+		_notif_hist_handles["root"]
 	]
 	for page in _tab_pages:
 		page.visible = false
 		content_host.add_child(page)
+	_rebuild_notification_history_ui()
 
 func _build_header_bar() -> void:
 	var hdr := HBoxContainer.new()
@@ -1541,14 +1550,159 @@ func _normalize_warning_key(raw: String) -> String:
 		s = s.replace("  ", " ")
 	return s.strip_edges()
 
+func _clean_history_text(raw: String) -> String:
+	var s := raw.strip_edges()
+	for sym in ["⚠", "⚡", "🔴", "🟡", "🟢", "🔵", "✅", "❌"]:
+		s = s.replace(sym, "")
+	while "  " in s:
+		s = s.replace("  ", " ")
+	return s.strip_edges()
+
+func _record_notification_history(title_txt: String, detail_txt: String, severity_norm: String) -> void:
+	var ct := _clean_history_text(title_txt)
+	var cm := _clean_history_text(detail_txt)
+	if ct == "" and cm == "":
+		return
+	var now_ms := Time.get_ticks_msec()
+	var hkey := severity_norm + "|" + _normalize_warning_key(ct) + "|" + _normalize_warning_key(cm)
+	if hkey == _last_history_key and (now_ms - _last_history_ms) < 1200:
+		return
+	_last_history_key = hkey
+	_last_history_ms = now_ms
+
+	_notification_history.push_front({
+		"timestamp": Time.get_time_string_from_system(),
+		"title": ct,
+		"message": cm,
+		"severity": severity_norm
+	})
+	while _notification_history.size() > MAX_NOTIFICATION_HISTORY:
+		_notification_history.pop_back()
+	_rebuild_notification_history_ui()
+
+func _on_notif_history_filter_selected(filter_id: String) -> void:
+	_notif_hist_filter = filter_id
+	if not _notif_hist_handles.is_empty():
+		var fbtns: Dictionary = _notif_hist_handles.get("filter_btns", {})
+		for fid in fbtns.keys():
+			var b := fbtns[fid] as Button
+			if b != null:
+				var active := (str(fid) == _notif_hist_filter)
+				TTheme.apply_btn_colors(b, TTheme.ACCENT_BLUE if active else TTheme.BG_SUBCARD, TTheme.ACCENT_CYAN if active else TTheme.BORDER_SUBTLE)
+	_rebuild_notification_history_ui()
+
+func _on_clear_notif_history() -> void:
+	_notification_history.clear()
+	_rebuild_notification_history_ui()
+
+func get_notification_history_count() -> int:
+	return _notification_history.size()
+
+func _rebuild_notification_history_ui() -> void:
+	if _notif_hist_handles.is_empty():
+		return
+	var list_vb := _notif_hist_handles.get("list_vb", null) as VBoxContainer
+	var kpis: Dictionary = _notif_hist_handles.get("kpi_labels", {})
+	if list_vb == null:
+		return
+
+	var cnt_crit := 0
+	var cnt_warn := 0
+	var cnt_info_ok := 0
+	for item in _notification_history:
+		var sev := str(item.get("severity", "INFO"))
+		if sev == "CRITICAL":
+			cnt_crit += 1
+		elif sev == "WARNING":
+			cnt_warn += 1
+		else:
+			cnt_info_ok += 1
+
+	if kpis.has("ALL"): (kpis["ALL"] as Label).text = str(_notification_history.size())
+	if kpis.has("CRITICAL"): (kpis["CRITICAL"] as Label).text = str(cnt_crit)
+	if kpis.has("WARNING"): (kpis["WARNING"] as Label).text = str(cnt_warn)
+	if kpis.has("INFO_OK"): (kpis["INFO_OK"] as Label).text = str(cnt_info_ok)
+
+	for ch in list_vb.get_children():
+		list_vb.remove_child(ch)
+		ch.queue_free()
+
+	var shown := 0
+	for item in _notification_history:
+		var sev := str(item.get("severity", "INFO"))
+		if _notif_hist_filter != "ALL" and sev != _notif_hist_filter:
+			continue
+		var accent := TTheme.ACCENT_CYAN
+		var bg := Color(0.05, 0.09, 0.15, 0.92)
+		var pill_txt := "INFO"
+		if sev == "CRITICAL":
+			accent = TTheme.ACCENT_RED
+			bg = Color(0.16, 0.04, 0.05, 0.94)
+			pill_txt = "CRÍTICA"
+		elif sev == "WARNING":
+			accent = TTheme.ACCENT_AMBER
+			bg = Color(0.14, 0.09, 0.03, 0.92)
+			pill_txt = "ALERTA"
+		elif sev == "SUCCESS":
+			accent = TTheme.ACCENT_EMERALD
+			bg = Color(0.04, 0.14, 0.10, 0.92)
+			pill_txt = "ÉXITO"
+
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_theme_stylebox_override("panel", TTheme.make_left_stripe_card(accent, bg))
+		list_vb.add_child(card)
+
+		var cvb := VBoxContainer.new()
+		cvb.add_theme_constant_override("separation", 3)
+		card.add_child(cvb)
+
+		var chdr := HBoxContainer.new()
+		chdr.add_theme_constant_override("separation", 8)
+		cvb.add_child(chdr)
+
+		var p_wrap := PanelContainer.new()
+		p_wrap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		p_wrap.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(accent.r * 0.25, accent.g * 0.25, accent.b * 0.25, 0.95), accent))
+		chdr.add_child(p_wrap)
+		p_wrap.add_child(TTheme.make_label(pill_txt, 9, accent, HORIZONTAL_ALIGNMENT_CENTER))
+
+		var tl := TTheme.make_label(str(item.get("title", "")), 11, Color(0.95, 0.97, 1.0))
+		tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tl.clip_text = true
+		tl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		chdr.add_child(tl)
+
+		chdr.add_child(TTheme.make_label(str(item.get("timestamp", "")), 10, TTheme.TEXT_MUTED, HORIZONTAL_ALIGNMENT_RIGHT))
+
+		var body_txt := str(item.get("message", ""))
+		if body_txt != "":
+			var ml := TTheme.make_label(body_txt, 10, Color(0.84, 0.89, 0.96))
+			ml.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			cvb.add_child(ml)
+
+		shown += 1
+
+	if shown == 0:
+		var empty_lbl := TTheme.make_label("Sin notificaciones registradas en esta categoría.", 11, TTheme.TEXT_MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+		list_vb.add_child(empty_lbl)
+
 func _on_bus_notification_posted(title: String, message: String, severity: String) -> void:
 	var sev_low := severity.to_lower()
-	if sev_low != "warning" and sev_low != "error" and sev_low != "critical":
+	var norm_all := "INFO"
+	if sev_low == "error" or sev_low == "critical":
+		norm_all = "CRITICAL"
+	elif sev_low == "warning":
+		norm_all = "WARNING"
+	elif sev_low == "success" or sev_low == "ok":
+		norm_all = "SUCCESS"
+	_record_notification_history(title, message, norm_all)
+
+	if norm_all != "WARNING" and norm_all != "CRITICAL":
 		return
-	var norm_sev := "CRITICAL" if (sev_low == "error" or sev_low == "critical") else "WARNING"
-	if norm_sev == "CRITICAL":
+	if norm_all == "CRITICAL":
 		_last_critical_notif_ms = Time.get_ticks_msec()
-	_push_tablet_warning(title, message, norm_sev)
+	_push_tablet_warning(title, message, norm_all)
 
 func _on_safety_line_crossed_warning(active: bool, zone_id: String, title: String, message: String) -> void:
 	if not active:
@@ -1558,6 +1712,7 @@ func _on_safety_line_crossed_warning(active: bool, zone_id: String, title: Strin
 	if (now_ms - last_z) < 3500:
 		return
 	_hazard_tablet_cooldown_ms[zone_id] = now_ms
+	_record_notification_history(title, message, "CRITICAL")
 	_push_tablet_warning(title, message, "CRITICAL")
 
 func _on_safety_violation_warning(_code: String, description: String, penalty: float) -> void:
@@ -1567,8 +1722,15 @@ func _on_safety_violation_warning(_code: String, description: String, penalty: f
 		_append_blackbox("CRITICAL", "Penalización RETIE (-%.1f) · %s" % [absf(penalty), _clamp_str(description, 100)])
 		if _warning_banner_body != null and not _warning_banner_body.text.contains("RETIE"):
 			_warning_banner_body.text = _clamp_str(_warning_banner_body.text + " (RETIE -%.1f)" % absf(penalty), 120)
+		if not _notification_history.is_empty():
+			var top_entry: Dictionary = _notification_history[0]
+			var m_cur := str(top_entry.get("message", ""))
+			if not m_cur.contains("RETIE"):
+				top_entry["message"] = (m_cur + " (RETIE -%.1f)" % absf(penalty)).strip_edges()
+				_rebuild_notification_history_ui()
 		return
 	var title_txt := "Infracción RETIE · -%.1f" % absf(penalty)
+	_record_notification_history(title_txt, description, "CRITICAL")
 	_push_tablet_warning(title_txt, description, "CRITICAL")
 
 func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: String) -> void:

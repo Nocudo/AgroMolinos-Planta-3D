@@ -375,18 +375,34 @@ func _qa_7_in_game_tablet_and_oscilloscopes() -> void:
 			ok = _assert_true(chassis.size == sz_ch_before and chassis.size == Vector2(1228, 748), "Tamaño de TabletChassis cambió: " + str(chassis.size)) and ok
 			ok = _assert_true(frame.size == sz_fr_before and frame.size == Vector2(1180, 700), "Tamaño de Frame cambió: " + str(frame.size)) and ok
 
-			# Validar las 8 pestañas rectificadas (Tab 1 renombrada a "Cámaras", sin sección separada Cámaras CCTV, y telemetría de 15 máquinas + CCM)
-			ok = _assert_true(tablet._tab_pages.size() == 8 and tablet.TAB_NAMES[1] == "Cámaras" and not tablet.TAB_NAMES.has("Cámaras CCTV"),
-				"Tablet debe tener 8 pestañas con 'Cámaras' y sin sección separada de Cámaras CCTV (%s)" % str(tablet.TAB_NAMES)) and ok
+			# Validar las 9 pestañas rectificadas (incluyendo pestaña 8 "Historial" de todas las notificaciones)
+			ok = _assert_true(tablet._tab_pages.size() == 9 and tablet.TAB_NAMES[1] == "Cámaras" and tablet.TAB_NAMES[8] == "Historial" and not tablet.TAB_NAMES.has("Cámaras CCTV"),
+				"Tablet debe tener 9 pestañas incluyendo 'Cámaras' e 'Historial' sin sección separada de Cámaras CCTV (%s)" % str(tablet.TAB_NAMES)) and ok
 			ok = _assert_true(tablet._machine_tiles.size() == 16 and tablet._cards_3d_workers.size() == 4,
 				"Telemetría IoT debe enlazar 15 máquinas + CCM (%d) y 4 operarios 3D (%d)" % [tablet._machine_tiles.size(), tablet._cards_3d_workers.size()]) and ok
-			for tab_i in range(8):
+			for tab_i in range(9):
 				tablet._select_tab(tab_i)
 				ok = _assert_true(chassis.size == Vector2(1228, 748) and frame.size == Vector2(1180, 700), "Cambio de tamaño en pestaña %d" % tab_i) and ok
 			tablet._select_tab(7)
 			var rub_root := tablet._cctv_handles.get("root", null) as Node
 			ok = _assert_true(rub_root != null and rub_root.name == "TabRubricaAcademica",
-				"Última pestaña (7) debe ser TabRubricaAcademica sin panel CCTV duplicado") and ok
+				"Pestaña 7 debe ser TabRubricaAcademica sin panel CCTV duplicado") and ok
+			# Validar pestaña 8: Historial de todas las notificaciones (info, éxito, alerta, crítica + filtros + limpiar)
+			tablet._select_tab(8)
+			tablet._on_clear_notif_history()
+			tablet._on_bus_notification_posted("EPP equipado", "Protección completa.", "info")
+			tablet._on_bus_notification_posted("Curso aprobado", "Quiz RETIE 5/5.", "success")
+			tablet._on_bus_notification_posted("Detén las máquinas primero", "Pulsa Parar Máquinas.", "warning")
+			tablet._on_bus_notification_posted("Falla en ciclón", "Presión anormal.", "error")
+			var h_list := tablet._notif_hist_handles.get("list_vb", null) as VBoxContainer
+			var h_all_cnt := h_list.get_child_count() if h_list != null else 0
+			tablet._on_notif_history_filter_selected("CRITICAL")
+			var h_crit_cnt := h_list.get_child_count() if h_list != null else 0
+			tablet._on_notif_history_filter_selected("ALL")
+			ok = _assert_true(
+				tablet.get_notification_history_count() == 4 and h_all_cnt == 4 and h_crit_cnt == 1,
+				"Pestaña Historial debe registrar todas las notificaciones y filtrar por severidad (total=%d, all=%d, crit=%d)" % [tablet.get_notification_history_count(), h_all_cnt, h_crit_cnt]
+			) and ok
 			tablet._select_tab(1)
 			var total_cam_cards := 0
 			for grp in tablet.TCatalog.CAMERA_GROUPS_ORDER:
