@@ -176,7 +176,7 @@ const STATION_TO_ROUTE_IDX: Dictionary = {
 const STATION_GLOW_GROUPS: Dictionary = {
 	1: [],
 	2: ["locker"],
-	3: ["banda_descarga", "truck"],
+	3: ["banda_descarga"],
 	4: ["banda_inclinada_tolva"],
 	5: ["hopper"],
 	6: ["banda_trituradora"],
@@ -199,7 +199,7 @@ const ALL_EQUIPMENT_GLOW_GROUPS: Array[String] = [
 	"tornillo_trituradora", "motor", "tornillo_secador", "secador_rotatorio",
 	"ciclon_separador", "cyclone", "unidad_extraccion", "horno",
 	"soplador", "intercambiador_calor", "ductos_aire",
-	"locker", "breaker", "bag", "truck"
+	"locker", "breaker", "bag"
 ]
 
 const MEETING_ROOM_POS: Vector3 = Vector3(27.0, 0.41, 32.9)

@@ -113,8 +113,7 @@ const ALL_GROUPS: Array[String] = [
 	"ductos_aire",
 	"locker",
 	"breaker",
-	"bag",
-	"truck"
+	"bag"
 ]
 
 # Mapeo único máquina -> nodos reales del GLB (sin traslapes)
@@ -528,11 +527,8 @@ func _collect_targets(scene_root: Node) -> void:
 			_append_meshes_for_names(plant, GLB_GROUP_NODES[g_name] as Array, grp_arr)
 			_meshes_by_group[g_name] = grp_arr
 
-	var truck_meshes: Array[MeshInstance3D] = []
-	var truck_node := scene_root.find_child("NCDOT International Box Truck", true, false)
-	if truck_node != null:
-		_append_subtree_meshes(truck_node, truck_meshes, [])
-	_meshes_by_group["truck"] = truck_meshes
+	# Todos los camiones sin glow visual
+	_meshes_by_group["truck"] = []
 
 	var motor_meshes: Array[MeshInstance3D] = _meshes_by_group["motor"] as Array[MeshInstance3D]
 	var mill_unit := scene_root.find_child("MotorMillUnit", true, false)
@@ -1251,11 +1247,7 @@ func _compute_equipment_state(group_key: String) -> int:
 			return GlowState.WHITE
 
 		"truck":
-			if _prop_bool(_motor_node, "is_e_stop_engaged"):
-				return GlowState.RED
-			if hopper_jam or bool(_group_warnings.get("truck", false)):
-				return GlowState.YELLOW
-			return GlowState.WHITE
+			return GlowState.HIDDEN
 
 		_:
 			if PROCESS_FAULT_SPECS.has(group_key):

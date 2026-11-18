@@ -65,92 +65,120 @@ var _staging_mover: Node3D = null
 var _south_spotter = null
 var _west_spotter = null
 var _main_gate = null
+var _exit_gate = null
 var _gate_opened_by_trucks: bool = false
+var _exit_gate_opened_by_trucks: bool = false
 var _player_ref: Node3D = null
 var _idle_pulse_t: float = 0.0
 
-# Rutas curvadas suaves sobre pavimento, báscula y vía perimetral (cero giros bruscos)
-# Pivote de los tractocamiones en la quinta rueda (quinta rueda -> acople del remolque)
-const SOUTH_DOCK_POS := Vector3(-2.26, 0.0, 23.95)
+# Rutas 100 % sobre carreteras pavimentadas (ADOQUIN/baldosa, cero pasto) y giros naturales:
+# Salida por vía Norte -> Portón Noreste (55.03, 9.58) -> Bulevar Este (X=71) -> Portón Principal (56.08, 38.04) -> Vía Sur -> Curva Oeste
+const SOUTH_DOCK_POS := Vector3(-2.10, 0.0, 24.30)
 const SOUTH_EXIT_ROUTE: Array[Vector3] = [
-	Vector3(-2.26, 0.0, 23.95),
-	Vector3(10.0, 0.0, 21.6),
-	Vector3(24.0, 0.0, 17.6),
-	Vector3(44.0, 0.0, 17.6),
-	Vector3(51.2, 0.0, 22.8),
-	Vector3(53.4, 0.0, 31.2),
-	Vector3(54.8, 0.0, 37.6),
-	Vector3(56.4, 0.0, 38.2),
-	Vector3(72.0, 0.0, 38.2)
+	Vector3(-2.10, 0.0, 24.30),
+	Vector3(10.0, 0.0, 22.0),
+	Vector3(20.0, 0.0, 18.2),
+	Vector3(30.0, 0.0, 15.8),
+	Vector3(40.0, 0.0, 13.2),
+	Vector3(48.0, 0.0, 11.2),
+	Vector3(55.03, 0.0, 9.58),
+	Vector3(62.5, 0.0, 9.5),
+	Vector3(68.2, 0.0, 11.2),
+	Vector3(70.2, 0.0, 16.5)
 ]
 const SOUTH_TRANSIT_ROUTE: Array[Vector3] = [
-	Vector3(72.0, 0.0, 38.2),
-	Vector3(80.5, 0.0, 35.5),
-	Vector3(87.0, 0.0, 26.5),
-	Vector3(81.5, 0.0, 19.5),
-	Vector3(73.5, 0.0, 26.5),
-	Vector3(72.0, 0.0, 38.2)
+	Vector3(70.2, 0.0, 16.5),
+	Vector3(70.8, 0.0, 24.5),
+	Vector3(70.5, 0.0, 32.5),
+	Vector3(68.5, 0.0, 36.4),
+	Vector3(63.5, 0.0, 37.4),
+	Vector3(56.08, 0.0, 38.04)
 ]
 const SOUTH_ENTER_ROUTE: Array[Vector3] = [
-	Vector3(72.0, 0.0, 38.2),
-	Vector3(56.0, 0.0, 38.2),
-	Vector3(53.8, 0.0, 48.0),
-	Vector3(51.2, 0.0, 56.8),
-	Vector3(43.5, 0.0, 58.3),
-	Vector3(16.0, 0.0, 58.3),
-	Vector3(-25.0, 0.0, 58.3),
-	Vector3(-48.0, 0.0, 56.8),
-	Vector3(-52.0, 0.0, 47.5),
-	Vector3(-52.0, 0.0, 25.0),
-	Vector3(-42.0, 0.0, 10.5),
-	Vector3(-12.0, 0.0, 10.5),
-	Vector3(6.0, 0.0, 15.2),
-	Vector3(17.2, 0.0, 19.6),
-	Vector3(16.2, 0.0, 22.4)
+	Vector3(56.08, 0.0, 38.04),
+	Vector3(51.8, 0.0, 40.2),
+	Vector3(47.8, 0.0, 46.0),
+	Vector3(43.6, 0.0, 52.0),
+	Vector3(39.0, 0.0, 54.4),
+	Vector3(34.8, 0.0, 55.0),
+	Vector3(29.5, 0.0, 57.2),
+	Vector3(20.0, 0.0, 58.4),
+	Vector3(5.0, 0.0, 58.4),
+	Vector3(-15.0, 0.0, 57.8),
+	Vector3(-35.0, 0.0, 57.4),
+	Vector3(-44.0, 0.0, 56.2),
+	Vector3(-49.2, 0.0, 53.2),
+	Vector3(-52.4, 0.0, 47.5),
+	Vector3(-53.2, 0.0, 41.0),
+	Vector3(-52.4, 0.0, 34.0),
+	Vector3(-50.6, 0.0, 27.0),
+	Vector3(-48.4, 0.0, 21.0),
+	Vector3(-44.8, 0.0, 16.0),
+	Vector3(-39.0, 0.0, 12.6),
+	Vector3(-31.0, 0.0, 12.0),
+	Vector3(-22.0, 0.0, 13.6),
+	Vector3(-12.0, 0.0, 16.2),
+	Vector3(-2.0, 0.0, 18.6),
+	Vector3(6.5, 0.0, 21.0),
+	Vector3(11.5, 0.0, 22.2),
+	Vector3(14.5, 0.0, 22.0)
 ]
 const SOUTH_REVERSE_ROUTE: Array[Vector3] = [
-	Vector3(16.2, 0.0, 22.4),
-	Vector3(7.2, 0.0, 22.8),
-	Vector3(-2.26, 0.0, 23.95)
+	Vector3(14.5, 0.0, 22.0),
+	Vector3(6.2, 0.0, 23.15),
+	Vector3(-2.10, 0.0, 24.30)
 ]
 
-# Circuito del segundo tractocamión articulado (Bahía Sur #2, desfasado +0.38 para cero cruces en portón ni patio)
-const BAY2_DOCK_POS := Vector3(2.20, 0.0, 26.78)
+# Tractocamión articulado principal estacionado al ras de la puerta izquierda de carga (muelle amarillo)
+const BAY2_DOCK_POS := Vector3(2.65, 0.0, 25.84)
 const BAY2_EXIT_ROUTE: Array[Vector3] = [
-	Vector3(2.20, 0.0, 26.78),
-	Vector3(13.0, 0.0, 24.4),
-	Vector3(25.5, 0.0, 18.2),
-	Vector3(44.0, 0.0, 17.6),
-	Vector3(51.2, 0.0, 22.8),
-	Vector3(53.4, 0.0, 31.2),
-	Vector3(54.8, 0.0, 37.6),
-	Vector3(56.4, 0.0, 38.2),
-	Vector3(72.0, 0.0, 38.2)
+	Vector3(2.65, 0.0, 25.84),
+	Vector3(11.5, 0.0, 22.8),
+	Vector3(21.0, 0.0, 18.2),
+	Vector3(30.0, 0.0, 15.8),
+	Vector3(40.0, 0.0, 13.2),
+	Vector3(48.0, 0.0, 11.2),
+	Vector3(55.03, 0.0, 9.58),
+	Vector3(62.5, 0.0, 9.5),
+	Vector3(68.2, 0.0, 11.2),
+	Vector3(70.2, 0.0, 16.5)
 ]
 const BAY2_ENTER_ROUTE: Array[Vector3] = [
-	Vector3(72.0, 0.0, 38.2),
-	Vector3(56.0, 0.0, 38.2),
-	Vector3(53.8, 0.0, 48.0),
-	Vector3(51.2, 0.0, 56.8),
-	Vector3(43.5, 0.0, 58.3),
-	Vector3(16.0, 0.0, 58.3),
-	Vector3(-25.0, 0.0, 58.3),
-	Vector3(-48.0, 0.0, 56.8),
-	Vector3(-52.0, 0.0, 47.5),
-	Vector3(-52.0, 0.0, 25.0),
-	Vector3(-42.0, 0.0, 10.5),
-	Vector3(-12.0, 0.0, 10.5),
-	Vector3(6.8, 0.0, 15.6),
-	Vector3(19.0, 0.0, 20.8),
-	Vector3(18.5, 0.0, 24.8)
+	Vector3(56.08, 0.0, 38.04),
+	Vector3(51.8, 0.0, 40.2),
+	Vector3(47.8, 0.0, 46.0),
+	Vector3(43.6, 0.0, 52.0),
+	Vector3(39.0, 0.0, 54.4),
+	Vector3(34.8, 0.0, 55.0),
+	Vector3(29.5, 0.0, 57.2),
+	Vector3(20.0, 0.0, 58.4),
+	Vector3(5.0, 0.0, 58.4),
+	Vector3(-15.0, 0.0, 57.8),
+	Vector3(-35.0, 0.0, 57.4),
+	Vector3(-44.0, 0.0, 56.2),
+	Vector3(-49.2, 0.0, 53.2),
+	Vector3(-52.4, 0.0, 47.5),
+	Vector3(-53.2, 0.0, 41.0),
+	Vector3(-52.4, 0.0, 34.0),
+	Vector3(-50.6, 0.0, 27.0),
+	Vector3(-48.4, 0.0, 21.0),
+	Vector3(-44.8, 0.0, 16.0),
+	Vector3(-39.0, 0.0, 12.6),
+	Vector3(-31.0, 0.0, 12.0),
+	Vector3(-22.0, 0.0, 13.6),
+	Vector3(-12.0, 0.0, 16.2),
+	Vector3(-2.0, 0.0, 18.8),
+	Vector3(6.2, 0.0, 21.2),
+	Vector3(11.0, 0.0, 22.8),
+	Vector3(13.8, 0.0, 22.8)
 ]
 const BAY2_REVERSE_ROUTE: Array[Vector3] = [
-	Vector3(18.5, 0.0, 24.8),
-	Vector3(10.5, 0.0, 25.8),
-	Vector3(2.20, 0.0, 26.78)
+	Vector3(13.8, 0.0, 22.8),
+	Vector3(8.2, 0.0, 24.3),
+	Vector3(2.65, 0.0, 25.84)
 ]
 
-# Circuito cerrado holgado 100 % dentro del patio asfaltado Norte
+# Circuito cerrado holgado 100 % dentro del patio de grava Norte (cero pasto)
 const STAGING_YARD_LOOP: Array[Vector3] = [
 	Vector3(-33.3, 0.0, -11.4),
 	Vector3(-22.0, 0.0, -13.0),
@@ -163,39 +191,53 @@ const STAGING_YARD_LOOP: Array[Vector3] = [
 const WEST_DOCK_POS := Vector3(-38.43, 0.0, 51.31)
 const WEST_EXIT_ROUTE: Array[Vector3] = [
 	Vector3(-38.43, 0.0, 51.31),
-	Vector3(-51.5, 0.0, 49.5),
-	Vector3(-52.0, 0.0, 26.0),
-	Vector3(-42.0, 0.0, 10.5),
-	Vector3(-12.0, 0.0, 10.5),
-	Vector3(14.0, 0.0, 17.6),
-	Vector3(44.5, 0.0, 17.6),
-	Vector3(51.2, 0.0, 22.8),
-	Vector3(53.4, 0.0, 31.2),
-	Vector3(54.8, 0.0, 37.6),
-	Vector3(56.4, 0.0, 38.2),
-	Vector3(72.0, 0.0, 38.2)
+	Vector3(-47.5, 0.0, 51.0),
+	Vector3(-52.2, 0.0, 47.0),
+	Vector3(-53.2, 0.0, 41.0),
+	Vector3(-52.2, 0.0, 34.0),
+	Vector3(-50.2, 0.0, 27.0),
+	Vector3(-47.8, 0.0, 21.5),
+	Vector3(-44.5, 0.0, 16.8),
+	Vector3(-39.0, 0.0, 13.5),
+	Vector3(-31.0, 0.0, 12.8),
+	Vector3(-22.0, 0.0, 14.5),
+	Vector3(-12.0, 0.0, 17.2),
+	Vector3(0.0, 0.0, 19.2),
+	Vector3(14.0, 0.0, 19.2),
+	Vector3(26.0, 0.0, 16.8),
+	Vector3(38.0, 0.0, 13.8),
+	Vector3(48.0, 0.0, 11.2),
+	Vector3(55.03, 0.0, 9.58),
+	Vector3(62.5, 0.0, 9.5),
+	Vector3(68.2, 0.0, 11.2),
+	Vector3(70.2, 0.0, 16.5)
 ]
 const WEST_TRANSIT_ROUTE: Array[Vector3] = [
-	Vector3(72.0, 0.0, 38.2),
-	Vector3(77.5, 0.0, 42.5),
-	Vector3(81.0, 0.0, 49.5),
-	Vector3(76.5, 0.0, 52.5),
-	Vector3(72.5, 0.0, 45.5),
-	Vector3(72.0, 0.0, 38.2)
+	Vector3(70.2, 0.0, 16.5),
+	Vector3(70.8, 0.0, 24.5),
+	Vector3(70.5, 0.0, 32.5),
+	Vector3(68.5, 0.0, 36.4),
+	Vector3(63.5, 0.0, 37.4),
+	Vector3(56.08, 0.0, 38.04)
 ]
 const WEST_ENTER_ROUTE: Array[Vector3] = [
-	Vector3(72.0, 0.0, 38.2),
-	Vector3(56.0, 0.0, 38.2),
-	Vector3(53.8, 0.0, 48.0),
-	Vector3(51.2, 0.0, 56.8),
-	Vector3(43.5, 0.0, 58.3),
-	Vector3(16.0, 0.0, 58.3),
-	Vector3(-25.0, 0.0, 58.3),
-	Vector3(-46.5, 0.0, 56.8),
-	Vector3(-52.2, 0.0, 51.31)
+	Vector3(56.08, 0.0, 38.04),
+	Vector3(51.8, 0.0, 40.2),
+	Vector3(47.8, 0.0, 46.0),
+	Vector3(43.6, 0.0, 52.0),
+	Vector3(39.0, 0.0, 54.4),
+	Vector3(34.8, 0.0, 55.0),
+	Vector3(29.5, 0.0, 57.2),
+	Vector3(20.0, 0.0, 58.4),
+	Vector3(5.0, 0.0, 58.4),
+	Vector3(-15.0, 0.0, 57.8),
+	Vector3(-35.0, 0.0, 57.4),
+	Vector3(-44.0, 0.0, 56.2),
+	Vector3(-48.5, 0.0, 53.6),
+	Vector3(-49.2, 0.0, 51.31)
 ]
 const WEST_REVERSE_ROUTE: Array[Vector3] = [
-	Vector3(-52.2, 0.0, 51.31),
+	Vector3(-49.2, 0.0, 51.31),
 	Vector3(-38.43, 0.0, 51.31)
 ]
 
@@ -305,6 +347,7 @@ func _bind_downloaded_models() -> void:
 			_auger_base_pos = auger_node.position
 
 		_main_gate = plant_model.find_child("Door_Porton Automatico Parcela", true, false)
+		_exit_gate = plant_model.find_child("Door_Porton Automatico Parcela_1", true, false)
 
 	var mill_unit := scene_root.find_child("MotorMillUnit", true, false) as Node3D
 	if mill_unit != null:
@@ -799,24 +842,24 @@ func _spawn_dock_operators(scene_root: Node) -> void:
 	if host.find_child("WorkerDockSouth", false, false) == null:
 		var ws := WorkerLogisticsScene.instantiate()
 		ws.name = "WorkerDockSouth"
-		ws.worker_role_name = "Operario Logístico — Muelle Sur"
-		ws.worker_dialogue = "Muelle de recepción de grano a granel. Coordino el ingreso, peso en báscula y descarga hidráulica del tractocamión."
+		ws.worker_role_name = "Operario de Carga — Muelle Sur"
+		ws.worker_dialogue = "Muelle de carga izquierdo. Aquí coordinamos el acople del tractocamión y cargamos las estibas de manera segura."
 		ws.primary_animation = "inspect"
 		ws.secondary_animation = "idle"
 		ws.external_animation_control = true
 		host.add_child(ws)
-		ws.global_position = Vector3(-7.8, 0.04, 20.1)
+		ws.global_position = Vector3(-13.6, 0.80, 29.8)
 
 	if host.find_child("WorkerDockWest", false, false) == null:
 		var ww := WorkerLogisticsScene.instantiate()
 		ww.name = "WorkerDockWest"
 		ww.worker_role_name = "Operario Señalero — Bahía Oeste"
-		ww.worker_dialogue = "Estación 11 (Zona 6): Supervisión de maniobra en reversa con alarma acústica y despacho de furgones de 50 kg."
+		ww.worker_dialogue = "Supervisión de maniobra en reversa y despacho de carga desde plataforma peatonal elevada."
 		ww.primary_animation = "inspect"
 		ww.secondary_animation = "idle"
 		ww.external_animation_control = true
 		host.add_child(ww)
-		ww.global_position = Vector3(-35.2, 0.04, 54.4)
+		ww.global_position = Vector3(-22.5, 0.60, 52.3)
 
 	_south_spotter = host.find_child("WorkerDockSouth", false, false)
 	_west_spotter = host.find_child("WorkerDockWest", false, false)
@@ -993,16 +1036,16 @@ func _update_truck_logistics(delta: float) -> void:
 
 	# Desfases matemáticamente optimizados (>20 m de separación mínima centro-a-centro en todo el ciclo de 300 s)
 	var u_south: float = truck_cycle_time / TRUCK_CYCLE_DURATION
-	var u_bay2: float = fmod(u_south + 0.367, 1.0)
-	dispatch_cycle_time = fmod(u_south + 0.99, 1.0)
+	var u_bay2: float = fmod(u_south + 0.38, 1.0)
+	dispatch_cycle_time = fmod(u_south + 0.06, 1.0)
 	var u_west: float = dispatch_cycle_time
 	var u_staging: float = fmod(u_south * 5.0, 1.0)
 
-	var south_state := _update_single_truck_rig(_south_rig, u_south, delta, true, _south_spotter, "Muelle Sur #1", false)
+	var south_state := _update_single_truck_rig(_south_rig, u_south, delta, true, null, "Muelle Sur #1", false)
 	truck_cycle_phase = south_state["phase"]
 	truck_tilt_angle_deg = south_state["tilt_deg"]
 
-	_update_single_truck_rig(_bay2_rig, u_bay2, delta, false, null, "Bahía Sur #2", false)
+	_update_single_truck_rig(_bay2_rig, u_bay2, delta, false, _south_spotter, "Muelle de Carga Izquierdo", false)
 	_update_single_truck_rig(_staging_rig, u_staging, delta, false, null, "Patio Norte", false)
 	_update_single_truck_rig(_west_rig, u_west, delta, false, _west_spotter, "Bahía Oeste (Est. 11)", true)
 
@@ -1127,9 +1170,9 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 			var sample := _sample_route(active_route, route_s, true)
 			target_pos = sample["pos"]
 			target_yaw = atan2(-sample["dir"].x, -sample["dir"].z)
-			# Contragiro real del tractocamión en S para alinear el semirremolque en muelle
+			# Maniobra de reversa natural alineada al muelle (sin contragiro artificial exagerado)
 			if bool(rig.get("is_semi", false)):
-				steer_bias_rad = sin(route_s * PI) * deg_to_rad(21.0)
+				steer_bias_rad = sin(route_s * PI) * deg_to_rad(3.0)
 				target_yaw += steer_bias_rad
 		engine_pitch = 0.95
 		engine_vol = -4.0
@@ -1155,7 +1198,7 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 	var is_jump := (prev_u < 0.0) or (du > 0.04) or (delta > 0.25)
 	rig["prev_u"] = u
 
-	var yaw_rate_blend := 7.0 * delta
+	var yaw_rate_blend := 3.8 * delta
 	var cur_yaw := target_yaw if is_jump else lerp_angle(prev_yaw, target_yaw, clampf(yaw_rate_blend, 0.0, 1.0))
 	var yaw_vel := 0.0 if (delta <= 0.0001 or is_jump) else wrapf(cur_yaw - prev_yaw, -PI, PI) / delta
 	var lin_dist := Vector2(target_pos.x - prev_pos.x, target_pos.z - prev_pos.z).length()
@@ -1262,22 +1305,23 @@ func _step_articulated_semi_hitch(
 		var u0 := Vector2(-sin(trl_yaw), -cos(trl_yaw))
 		rig["trailer_axle_xz"] = kp_xz - u0 * axle_dist
 	elif reverse_mode:
-		# En reversa: el semirremolque se endereza suave hacia la tangente de bahía (dock_yaw) mientras el cabezote contragira
+		# En reversa: el semirremolque se endereza con fluidez hacia el eje del muelle
 		var dock_y := float(rig.get("dock_yaw", cab_yaw))
-		var back_blend := _smooth_u(clampf((route_s - 0.08) / 0.84, 0.0, 1.0))
-		trl_yaw = lerp_angle(trl_yaw, dock_y, maxf(back_blend * 0.25, clampf(delta * 2.2, 0.0, 1.0)))
-		var rel_r := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(50.0), deg_to_rad(50.0))
+		var back_blend := _smooth_u(clampf((route_s - 0.05) / 0.85, 0.0, 1.0))
+		trl_yaw = lerp_angle(trl_yaw, dock_y, maxf(back_blend * 0.22, clampf(delta * 2.0, 0.0, 1.0)))
+		var rel_r := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(24.0), deg_to_rad(24.0))
 		trl_yaw = cab_yaw + rel_r
 		var ur := Vector2(-sin(trl_yaw), -cos(trl_yaw))
 		rig["trailer_axle_xz"] = kp_xz - ur * axle_dist
 	elif is_moving:
-		# Avance cinemático no holonómico: el eje trasero del semirremolque sigue la quinta rueda paso a paso
+		# Avance cinemático no holonómico suavizado: el remolque sigue la quinta rueda de forma natural
 		var prev_axle: Vector2 = rig.get("trailer_axle_xz", kp_xz - Vector2(-sin(trl_yaw), -cos(trl_yaw)) * axle_dist)
 		var pull_vec := kp_xz - prev_axle
 		if pull_vec.length_squared() > 0.0001:
 			var u_pull := pull_vec.normalized()
 			var desired_trl_yaw := atan2(-u_pull.x, -u_pull.y)
-			var rel_fwd := clampf(wrapf(desired_trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(52.0), deg_to_rad(52.0))
+			var smooth_trl_yaw := lerp_angle(trl_yaw, desired_trl_yaw, clampf(delta * 5.0, 0.0, 1.0))
+			var rel_fwd := clampf(wrapf(smooth_trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(42.0), deg_to_rad(42.0))
 			trl_yaw = cab_yaw + rel_fwd
 			var u_clamped := Vector2(-sin(trl_yaw), -cos(trl_yaw))
 			rig["trailer_axle_xz"] = kp_xz - u_clamped * axle_dist
@@ -1288,7 +1332,7 @@ func _step_articulated_semi_hitch(
 		rig["trailer_axle_xz"] = kp_xz - u_idle * axle_dist
 
 	rig["trailer_yaw"] = trl_yaw
-	var rel_final := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(54.0), deg_to_rad(54.0))
+	var rel_final := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(44.0), deg_to_rad(44.0))
 	art_piv.rotation.y = rel_final - init_rel
 
 	var tilt_p := rig.get("tilt_pivot") as Node3D
@@ -1337,9 +1381,13 @@ func _sync_rig_audio(rig: Dictionary, phase: String, engine_pitch: float, engine
 			sfx.play()
 
 func _update_main_gate_proximity() -> void:
-	if _main_gate == null or not is_instance_valid(_main_gate):
-		return
-	var gate_pos: Vector3 = (_main_gate as Node3D).global_position
+	_gate_opened_by_trucks = _sync_single_gate_proximity(_main_gate, _gate_opened_by_trucks)
+	_exit_gate_opened_by_trucks = _sync_single_gate_proximity(_exit_gate, _exit_gate_opened_by_trucks)
+
+func _sync_single_gate_proximity(gate_node, was_opened_by_trucks: bool) -> bool:
+	if gate_node == null or not is_instance_valid(gate_node):
+		return was_opened_by_trucks
+	var gate_pos: Vector3 = (gate_node as Node3D).global_position
 	var truck_near := false
 	for rig in [_south_rig, _bay2_rig, _west_rig]:
 		if rig.is_empty():
@@ -1355,10 +1403,10 @@ func _update_main_gate_proximity() -> void:
 
 	var play_sfx := DisplayServer.get_name() != "headless"
 	if truck_near:
-		if not _main_gate.is_open:
-			_gate_opened_by_trucks = true
-			_main_gate.open_door(play_sfx)
-	elif _gate_opened_by_trucks and not player_near:
+		if not gate_node.is_open:
+			was_opened_by_trucks = true
+			gate_node.open_door(play_sfx)
+	elif was_opened_by_trucks and not player_near:
 		var any_close := false
 		for rig in [_south_rig, _bay2_rig, _west_rig]:
 			if rig.is_empty():
@@ -1368,8 +1416,9 @@ func _update_main_gate_proximity() -> void:
 				any_close = true
 				break
 		if not any_close:
-			_gate_opened_by_trucks = false
-			_main_gate.close_door(play_sfx)
+			was_opened_by_trucks = false
+			gate_node.close_door(play_sfx)
+	return was_opened_by_trucks
 
 func _find_sub_node(root_n: Node, parent_key: String, child_key: String) -> Node3D:
 	if root_n == null:

@@ -1144,8 +1144,8 @@ func _qa_10_main_scene_integration() -> void:
 		if glow_ctrl != null:
 			glow_ctrl.refresh_highlights(true)
 			var gs_norm: Dictionary = glow_ctrl.get_glow_summary()
-			ok = _assert_true(int(gs_norm.get("motor_meshes", 0)) > 0 and int(gs_norm.get("hopper_meshes", 0)) > 0 and int(gs_norm.get("cyclone_meshes", 0)) > 0 and int(gs_norm.get("bag_meshes", 0)) > 0 and int(gs_norm.get("locker_meshes", 0)) > 0 and int(gs_norm.get("truck_meshes", 0)) > 0 and int(gs_norm.get("breaker_meshes", 0)) >= 4 and bool(gs_norm.get("all_15_bound", false)),
-				"InteractableGlowController debe enlazar todas las 15 máquinas ordenadas y equipos de planta (%s)" % str(gs_norm.get("ordered_15_meshes", {}))) and ok
+			ok = _assert_true(int(gs_norm.get("motor_meshes", 0)) > 0 and int(gs_norm.get("hopper_meshes", 0)) > 0 and int(gs_norm.get("cyclone_meshes", 0)) > 0 and int(gs_norm.get("bag_meshes", 0)) > 0 and int(gs_norm.get("locker_meshes", 0)) > 0 and int(gs_norm.get("truck_meshes", 0)) == 0 and int(gs_norm.get("breaker_meshes", 0)) >= 4 and bool(gs_norm.get("all_15_bound", false)),
+				"InteractableGlowController debe enlazar las 15 máquinas ordenadas sin glow en camiones (%s)" % str(gs_norm.get("ordered_15_meshes", {}))) and ok
 			ok = _assert_true(not bool(gs_norm.get("motor_fault", true)), "Motor sano no debe iniciar con resaltado rojo de falla") and ok
 			if breaker_node != null and breaker_node.has_method("toggle_breaker_l3"):
 				breaker_node.toggle_breaker_l3()
