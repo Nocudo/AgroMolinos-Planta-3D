@@ -346,8 +346,25 @@ func _update_machine_hover_selection() -> void:
 	if glow.has_method("update_hover_from_camera"):
 		glow.update_hover_from_camera(camera_fps, _get_aim_screen_position(), MAX_SELECTION_DISTANCE_M, get_rid())
 
-func _should_use_close_priority(target: Node) -> bool:
+func _is_tour_showcase_machine_locked(target: Node) -> bool:
 	if target == null:
+		return false
+	var is_machine_part := (
+		target is PhysicalBreakerPanel
+		or target is PhysicalCableConductor
+		or target is MechanicalBolt
+		or target is VentilationCover
+		or target is PhysicalHopperFeeder
+	)
+	if not is_machine_part:
+		return false
+	var tut := get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	if tut != null and tut.has_method("is_tutorial_glow_unlocked"):
+		return not bool(tut.is_tutorial_glow_unlocked())
+	return false
+
+func _should_use_close_priority(target: Node) -> bool:
+	if target == null or _is_tour_showcase_machine_locked(target):
 		return false
 	if target is WorkerNPC or target is InteractiveDoor or target is InteractiveGrainBag or "epp_equipped" in target:
 		return true
@@ -376,6 +393,8 @@ func _handle_interaction() -> void:
 	var close_target: Node = null
 	if interaction_ray != null and interaction_ray.is_colliding():
 		close_target = _find_interactable(interaction_ray.get_collider())
+		if _is_tour_showcase_machine_locked(close_target):
+			close_target = null
 
 	if close_target != null and _should_use_close_priority(close_target):
 		if close_target.has_method("can_interact") and not close_target.can_interact():
@@ -771,6 +790,8 @@ func _update_ray_prompt() -> void:
 	var close_target: Node = null
 	if interaction_ray != null and interaction_ray.is_colliding():
 		close_target = _find_interactable(interaction_ray.get_collider())
+		if _is_tour_showcase_machine_locked(close_target):
+			close_target = null
 
 	if close_target != null and _should_use_close_priority(close_target):
 		current_interactable = close_target

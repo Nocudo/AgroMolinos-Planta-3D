@@ -1190,13 +1190,25 @@ func _qa_10_main_scene_integration() -> void:
 				tut_node.target_station_id = 4
 				glow_ctrl.refresh_highlights(true)
 				var gs_s4: Dictionary = glow_ctrl.get_glow_summary()
-				ok = _assert_true(not bool(gs_s4.get("post_tutorial", true)) and glow_ctrl.get_group_state("breaker") == "WHITE" and glow_ctrl.get_group_state("motor") == "HIDDEN",
-					"En Estación 4 del tutorial solo Tablero CCM debe tener glow blanco y motor estar HIDDEN (%s)" % str(gs_s4.get("group_states"))) and ok
+				glow_ctrl.set_hovered_machine_group("breaker")
+				ok = _assert_true(
+					not bool(gs_s4.get("post_tutorial", true))
+					and glow_ctrl.get_group_state("breaker") == "BLUE_PULSE"
+					and glow_ctrl.get_group_state("motor") == "HIDDEN"
+					and not glow_ctrl.has_active_green_selection()
+					and glow_ctrl.get_hover_selection_prompt(2) == "",
+					"En Estación 4 del tutorial solo Tablero CCM debe tener glow azul parpadeante (BLUE_PULSE) no seleccionable (%s)" % str(gs_s4.get("group_states"))
+				) and ok
 
 				tut_node.target_station_id = 5
 				glow_ctrl.refresh_highlights(true)
-				ok = _assert_true(glow_ctrl.get_group_state("motor") == "WHITE" and glow_ctrl.get_group_state("breaker") == "HIDDEN",
-					"En Estación 5 del tutorial solo Motor/Molinos deben tener glow") and ok
+				glow_ctrl.set_hovered_machine_group("motor")
+				ok = _assert_true(
+					glow_ctrl.get_group_state("motor") == "BLUE_PULSE"
+					and glow_ctrl.get_group_state("breaker") == "HIDDEN"
+					and not glow_ctrl.has_active_green_selection(),
+					"En Estación 5 del tutorial solo Motor/Molinos deben tener glow BLUE_PULSE sin volverse verde al apuntar"
+				) and ok
 
 				tut_node.skip_tutorial_to_final_station()
 				glow_ctrl.refresh_highlights(true)

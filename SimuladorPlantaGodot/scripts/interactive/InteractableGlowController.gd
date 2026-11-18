@@ -10,7 +10,7 @@ extends Node
 # Compatible con Godot 4.7 GL Compatibility y mallas SketchUp / Sketchfab (.glb).
 # ==============================================================================
 
-enum GlowState { HIDDEN = -1, WHITE = 0, YELLOW = 1, RED = 2, GREEN = 3, RED_HOVER = 4 }
+enum GlowState { HIDDEN = -1, WHITE = 0, YELLOW = 1, RED = 2, GREEN = 3, RED_HOVER = 4, BLUE_PULSE = 5 }
 
 const STATE_NAMES: Dictionary = {
 	GlowState.HIDDEN: "HIDDEN",
@@ -18,7 +18,8 @@ const STATE_NAMES: Dictionary = {
 	GlowState.YELLOW: "YELLOW",
 	GlowState.RED: "RED",
 	GlowState.GREEN: "GREEN",
-	GlowState.RED_HOVER: "RED_HOVER"
+	GlowState.RED_HOVER: "RED_HOVER",
+	GlowState.BLUE_PULSE: "BLUE_PULSE"
 }
 
 const TOOL_NAMES: Dictionary = {
@@ -241,6 +242,7 @@ uniform float width_ratio = 0.0020;
 uniform float min_width = 0.012;
 uniform float max_width = 0.048;
 uniform float pulse_speed = 0.0;
+uniform float pulse_min = 0.70;
 
 void vertex() {
 	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -256,7 +258,7 @@ void vertex() {
 }
 
 void fragment() {
-	float pulse = (pulse_speed > 0.05) ? (0.85 + 0.15 * sin(TIME * pulse_speed)) : 1.0;
+	float pulse = (pulse_speed > 0.05) ? mix(pulse_min, 1.0, 0.5 + 0.5 * sin(TIME * pulse_speed)) : 1.0;
 	ALBEDO = outline_color * (intensity * pulse);
 }
 """
@@ -408,7 +410,7 @@ func _exit_tree() -> void:
 	_machine_labels_by_group.clear()
 	_machine_labels_root = null
 
-func _make_hull_material(_mirrored: bool, col: Color, core_i: float, _halo_i: float, core_w: float, _halo_w: float, pulse: float, with_xray: bool, xray_i: float) -> ShaderMaterial:
+func _make_hull_material(_mirrored: bool, col: Color, core_i: float, _halo_i: float, core_w: float, _halo_w: float, pulse: float, with_xray: bool, xray_i: float, pulse_min: float = 0.70) -> ShaderMaterial:
 	# En Godot 4 (incluyendo GL Compatibility), el motor invierte automáticamente el culling de caras
 	# para mallas con determinante negativo; usar siempre cull_front evita pintar las caras frontales.
 	var hull_cull := "cull_front"
@@ -423,6 +425,7 @@ func _make_hull_material(_mirrored: bool, col: Color, core_i: float, _halo_i: fl
 	core_mat.set_shader_parameter("min_width", maxf(0.022, core_w * 3.8))
 	core_mat.set_shader_parameter("max_width", maxf(0.095, core_w * 17.5))
 	core_mat.set_shader_parameter("pulse_speed", pulse)
+	core_mat.set_shader_parameter("pulse_min", pulse_min)
 
 	if with_xray:
 		var xray_cull := "cull_back"
@@ -470,19 +473,26 @@ func _build_outline_materials() -> void:
 			"core_i": 2.10, "halo_i": 1.95,
 			"core_w": 0.0085, "halo_w": 0.0135,
 			"pulse": 7.5, "xray_i": 2.25
+		},
+		GlowState.BLUE_PULSE: {
+			"col": Color(0.14, 0.66, 1.0, 1.0),
+			"core_i": 2.05, "halo_i": 1.80,
+			"core_w": 0.0078, "halo_w": 0.0120,
+			"pulse": 5.2, "pulse_min": 0.10, "xray_i": 1.95
 		}
 	}
 	_mats.clear()
 	for st in cfgs.keys():
 		var c: Dictionary = cfgs[st]
+		var p_min: float = float(c.get("pulse_min", 0.70))
 		_mats[st] = {
 			0: {
-				0: _make_hull_material(false, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], false, c["xray_i"]),
-				1: _make_hull_material(false, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], true, c["xray_i"])
+				0: _make_hull_material(false, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], false, c["xray_i"], p_min),
+				1: _make_hull_material(false, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], true, c["xray_i"], p_min)
 			},
 			1: {
-				0: _make_hull_material(true, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], false, c["xray_i"]),
-				1: _make_hull_material(true, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], true, c["xray_i"])
+				0: _make_hull_material(true, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], false, c["xray_i"], p_min),
+				1: _make_hull_material(true, c["col"], c["core_i"], c["halo_i"], c["core_w"], c["halo_w"], c["pulse"], true, c["xray_i"], p_min)
 			}
 		}
 
@@ -1344,7 +1354,7 @@ func _is_group_occluded_by_wall(cam: Camera3D, space: PhysicsDirectSpaceState3D,
 	return blocked_hits >= 3
 
 func set_hovered_machine_group(group_key: String, target_node: Node = null) -> void:
-	var normalized := group_key if MACHINE_GROUPS.has(group_key) else ""
+	var normalized := group_key if (_is_post_tutorial() and MACHINE_GROUPS.has(group_key)) else ""
 	_hovered_target_node = target_node if normalized != "" else null
 	if _hovered_machine_group != normalized:
 		_hovered_machine_group = normalized
@@ -1354,12 +1364,15 @@ func get_hovered_machine_group() -> String:
 	return _hovered_machine_group
 
 func has_active_green_selection() -> bool:
-	if _hovered_machine_group == "":
+	if not _is_post_tutorial() or _hovered_machine_group == "":
 		return false
 	var st: int = int(_last_states.get(_hovered_machine_group, GlowState.HIDDEN))
 	return st == GlowState.GREEN or st == GlowState.RED_HOVER
 
 func update_hover_from_camera(cam: Camera3D, screen_pos: Vector2, max_dist: float = 30.0, player_rid: RID = RID()) -> String:
+	if not _is_post_tutorial():
+		set_hovered_machine_group("")
+		return ""
 	if cam == null or not is_inside_tree() or get_parent() == null:
 		set_hovered_machine_group("")
 		return ""
@@ -1622,7 +1635,7 @@ func _build_interaction_plan(group_key: String, tool_id: int) -> Dictionary:
 	return {"allowed": [3], "pref": 3, "label": label, "desc": "Intervenir equipo", "fault": false}
 
 func get_hover_selection_prompt(tool_id: int) -> String:
-	if _hovered_machine_group == "":
+	if not _is_post_tutorial() or _hovered_machine_group == "":
 		return ""
 	var plan := _build_interaction_plan(_hovered_machine_group, tool_id)
 	var pref: int = int(plan["pref"])
@@ -1633,7 +1646,7 @@ func get_hover_selection_prompt(tool_id: int) -> String:
 	return "[E] para inducir falla\n(%s)" % tool_name
 
 func induce_fault_for_hovered_machine(tool_id: int = 1) -> String:
-	if _hovered_machine_group == "":
+	if not _is_post_tutorial() or _hovered_machine_group == "":
 		return ""
 	var plan := _build_interaction_plan(_hovered_machine_group, tool_id)
 	var allowed: Array = plan["allowed"]
@@ -1722,6 +1735,9 @@ func induce_fault_for_hovered_machine(tool_id: int = 1) -> String:
 
 func refresh_highlights(force: bool = false) -> void:
 	_post_tutorial_active = _is_post_tutorial()
+	if not _post_tutorial_active:
+		_hovered_machine_group = ""
+		_hovered_target_node = null
 	var visible_groups := _get_visible_groups()
 
 	var tablet_open := _tablet_root != null and is_instance_valid(_tablet_root) and bool(_tablet_root.visible)
@@ -1739,10 +1755,15 @@ func refresh_highlights(force: bool = false) -> void:
 	var changed := force
 
 	for g in ALL_GROUPS:
-		var base_st: int = _compute_equipment_state(g) if visible_groups.has(g) else GlowState.HIDDEN
+		var base_st: int = GlowState.HIDDEN
+		if visible_groups.has(g):
+			if not _post_tutorial_active and g != "locker":
+				base_st = GlowState.BLUE_PULSE
+			else:
+				base_st = _compute_equipment_state(g)
 		base_states[g] = base_st
 		var disp_st := base_st
-		if base_st != GlowState.HIDDEN and g == _hovered_machine_group:
+		if _post_tutorial_active and base_st != GlowState.HIDDEN and g == _hovered_machine_group:
 			if base_st == GlowState.RED:
 				disp_st = GlowState.RED_HOVER
 			else:
@@ -1815,7 +1836,7 @@ func _apply_group_shells(group_key: String, state: int, is_occluded: bool) -> vo
 				shell.visible = false
 				continue
 		shell.visible = true
-		shell.visibility_range_end = 80.0 if (state == GlowState.GREEN or state == GlowState.RED or state == GlowState.RED_HOVER or state == GlowState.YELLOW) else 36.0
+		shell.visibility_range_end = 80.0 if (state == GlowState.GREEN or state == GlowState.RED or state == GlowState.RED_HOVER or state == GlowState.YELLOW or state == GlowState.BLUE_PULSE) else 36.0
 		var m_idx := 1 if bool(item.get("mirrored", false)) else 0
 		var x_idx := 1 if is_occluded else 0
 		shell.material_override = _mats[state][m_idx][x_idx]
@@ -1825,6 +1846,9 @@ func _apply_group_shells(group_key: String, state: int, is_occluded: bool) -> vo
 		if lbl != null and is_instance_valid(lbl):
 			lbl.visible = (state != GlowState.HIDDEN)
 			match state:
+				GlowState.BLUE_PULSE:
+					lbl.modulate = Color(0.42, 0.86, 1.30, 1.0)
+					lbl.outline_modulate = Color(0.02, 0.08, 0.22, 0.85)
 				GlowState.GREEN:
 					lbl.modulate = Color(0.35, 1.25, 0.65, 1.0)
 					lbl.outline_modulate = Color(0.01, 0.12, 0.04, 0.85)
