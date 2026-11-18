@@ -199,6 +199,7 @@ var _machine_card_tiles: Dictionary = {}
 var _filter_btns: Dictionary = {}
 var _active_filter: String = "ALL"
 var btn_close: Button = null
+var btn_emergency_stop: Button = null
 var btn_drive_mode: Button = null
 var lbl_academic_score: Label = null
 var lbl_cctv_status: Label = null
@@ -342,12 +343,21 @@ func _build_header_bar() -> void:
 	lbl_academic_score = TTheme.make_label("RETIE: 5.0/5.0", 11, TTheme.ACCENT_EMERALD)
 	score_pill.add_child(lbl_academic_score)
 
+	btn_emergency_stop = Button.new()
+	btn_emergency_stop.name = "BtnEmergencyStop"
+	btn_emergency_stop.text = "Parar Máquinas"
+	btn_emergency_stop.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	btn_emergency_stop.add_theme_font_size_override("font_size", 11)
+	TTheme.apply_btn_colors(btn_emergency_stop, Color(0.55, 0.10, 0.12), TTheme.ACCENT_RED)
+	btn_emergency_stop.pressed.connect(_on_emergency_stop_pressed)
+	hdr.add_child(btn_emergency_stop)
+
 	btn_close = Button.new()
 	btn_close.name = "BtnClose"
 	btn_close.text = "Salir [TAB]"
 	btn_close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	btn_close.add_theme_font_size_override("font_size", 11)
-	TTheme.apply_btn_colors(btn_close, Color(0.35, 0.08, 0.10), TTheme.ACCENT_RED)
+	TTheme.apply_btn_colors(btn_close, Color(0.14, 0.18, 0.24), TTheme.BORDER_SUBTLE)
 	btn_close.pressed.connect(_close_tablet)
 	hdr.add_child(btn_close)
 
@@ -860,6 +870,10 @@ func _connect_event_bus() -> void:
 		bus.notification_posted.connect(_on_bus_notification_posted)
 	if bus.has_signal("safety_violation_committed") and not bus.safety_violation_committed.is_connected(_on_safety_violation_warning):
 		bus.safety_violation_committed.connect(_on_safety_violation_warning)
+	if bus.has_signal("emergency_stop_triggered") and not bus.emergency_stop_triggered.is_connected(_on_emergency_stop_triggered):
+		bus.emergency_stop_triggered.connect(_on_emergency_stop_triggered)
+	if bus.has_signal("emergency_stop_reset") and not bus.emergency_stop_reset.is_connected(_on_emergency_stop_reset):
+		bus.emergency_stop_reset.connect(_on_emergency_stop_reset)
 
 func _input(event: InputEvent) -> void:
 	var focus_owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
@@ -941,6 +955,39 @@ func _on_toggle_drive_mode_pressed() -> void:
 		if btn_drive_mode != null:
 			btn_drive_mode.text = "Modo: %s" % new_mode
 		_append_blackbox("INFO", "Modo de accionamiento cambiado a %s." % new_mode)
+
+func _on_emergency_stop_pressed() -> void:
+	var sm = get_node_or_null("/root/SimulationManager")
+	if sm != null and sm.has_method("toggle_emergency_stop"):
+		var engaged: bool = sm.toggle_emergency_stop("TABLET_SCADA")
+		_sync_emergency_stop_ui(engaged)
+		if engaged:
+			_append_blackbox("CRITICAL", "Parada de emergencia accionada desde la Tablet Industrial.")
+		else:
+			_append_blackbox("OK", "Parada rearmada desde la Tablet Industrial. Máquinas reanudadas.")
+
+func _on_emergency_stop_triggered(_source: String) -> void:
+	_sync_emergency_stop_ui(true)
+
+func _on_emergency_stop_reset() -> void:
+	_sync_emergency_stop_ui(false)
+
+func _sync_emergency_stop_ui(engaged: bool) -> void:
+	if btn_emergency_stop != null:
+		if engaged:
+			btn_emergency_stop.text = "Reanudar Máquinas"
+			TTheme.apply_btn_colors(btn_emergency_stop, Color(0.06, 0.38, 0.24), TTheme.ACCENT_EMERALD)
+		else:
+			btn_emergency_stop.text = "Parar Máquinas"
+			TTheme.apply_btn_colors(btn_emergency_stop, Color(0.55, 0.10, 0.12), TTheme.ACCENT_RED)
+	if _iot_relay_lbl != null and engaged:
+		_iot_relay_lbl.text = "Relé CCM: ABIERTO (PARADA)"
+		_iot_relay_lbl.add_theme_color_override("font_color", TTheme.ACCENT_RED)
+	if _header_status_panel != null and _header_status_lbl != null:
+		if engaged:
+			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "PARADA DE EMERGENCIA", "CRITICAL")
+		elif _last_severity == "NORMAL":
+			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "SISTEMA NORMAL", "NORMAL")
 
 func _toggle_audio_mute() -> void:
 	_audio_muted = not _audio_muted
@@ -1038,7 +1085,14 @@ func _on_telemetry_vector_updated(t: Dictionary) -> void:
 	if btn_drive_mode != null:
 		btn_drive_mode.text = "Modo: %s" % d_mode
 	if _iot_relay_lbl != null:
-		_iot_relay_lbl.text = "Relé CCM: CERRADO · %s (%.0f Hz)" % [d_mode, freq]
+		var sm_tel = get_node_or_null("/root/SimulationManager")
+		var e_stopped: bool = sm_tel != null and sm_tel.has_method("is_emergency_stop_engaged") and sm_tel.is_emergency_stop_engaged()
+		if e_stopped:
+			_iot_relay_lbl.text = "Relé CCM: ABIERTO (PARADA)"
+			_iot_relay_lbl.add_theme_color_override("font_color", TTheme.ACCENT_RED)
+		else:
+			_iot_relay_lbl.text = "Relé CCM: CERRADO · %s (%.0f Hz)" % [d_mode, freq]
+			_iot_relay_lbl.add_theme_color_override("font_color", TTheme.ACCENT_EMERALD)
 	if not energy.is_empty():
 		var kwh_t := float(energy.get("specific_kwh_ton", 7.52))
 		var sav := float(energy.get("savings_pct", 28.4))
@@ -1286,6 +1340,9 @@ func _on_ai_alert_received(alert_data: Dictionary) -> void:
 func _sync_live_plant_context() -> void:
 	if not is_inside_tree():
 		return
+	var sm_sync = get_node_or_null("/root/SimulationManager")
+	if sm_sync != null and sm_sync.has_method("is_emergency_stop_engaged"):
+		_sync_emergency_stop_ui(sm_sync.is_emergency_stop_engaged())
 	var r := get_tree().root
 
 	# Sincronizar Operario jugador & PlantStaff reales en Tab 4 y Visores 3D

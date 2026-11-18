@@ -335,7 +335,7 @@ func _setup_controls_tips_card() -> void:
 	rtl.text = (
 		"[color=#7ee8c0][b]WASD[/b][/color] Mover  |  [color=#7ee8c0][b]Shift[/b][/color] Correr  |  [color=#7ee8c0][b]Espacio[/b][/color] Saltar\n"
 		+ "[color=#7ee8c0][b]E / Clic[/b][/color] Interactuar  |  [color=#7ee8c0][b]1-5 / Rueda[/b][/color] Herramientas\n"
-		+ "[color=#7ee8c0][b]TAB[/b][/color] Tablet  |  [color=#7ee8c0][b]X[/b][/color] E-Stop  |  [color=#7ee8c0][b]F11[/b][/color] Pantalla"
+		+ "[color=#7ee8c0][b]TAB[/b][/color] Tablet  |  [color=#7ee8c0][b]F11[/b][/color] Pantalla"
 	)
 	vb.add_child(rtl)
 

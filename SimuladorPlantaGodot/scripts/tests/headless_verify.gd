@@ -1585,6 +1585,28 @@ func _qa_10_main_scene_integration() -> void:
 							and notifs_after_w == notifs_before_w,
 							"Subtítulos de trabajadores deben mostrarse encima de la hotbar como '[Nombre] ([Cargo]):' sin duplicarse en NotificationStack"
 						) and ok
+						# Regresión: Sin tecla E-Stop ni [ESC] en RetieCourseModal; parada de máquinas únicamente desde Tablet Industrial
+						var course_m: Variant = hud_ctrl.get("_course_modal")
+						var course_close_btn := course_m.get("_btn_close_only") as Button if course_m != null else null
+						var ctrl_tips_body := hud_ctrl.find_child("ControlsTipsBody", true, false) as RichTextLabel
+						var tab_ctrl_es := inst.find_child("TabletRoot", true, false)
+						var btn_estop := tab_ctrl_es.find_child("BtnEmergencyStop", true, false) as Button if tab_ctrl_es != null else null
+						var sm_ref := root.get_node_or_null("/root/SimulationManager")
+						var estop_toggled_ok := false
+						if btn_estop != null and sm_ref != null and sm_ref.has_method("is_emergency_stop_engaged"):
+							var was_es: bool = sm_ref.is_emergency_stop_engaged()
+							tab_ctrl_es._on_emergency_stop_pressed()
+							var after_es: bool = sm_ref.is_emergency_stop_engaged()
+							tab_ctrl_es._on_emergency_stop_pressed()
+							var restored_es: bool = sm_ref.is_emergency_stop_engaged()
+							estop_toggled_ok = (after_es != was_es) and (restored_es == was_es)
+						ok = _assert_true(
+							not InputMap.has_action("e_stop")
+							and course_close_btn != null and course_close_btn.text == "Posponer"
+							and ctrl_tips_body != null and not ctrl_tips_body.text.contains("E-Stop")
+							and btn_estop != null and estop_toggled_ok,
+							"Parada de máquinas debe operarse desde BtnEmergencyStop en la Tablet (sin tecla e_stop ni [ESC] en Posponer)"
+						) and ok
 
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:

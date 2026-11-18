@@ -319,7 +319,7 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 				"rul_hours": rul_hours,
 				"root_cause": "Asimetría severa de fases (IUF=%.1f%%, THD=%.1f%%, V=%.0f V). Pérdida de fase L3 o falso contacto en breaker." % [iuf, thd, v_rms],
 				"prognosis": "Campo inverso a 120 Hz y sobrecorriente de 173%% en fases sanas. RUL crítica: %.0f h." % rul_hours,
-				"prescription": "Parada E-Stop [X], aplicar 5 Reglas de Oro LOTO en CCM y reparar conductor L3 o rearmar breaker.",
+				"prescription": "Detener máquinas desde la Tablet, aplicar 5 Reglas de Oro LOTO en CCM y reparar conductor L3 o rearmar breaker.",
 				"maintenance_steps": [
 					"1. Accionar parada segura y abrir seccionador CCM (Regla 1).",
 					"2. Bloquear LOTO [5] y medir ausencia de tensión 0.0 V [4] (Reglas 2-3).",

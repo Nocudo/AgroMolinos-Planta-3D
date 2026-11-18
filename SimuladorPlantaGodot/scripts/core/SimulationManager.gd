@@ -89,21 +89,41 @@ func toggle_drive_mode() -> String:
 		return induction_motor.vfd_controller.toggle_drive_mode()
 	return "VFD"
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("e_stop"):
-		if induction_motor != null:
-			if not induction_motor.is_e_stop_engaged:
-				EventBus.emergency_stop_triggered.emit("KEYBOARD_E_STOP")
-				EventBus.notification_posted.emit(
-					"PARADA DE EMERGENCIA ACCIONADA (E-STOP)",
-					"Desconexión inmediata de fuerza por el operario. Parada Cat 0.",
-					"error"
-				)
-			else:
-				EventBus.emergency_stop_reset.emit()
-				induction_motor.start_motor()
-				EventBus.notification_posted.emit(
-					"PARADA DE EMERGENCIA REARMADA",
-					"Circuito de seguridad habilitado. Motor reiniciando marcha suave.",
-					"info"
-				)
+func is_emergency_stop_engaged() -> bool:
+	return induction_motor != null and is_instance_valid(induction_motor) and bool(induction_motor.is_e_stop_engaged)
+
+func toggle_emergency_stop(source: String = "TABLET_SCADA") -> bool:
+	if induction_motor == null or not is_instance_valid(induction_motor):
+		return false
+	return set_emergency_stop(not bool(induction_motor.is_e_stop_engaged), source)
+
+func set_emergency_stop(engaged: bool, source: String = "TABLET_SCADA") -> bool:
+	if induction_motor == null or not is_instance_valid(induction_motor):
+		return false
+	var bus = get_node_or_null("/root/EventBus")
+	if engaged:
+		if bus != null and bus.has_signal("emergency_stop_triggered"):
+			bus.emergency_stop_triggered.emit(source)
+		else:
+			induction_motor.is_e_stop_engaged = true
+		if bus != null and bus.has_signal("notification_posted"):
+			bus.notification_posted.emit(
+				"PARADA DE EMERGENCIA",
+				"Máquinas detenidas desde la tablet.",
+				"error"
+			)
+		return true
+	if bus != null and bus.has_signal("emergency_stop_reset"):
+		bus.emergency_stop_reset.emit()
+	else:
+		induction_motor.is_e_stop_engaged = false
+	induction_motor.start_motor()
+	if induction_motor.has_method("set_vfd_target_frequency"):
+		induction_motor.set_vfd_target_frequency(60.0)
+	if bus != null and bus.has_signal("notification_posted"):
+		bus.notification_posted.emit(
+			"MÁQUINAS REANUDADAS",
+			"Parada rearmada desde la tablet.",
+			"info"
+		)
+	return false

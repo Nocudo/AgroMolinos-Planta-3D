@@ -210,7 +210,6 @@ func _build_ui() -> void:
 		{"k": "[E]", "d": "Interactuar / Reparar"},
 		{"k": "[TAB]", "d": "Tablet Industrial"},
 		{"k": "[1 - 5]", "d": "Herramientas"},
-		{"k": "[X]", "d": "Parada E-Stop"},
 		{"k": "[F11]", "d": "Pantalla Completa"}
 	]
 

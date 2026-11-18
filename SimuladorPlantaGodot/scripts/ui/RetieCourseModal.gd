@@ -30,7 +30,7 @@ const INFO_SLIDES: Array[Dictionary] = [
 	{
 		"badge": "MÓDULO 3 DE 3  •  MOLINO M-101, ATEX & TELEMETRÍA [TAB]",
 		"title": "3. Operación Segura, Polvo Combustible ATEX y Fallas",
-		"body": "• [b]Fallas físicas en campo[/b]: nunca repares conductores cortados (L3), pernos flojos ni tolva atascada T-301 con el motor energizado; pulsa [color=#ff7575][b][X] E-Stop[/b][/color] o abre el breaker primero.\n"
+		"body": "• [b]Fallas físicas en campo[/b]: nunca repares conductores cortados (L3), pernos flojos ni tolva atascada T-301 con el motor energizado; detén las máquinas desde la [color=#ff7575][b]Tablet Industrial[/b][/color] o abre el breaker primero.\n"
 		+ "• [b]Zona ATEX 22 (NFPA 61)[/b]: los ciclones generan polvo combustible de cereal; evita chispas y mantén la ventilación despejada.\n"
 		+ "• [b]Tablet Industrial [TAB][/b]: supervisa corrientes, temperatura Clase F, vibración ISO 10816-3, diagnóstico Edge IA (MLP/SVM), cámaras CCTV y ahorro energético VFD vs DOL."
 	}
@@ -60,7 +60,7 @@ const QUIZ_QUESTIONS: Array[Dictionary] = [
 		"options": [
 			"A) Ignorar el sonido y arrojar más maíz a la tolva",
 			"B) Quitar la alarma sin revisar la máquina",
-			"C) Detener/desenergizar con E-Stop o Breaker, aplicar LOTO y reparar"
+			"C) Detener las máquinas desde la Tablet o el Breaker, aplicar LOTO y reparar"
 		],
 		"correct": 2
 	}
@@ -205,7 +205,7 @@ func _build_ui() -> void:
 	foot.add_theme_constant_override("separation", 10)
 	vb.add_child(foot)
 
-	_btn_close_only = _make_btn("Posponer [ESC]", Color(0.18, 0.22, 0.28), Color(0.45, 0.55, 0.65), func(): close_modal(false))
+	_btn_close_only = _make_btn("Posponer", Color(0.18, 0.22, 0.28), Color(0.45, 0.55, 0.65), func(): close_modal(false))
 	foot.add_child(_btn_close_only)
 
 	var spacer := Control.new()
