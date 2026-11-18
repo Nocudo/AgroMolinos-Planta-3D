@@ -1449,6 +1449,12 @@ func _qa_10_main_scene_integration() -> void:
 						prod_flow.step_production(0.2)
 					ok = _assert_true(bag_log != null and bag_log.visible and bag_dock != null and bag_dock.visible,
 						"Con TruckBay2Mover parqueado en puerta izquierda los operarios deben cargar sacos al camión") and ok
+					prod_flow.truck_cycle_time = 0.11 * float(prod_flow.TRUCK_CYCLE_DURATION) # TILTING_UNLOAD en TruckIntakeMover
+					prod_flow.step_production(0.1)
+					var m_int := prod_flow.find_child("TruckIntakeMover", true, false) as Node3D
+					var t_piv := m_int.find_child("HydraulicTiltPivot", true, false) as Node3D if m_int != null else null
+					ok = _assert_true(t_piv != null and absf(t_piv.rotation.x) < 0.001,
+						"El semirremolque jamás debe separarse ni inclinarse sobre la quinta rueda (rot_x=%.4f)" % (t_piv.rotation.x if t_piv != null else -1.0)) and ok
 					prod_flow.truck_cycle_time = saved_ct
 					prod_flow.step_production(0.05)
 					var sample_stream := pvis_chk.get_node_or_null("StreamBeltTrituradora") as GPUParticles3D if pvis_chk != null else null

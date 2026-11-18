@@ -1142,11 +1142,12 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 	elif u < u_dock_end:
 		phase = "TILTING_UNLOAD"
 		var local_p := (u - u_weigh_end) / maxf(u_dock_end - u_weigh_end, 0.001)
-		tilt_deg = 45.0 * clampf(sin(local_p * PI) * 1.35, 0.0, 1.0) if is_intake else 0.0
-		engine_pitch = 1.02 if is_intake else 0.88
-		engine_vol = -4.5 if is_intake else -7.0
+		# El semirremolque contenedor permanece siempre acoplado a la quinta rueda (nunca se levanta ni se separa)
+		tilt_deg = 0.0
+		engine_pitch = 0.92 if is_intake else 0.88
+		engine_vol = -5.5 if is_intake else -7.0
 		spotter_anim = "interact" if sin(local_p * PI * 2.0) > 0.0 else "inspect"
-		spotter_msg = "Estamos descargando el grano hacia la tolva, mantén distancia mientras baja la carga." if is_intake else "Estamos subiendo las estibas de sacos de 50 kilos al camión de despacho."
+		spotter_msg = "Estamos descargando el grano hacia la tolva, mantén distancia en la bahía." if is_intake else "Estamos subiendo las estibas de sacos de 50 kilos al camión de despacho."
 	elif u < u_exit_end:
 		phase = "EXITING_STATION"
 		route_s = _trapezoid_u((u - u_dock_end) / maxf(u_exit_end - u_dock_end, 0.001), 0.10 if is_west_box else 0.12)
@@ -1259,7 +1260,8 @@ func _update_single_truck_rig(rig: Dictionary, u: float, delta: float, is_intake
 		visual.rotation.z = cur_r
 
 	if tilt_pivot != null and is_instance_valid(tilt_pivot):
-		tilt_pivot.rotation.x = deg_to_rad(tilt_deg * 0.18)
+		# Mantener la caja del semirremolque nivelada y acoplada firmemente sobre la quinta rueda
+		tilt_pivot.rotation.x = 0.0
 
 	# Giro realista de ruedas proporcional a distancia recorrida y dirección de ruedas delanteras
 	var steer_target := clampf(yaw_vel * 0.55 * (-1.0 if reverse_mode else 1.0), -deg_to_rad(25.0), deg_to_rad(25.0))

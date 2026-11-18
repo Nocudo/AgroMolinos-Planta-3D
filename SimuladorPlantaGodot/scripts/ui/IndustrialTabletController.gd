@@ -999,7 +999,7 @@ func _on_safety_score_updated(current_score: float, history: Array) -> void:
 func _on_production_metrics_updated(metrics: Dictionary) -> void:
 	_last_prod = metrics
 	_set_tile("prod", "%.0f kg" % float(metrics.get("total_grain_milled_kg", 0.0)), "%d sacos 50 kg" % int(metrics.get("bags_50kg_produced", 0)), "NORMAL")
-	_set_tile("truck", str(metrics.get("truck_cycle_phase", "ESPERA")), "%d pallets · %.0f°" % [int(metrics.get("pallets_completed", 0)), float(metrics.get("truck_tilt_deg", 0.0))], "NORMAL")
+	_set_tile("truck", str(metrics.get("truck_cycle_phase", "ESPERA")), "%d pallets" % int(metrics.get("pallets_completed", 0)), "NORMAL")
 	_sync_machine_telemetry_tiles()
 	_sync_3d_card_huds()
 
