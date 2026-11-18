@@ -174,7 +174,7 @@ Operar y supervisar la línea de molienda de granos (10 HP, 460 V) manteniendo p
 
 QUÉ PUEDES HACER:
 • Controlar el arranque (VFD o DOL), la frecuencia y la carga del motor desde la Tablet Industrial, además de revisar oscilogramas, Edge AI, cámaras CCTV y tu nota de seguridad.
-• Intervenir este tablero CCM, aplicar las 5 Reglas de Oro LOTO e inducir o reparar fallas físicas directamente en los equipos (cables, tolva, pernos, rejilla de ventilación y breakers).
+• Intervenir este tablero CCM, aplicar las 5 Reglas de Oro LOTO e inducir o reparar fallas físicas en los equipos (recuerda detener primero las máquinas desde la tablet antes de reparar).
 • Recorrer libremente la planta respetando siempre el pasillo peatonal verde sin cruzar líneas amarillas ni rojas.
 
 CÓMO HACERLO:

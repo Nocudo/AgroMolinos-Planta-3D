@@ -1381,6 +1381,7 @@ func _qa_10_main_scene_integration() -> void:
 				player.global_position = Vector3(-18.69, 0.85, 39.4)
 				var close_reply: String = guide.interact(1)
 				var b_greet_end := hud_ctrl.find_child("BriefingGreeting", true, false) as Label
+				var b_secs_end := hud_ctrl.find_child("BriefingSectionsBox", true, false) as VBoxContainer
 				ok = _assert_true(
 					close_reply != ""
 					and bool(tut_node.visited_stations.get(last_sid, false))
@@ -1388,8 +1389,10 @@ func _qa_10_main_scene_integration() -> void:
 					and b_greet_end != null
 					and b_greet_end.text.contains("TU LABOR")
 					and b_greet_end.text.contains("QUÉ PUEDES HACER")
-					and b_greet_end.text.contains("CÓMO HACERLO"),
-					"Al cerrar el recorrido frente al tablero eléctrico, el SST debe explicar la labor, qué se puede hacer y cómo hacerlo"
+					and b_greet_end.text.contains("CÓMO HACERLO")
+					and b_greet_end.text.contains("\n")
+					and b_secs_end != null and b_secs_end.visible and b_secs_end.get_child_count() == 3,
+					"Al cerrar el recorrido frente al tablero eléctrico, el SST debe explicar la labor en 3 tarjetas separadas con saltos de línea"
 				) and ok
 				hud_ctrl.close_briefing_panel()
 

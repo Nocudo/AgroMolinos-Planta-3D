@@ -36,6 +36,7 @@ var _dialogue_timer: float = 0.0
 var briefing_overlay: ColorRect = null
 var _briefing_title: Label = null
 var _briefing_greeting: Label = null
+var _briefing_sections_box: VBoxContainer = null
 var _btn_close_briefing: Button = null
 var _btn_course_sst: Button = null
 var _btn_skip_briefing: Button = null
@@ -388,6 +389,25 @@ func _sanitize_plain_text(raw: String) -> String:
 	while "  " in stripped:
 		stripped = stripped.replace("  ", " ")
 	return stripped.strip_edges()
+
+func _sanitize_multiline_text(raw: String) -> String:
+	var lines := raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+	var out: Array[String] = []
+	for ln in lines:
+		var s := ln.strip_edges()
+		if s == "":
+			out.append("")
+			continue
+		var stripped := ""
+		for i in range(s.length()):
+			var ch := s[i]
+			var code := s.unicode_at(i)
+			if (code >= 32 and code <= 126) or (code >= 160 and code <= 255) or code in [0x2013, 0x2014, 0x2022]:
+				stripped += ch
+		while "  " in stripped:
+			stripped = stripped.replace("  ", " ")
+		out.append(stripped.strip_edges())
+	return "\n".join(out).strip_edges()
 
 func _normalize_alert_key(raw: String) -> String:
 	var s := _sanitize_plain_text(raw).to_lower()
@@ -1035,21 +1055,32 @@ func show_briefing_panel(title: String, greeting: String, resume_tour_on_close: 
 	var is_long_info := (not resume_tour_on_close) and greeting.length() > 140
 	var b_card := briefing_overlay.find_child("BriefingCard", true, false) as PanelContainer
 	if b_card != null:
-		b_card.custom_minimum_size = Vector2(640, 0) if is_long_info else Vector2(460, 0)
+		b_card.custom_minimum_size = Vector2(680, 0) if is_long_info else Vector2(460, 0)
 	if _briefing_title != null:
 		_briefing_title.text = (
 			"Bienvenido a Agromolinos del Valle"
 			if resume_tour_on_close
 			else _sanitize_plain_text(title)
 		)
+	var clean_multi := _sanitize_multiline_text(greeting)
 	if _briefing_greeting != null:
 		_briefing_greeting.text = (
 			"¿Deseas realizar el curso SST?"
 			if resume_tour_on_close
-			else _sanitize_plain_text(greeting)
+			else clean_multi
 		)
 		_briefing_greeting.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if is_long_info else HORIZONTAL_ALIGNMENT_CENTER
 		_briefing_greeting.add_theme_font_size_override("font_size", 14 if is_long_info else 15)
+		_briefing_greeting.add_theme_constant_override("line_spacing", 5 if is_long_info else 3)
+	var built_sections := false
+	if _briefing_sections_box != null:
+		for ch in _briefing_sections_box.get_children():
+			ch.queue_free()
+		if is_long_info and clean_multi.contains("\n"):
+			built_sections = _populate_briefing_sections(clean_multi)
+		_briefing_sections_box.visible = built_sections
+	if _briefing_greeting != null:
+		_briefing_greeting.visible = not built_sections
 	if _btn_course_sst != null:
 		_btn_course_sst.visible = resume_tour_on_close
 		_btn_course_sst.text = "Sí"
@@ -1132,6 +1163,13 @@ func _setup_briefing_overlay() -> void:
 	_briefing_greeting.add_theme_color_override("font_color", Color(0.84, 0.90, 0.96, 1.0))
 	vbox.add_child(_briefing_greeting)
 
+	_briefing_sections_box = VBoxContainer.new()
+	_briefing_sections_box.name = "BriefingSectionsBox"
+	_briefing_sections_box.visible = false
+	_briefing_sections_box.mouse_filter = Control.MOUSE_FILTER_STOP
+	_briefing_sections_box.add_theme_constant_override("separation", 10)
+	vbox.add_child(_briefing_sections_box)
+
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 10)
 	footer.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1195,6 +1233,76 @@ func _on_retie_course_finished(passed: bool, score: int, total: int) -> void:
 	var bus = get_node_or_null("/root/EventBus")
 	if bus != null and bus.has_signal("sst_course_completed_event"):
 		bus.sst_course_completed_event.emit(passed, score, total)
+
+func _populate_briefing_sections(clean_multi: String) -> bool:
+	if _briefing_sections_box == null:
+		return false
+	var sections: Array[Dictionary] = []
+	var cur_sec: Dictionary = {}
+	for raw_ln in clean_multi.split("\n"):
+		var ln := raw_ln.strip_edges()
+		if ln == "":
+			continue
+		if ln.ends_with(":") and ln.length() <= 36 and ln == ln.to_upper():
+			if not cur_sec.is_empty():
+				sections.append(cur_sec)
+			cur_sec = {"title": ln.trim_suffix(":"), "items": []}
+		else:
+			if cur_sec.is_empty():
+				cur_sec = {"title": "", "items": []}
+			(cur_sec["items"] as Array).append(ln)
+	if not cur_sec.is_empty():
+		sections.append(cur_sec)
+	if sections.size() < 2:
+		return false
+
+	var accents: Array[Color] = [
+		Color(0.24, 0.80, 0.98, 1.0),
+		Color(0.98, 0.74, 0.22, 1.0),
+		Color(0.20, 0.86, 0.58, 1.0)
+	]
+	for s_idx in range(sections.size()):
+		var sec: Dictionary = sections[s_idx]
+		var col: Color = accents[s_idx % accents.size()]
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		var st := StyleBoxFlat.new()
+		st.bg_color = Color(0.03, 0.06, 0.11, 0.90)
+		st.border_color = Color(col.r, col.g, col.b, 0.62)
+		st.border_width_left = 3
+		st.border_width_top = 1
+		st.border_width_right = 1
+		st.border_width_bottom = 1
+		st.set_corner_radius_all(7)
+		st.content_margin_left = 14.0
+		st.content_margin_right = 14.0
+		st.content_margin_top = 10.0
+		st.content_margin_bottom = 10.0
+		card.add_theme_stylebox_override("panel", st)
+		_briefing_sections_box.add_child(card)
+
+		var svb := VBoxContainer.new()
+		svb.add_theme_constant_override("separation", 6)
+		card.add_child(svb)
+
+		var stitle := str(sec.get("title", ""))
+		if stitle != "":
+			var hl := Label.new()
+			hl.text = stitle
+			hl.add_theme_font_size_override("font_size", 12)
+			hl.add_theme_color_override("font_color", col)
+			svb.add_child(hl)
+
+		for it in (sec.get("items", []) as Array):
+			var il := Label.new()
+			il.text = str(it)
+			il.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			il.add_theme_font_size_override("font_size", 13)
+			il.add_theme_constant_override("line_spacing", 3)
+			il.add_theme_color_override("font_color", Color(0.89, 0.93, 0.98, 1.0))
+			svb.add_child(il)
+	return true
 
 func _build_briefing_column(header_txt: String, body_bbcode: String) -> PanelContainer:
 	var sub := PanelContainer.new()
