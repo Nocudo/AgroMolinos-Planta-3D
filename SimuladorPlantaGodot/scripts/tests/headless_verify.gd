@@ -2141,6 +2141,63 @@ func _qa_10_main_scene_integration() -> void:
 				"Tarjetas fisiológicas IEC 60479-1 deben cambiar dinámicamente de color verde -> cian/ámbar/naranja -> rojo según probabilidad"
 			) and ok
 
+			# Regresión: Jefe de Planta (Ing. Diana Morales) debe reportar estado actual de la planta y fallas activas en vivo
+			var plant_mgr := inst.find_child("WorkerPlantManager", true, false)
+			var sim_mgr := root.get_node_or_null("SimulationManager")
+			var hud_m := inst.find_child("HUDController", true, false)
+			var glow_m := inst.find_child("InteractableGlowController", true, false)
+			var bolt_m := inst.find_child("MechanicalBolt", true, false)
+			if plant_mgr != null and sim_mgr != null and hud_m != null:
+				if sim_mgr.has_method("set_emergency_stop"):
+					sim_mgr.set_emergency_stop(false, "QA_MGR_TEST")
+				if sim_mgr.has_method("start_plant_machines"):
+					sim_mgr.start_plant_machines()
+				if bolt_m != null and bool(bolt_m.get("is_loosened")):
+					bolt_m.set_loosened(false)
+				if glow_m != null:
+					var pf_clean = glow_m.get("_process_faults")
+					if pf_clean is Dictionary:
+						(pf_clean as Dictionary).clear()
+				var rep_ok: String = String(plant_mgr.interact(1))
+				var spk_lbl := hud_m.find_child("DialogueSpeaker", true, false) as Label
+				var body_lbl := hud_m.find_child("DialogueBody", true, false) as Label
+				ok = _assert_true(
+					rep_ok.contains("en operación") and rep_ok.contains("Fallas activas: Ninguna") and spk_lbl != null and spk_lbl.text.contains("Diana Morales") and body_lbl != null and body_lbl.text.contains("\n"),
+					"Jefe de Planta debe reportar operación nominal sin fallas en el panel de diálogo (%s)" % rep_ok
+				) and ok
+
+				# Inducir 2 fallas (perno mecánico + proceso ciclones) y verificar reporte en vivo
+				if bolt_m != null:
+					bolt_m.set_loosened(true)
+				if glow_m != null:
+					var pf_d = glow_m.get("_process_faults")
+					if pf_d is Dictionary:
+						(pf_d as Dictionary)["cyclone"] = true
+				var rep_faults: String = String(plant_mgr.interact(1))
+				ok = _assert_true(
+					rep_faults.contains("Fallas activas (2):") and rep_faults.contains("Pernos flojos") and rep_faults.contains("10 · Ciclones Clasificadores") and rep_faults.contains("Detén primero las máquinas"),
+					"Jefe de Planta debe enumerar las fallas activas reales y recordar detener máquinas antes de reparar (%s)" % rep_faults
+				) and ok
+
+				# Activar parada de emergencia y confirmar reporte de estado detenido listo para reparar
+				if sim_mgr.has_method("set_emergency_stop"):
+					sim_mgr.set_emergency_stop(true, "QA_MGR_TEST")
+				var rep_estop: String = String(plant_mgr.interact(1))
+				ok = _assert_true(
+					rep_estop.contains("en parada de emergencia") and rep_estop.contains("Fallas activas (2):") and rep_estop.contains("puedes reparar de forma segura"),
+					"Jefe de Planta debe reportar parada de emergencia y confirmar que ya es seguro reparar (%s)" % rep_estop
+				) and ok
+
+				# Restaurar estado limpio
+				if bolt_m != null:
+					bolt_m.set_loosened(false)
+				if glow_m != null:
+					var pf_r = glow_m.get("_process_faults")
+					if pf_r is Dictionary:
+						(pf_r as Dictionary).erase("cyclone")
+				if sim_mgr.has_method("set_emergency_stop"):
+					sim_mgr.set_emergency_stop(false, "QA_MGR_TEST")
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

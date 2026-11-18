@@ -664,8 +664,173 @@ func interact(_tool_id: int = 1) -> String:
 		bus.induction_briefing_requested.emit(title, msg, pending_start)
 		return msg
 
+	if is_plant_manager():
+		if player_ref == null and is_inside_tree():
+			player_ref = get_tree().root.find_child("PlayerOperator", true, false) as Node3D
+		if player_ref != null and is_instance_valid(player_ref):
+			_face_point(player_ref.global_position, 1.0)
+		var report := build_plant_manager_report()
+		var hud_mgr = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+		if hud_mgr != null and hud_mgr.has_method("show_npc_dialogue"):
+			hud_mgr.show_npc_dialogue(get_subtitle_header(), report, 12.0)
+		return report
+
 	var hud_node = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
 	if hud_node != null and hud_node.has_method("show_npc_dialogue"):
 		hud_node.show_npc_dialogue(get_subtitle_header(), worker_dialogue, 7.0)
 
 	return worker_dialogue
+
+func is_plant_manager() -> bool:
+	return (not is_tour_guide) and ("manager" in str(name).to_lower() or "jefe de planta" in worker_role_name.to_lower())
+
+func get_active_plant_faults() -> Array[String]:
+	var faults: Array[String] = []
+	if not is_inside_tree():
+		return faults
+	var root := get_tree().root
+	var sm := get_node_or_null("/root/SimulationManager")
+	var motor = sm.get("induction_motor") if sm != null else null
+	if motor == null:
+		motor = root.find_child("InductionMotor", true, false)
+
+	# 1. Fallas físicas directas en equipos de campo y tablero CCM
+	var cable := root.find_child("PhysicalCableConductor", true, false)
+	if cable != null and bool(cable.get("is_cut")):
+		var ph := str(cable.get("phase_id"))
+		faults.append("Conductor %s cortado en 06 · Motor 10 HP" % (ph if ph != "" else "L3"))
+	elif cable == null and motor != null and bool(motor.get("is_phase_l3_cut")):
+		faults.append("Fase L3 abierta en 06 · Motor 10 HP")
+
+	var breaker := root.find_child("PhysicalBreakerPanel", true, false)
+	if breaker != null:
+		var b_state: int = int(breaker.get("breaker_state"))
+		var l3_on: bool = bool(breaker.get("l3_active"))
+		if b_state == 1 or (not l3_on and b_state != 2):
+			faults.append("Breaker L3 abierto en CCM (bajón de tensión 340 V)")
+
+	var hopper := root.find_child("PhysicalHopperFeeder", true, false)
+	if hopper != null:
+		var h_jam: bool = bool(hopper.get("is_jammed"))
+		var h_gate: float = float(hopper.get("manual_gate_opening_pct"))
+		if h_jam or h_gate > 120.0:
+			faults.append("Atasco/sobrealimentación en 03 · Tolva de Recepción (%.0f%%)" % h_gate)
+	elif motor != null and bool(motor.get("is_mechanical_jammed")):
+		faults.append("Atasco mecánico en 03 · Tolva de Recepción")
+
+	var bolt := root.find_child("MechanicalBolt", true, false)
+	if bolt != null and bool(bolt.get("is_loosened")):
+		faults.append("Pernos flojos en bancada de 06 · Motor 10 HP")
+	elif bolt == null and motor != null and bool(motor.get("is_bolts_loosened")):
+		faults.append("Pernos flojos en bancada de 06 · Motor 10 HP")
+
+	var vent := root.find_child("VentilationCover", true, false)
+	if vent != null and bool(vent.get("is_blocked")):
+		faults.append("Rejilla de ventilación obstruida en 06 · Motor 10 HP")
+	elif vent == null and motor != null and bool(motor.get("is_cooling_blocked")):
+		faults.append("Ventilación forzada obstruida en 06 · Motor 10 HP")
+
+	# 2. Fallas de proceso activas en las demás máquinas del tren industrial (15 equipos)
+	var glow := root.find_child("InteractableGlowController", true, false)
+	if glow != null:
+		var pfaults = glow.get("_process_faults")
+		if pfaults is Dictionary:
+			var specs: Dictionary = InteractableGlowController.PROCESS_FAULT_SPECS
+			var names: Dictionary = InteractableGlowController.MACHINE_DISPLAY_NAMES
+			var ordered: Array[String] = InteractableGlowController.ORDERED_15_MACHINES
+			for grp in ordered:
+				if not bool((pfaults as Dictionary).get(grp, false)):
+					continue
+				var f_title := ""
+				if specs.has(grp):
+					var sp = specs[grp]
+					if sp is Dictionary:
+						f_title = str((sp as Dictionary).get("fault_title", ""))
+				var m_name := str(names.get(grp, grp))
+				if f_title != "":
+					faults.append("%s (%s)" % [f_title, m_name])
+				else:
+					faults.append("Falla activa en %s" % m_name)
+
+	return faults
+
+func build_plant_manager_report() -> String:
+	var root := get_tree().root if is_inside_tree() else null
+	var sm := get_node_or_null("/root/SimulationManager")
+	var motor = sm.get("induction_motor") if sm != null else null
+	if motor == null and root != null:
+		motor = root.find_child("InductionMotor", true, false)
+
+	var is_loto: bool = bool(motor.get("is_loto_isolated")) if motor != null else false
+	var is_estop: bool = bool(motor.get("is_e_stop_engaged")) if motor != null else false
+	var is_running: bool = bool(motor.get("is_running")) if motor != null else false
+	var machines_stopped: bool = (is_loto or is_estop or not is_running)
+	if sm != null and sm.has_method("are_machines_stopped"):
+		machines_stopped = bool(sm.are_machines_stopped())
+
+	var state_label := "detenida esperando arranque"
+	if is_loto:
+		state_label = "aislada bajo bloqueo LOTO a 0 V"
+	elif is_estop:
+		state_label = "en parada de emergencia"
+	elif is_running:
+		state_label = "en operación"
+
+	var mode_str := "VFD"
+	if motor != null and motor.get("vfd_controller") != null:
+		var vc = motor.get("vfd_controller")
+		if vc != null and "drive_mode" in vc:
+			mode_str = str(vc.get("drive_mode"))
+
+	var rpm: int = int(round(float(motor.get("rotor_speed_rpm")))) if motor != null else 0
+	var volt: float = float(motor.get("current_voltage")) if motor != null else 0.0
+	var cur_a: float = float(motor.get("current_l1")) if motor != null else 0.0
+	var cur_b: float = float(motor.get("current_l2")) if motor != null else 0.0
+	var cur_c: float = float(motor.get("current_l3")) if motor != null else 0.0
+	var max_i: float = maxf(cur_a, maxf(cur_b, cur_c))
+	if max_i <= 0.01 and motor != null:
+		max_i = float(motor.get("current_rms"))
+	var temp_c: float = float(motor.get("winding_temp_c")) if motor != null else 28.0
+	var vib: float = float(motor.get("vibration_rms_mm_s")) if motor != null else 0.0
+	if machines_stopped:
+		volt = 0.0 if (is_loto or is_estop) else volt
+		max_i = 0.0
+
+	var flow_pct: int = 0
+	var bags_count: int = 0
+	if root != null:
+		var prod := root.find_child("ProductionChainFlow", true, false)
+		if prod != null and prod.has_method("get_production_metrics"):
+			var pm: Dictionary = prod.get_production_metrics()
+			bags_count = int(pm.get("bags_50kg_produced", 0))
+			flow_pct = int(round(float(pm.get("line_flow_efficiency", 0.0)) * 100.0))
+			if machines_stopped:
+				flow_pct = 0
+
+	var retie_score: float = 5.0
+	if root != null:
+		var sc := root.find_child("SafetyEvaluationScorecard", true, false)
+		if sc != null and "score" in sc:
+			retie_score = float(sc.get("score"))
+
+	var status_line := "Estado actual: Planta %s (%s · %d RPM · %.0f V · %.1f A · %.0f °C · %.1f mm/s) | Flujo %d%% · %d sacos · RETIE %.1f/5.0." % [
+		state_label, mode_str, rpm, volt, max_i, temp_c, vib, flow_pct, bags_count, retie_score
+	]
+
+	var active_faults := get_active_plant_faults()
+	var faults_line := ""
+	if active_faults.is_empty():
+		if is_loto:
+			faults_line = "Fallas activas: Ninguna. Cuando termines la intervención, retira LOTO en el CCM para reanudar."
+		elif is_estop:
+			faults_line = "Fallas activas: Ninguna. Puedes reanudar las máquinas desde la tablet (TAB)."
+		elif not is_running:
+			faults_line = "Fallas activas: Ninguna. Completa el recorrido o enciende las máquinas desde la tablet (TAB)."
+		else:
+			faults_line = "Fallas activas: Ninguna. Todos los equipos operan dentro de parámetros nominales."
+	else:
+		var joined := "; ".join(active_faults)
+		var guidance := "Las máquinas ya están detenidas; puedes reparar de forma segura." if machines_stopped else "Detén primero las máquinas en la tablet (TAB) antes de reparar."
+		faults_line = "Fallas activas (%d): %s. %s" % [active_faults.size(), joined, guidance]
+
+	return status_line + "\n" + faults_line

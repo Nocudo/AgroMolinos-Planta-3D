@@ -628,7 +628,7 @@ func show_npc_dialogue(speaker: String, dialogue_text: String, duration: float =
 	if _dialogue_speaker != null:
 		_dialogue_speaker.text = clean_spk
 	if _dialogue_body != null:
-		_dialogue_body.text = _sanitize_plain_text(dialogue_text)
+		_dialogue_body.text = _sanitize_multiline_text(dialogue_text)
 	_dialogue_panel.visible = true
 	_dialogue_timer = duration
 
@@ -718,8 +718,8 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_dialogue_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_dialogue_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_dialogue_panel.offset_left = 410.0
-	_dialogue_panel.offset_right = -410.0
+	_dialogue_panel.offset_left = 340.0
+	_dialogue_panel.offset_right = -340.0
 	_dialogue_panel.offset_bottom = -152.0
 	_dialogue_panel.offset_top = -214.0
 	var st := StyleBoxFlat.new()

@@ -410,7 +410,7 @@ func _handle_interaction() -> void:
 			var seq_before := _get_hud_notification_seq()
 			var result_msg: String = close_target.interact(active_tool_id)
 			var bus = get_node_or_null("/root/EventBus")
-			if bus != null and result_msg != "" and _get_hud_notification_seq() == seq_before and bus.has_signal("notification_posted"):
+			if bus != null and result_msg != "" and not (close_target is WorkerNPC) and _get_hud_notification_seq() == seq_before and bus.has_signal("notification_posted"):
 				bus.notification_posted.emit("Acción", result_msg, "info")
 		return
 
@@ -433,7 +433,7 @@ func _handle_interaction() -> void:
 			var seq_before2 := _get_hud_notification_seq()
 			var result_msg2: String = close_target.interact(active_tool_id)
 			var bus2 = get_node_or_null("/root/EventBus")
-			if bus2 != null and result_msg2 != "" and _get_hud_notification_seq() == seq_before2 and bus2.has_signal("notification_posted"):
+			if bus2 != null and result_msg2 != "" and not (close_target is WorkerNPC) and _get_hud_notification_seq() == seq_before2 and bus2.has_signal("notification_posted"):
 				bus2.notification_posted.emit("Acción", result_msg2, "info")
 		return
 
