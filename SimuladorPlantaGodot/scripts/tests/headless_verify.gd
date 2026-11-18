@@ -704,10 +704,13 @@ func _qa_10_main_scene_integration() -> void:
 		ok = _assert_true(tut_node != null and hud_ctrl != null and guide != null,
 			"Faltan nodos TutorialInductionManager/HUDController/WorkerSafetyAuditor para validar pausa inicial") and ok
 		if tut_node != null and hud_ctrl != null and guide != null:
-			ok = _assert_true(bool(tut_node.is_briefing_active) and hud_ctrl.is_briefing_visible(),
-				"La pausa inicial explicando controles y mecánicas debe abrirse al entrar en Portería") and ok
-			ok = _assert_true(self.paused and not bool(guide.guide_has_target),
-				"El juego y el guía SST deben esperar pausados en Portería antes de caminar") and ok
+			ok = _assert_true(not bool(tut_node.is_briefing_active) and not hud_ctrl.is_briefing_visible() and not self.paused,
+				"El menú de bienvenida no debe abrirse solo al llegar; debe requerir hablar con el Supervisor SST") and ok
+			ok = _assert_true(not bool(guide.guide_has_target) and guide.can_interact(),
+				"El guía SST debe esperar listo en Portería para que el jugador hable con él") and ok
+			guide.interact(1)
+			ok = _assert_true(bool(tut_node.is_briefing_active) and hud_ctrl.is_briefing_visible() and self.paused,
+				"Hablar con el Supervisor SST en Portería debe abrir el menú de bienvenida") and ok
 			ok = _assert_true(hud_ctrl.find_child("BriefingCard", true, false) != null,
 				"Falta BriefingCard con explicación de controles y mecánicas") and ok
 			hud_ctrl.close_briefing_panel()
@@ -1083,8 +1086,11 @@ func _qa_10_main_scene_integration() -> void:
 			player.global_position = room_pos + Vector3(0.2, 0.0, 0.8)
 			tut_node._process(0.05)
 			var c_modal = hud_ctrl.get("_course_modal")
+			ok = _assert_true(c_modal != null and not bool(c_modal.visible),
+				"Al llegar a la Sala de Reuniones NO debe abrirse RetieCourseModal automáticamente") and ok
+			guide.interact(1)
 			ok = _assert_true(c_modal != null and bool(c_modal.visible),
-				"Al llegar a la Sala de Reuniones debe abrirse RetieCourseModal") and ok
+				"Al hablar con el Supervisor SST en Sala de Reuniones debe abrirse RetieCourseModal") and ok
 			if c_modal != null:
 				c_modal._on_primary_pressed() # módulo 2
 				c_modal._on_primary_pressed() # módulo 3

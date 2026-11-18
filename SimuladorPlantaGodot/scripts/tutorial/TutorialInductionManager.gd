@@ -308,24 +308,23 @@ func _post_welcome_message() -> void:
 		return
 	_welcome_shown = true
 	visit_station(1)
-	is_briefing_active = true
+	is_briefing_active = false
 	_rebuild_floor_guide_line()
+	if _guide_worker != null and is_instance_valid(_guide_worker):
+		_guide_worker.set("guide_has_target", false)
+		_guide_worker.set("is_explaining", false)
+		_guide_worker.set("has_arrived_and_explained", true)
 	var bus = get_node_or_null("/root/EventBus")
 	if bus != null:
 		if bus.has_signal("induction_briefing_closed") and not bus.induction_briefing_closed.is_connected(_on_briefing_closed):
 			bus.induction_briefing_closed.connect(_on_briefing_closed)
-		if bus.has_signal("induction_briefing_requested"):
-			bus.induction_briefing_requested.emit(
-				"Bienvenido a Agromolinos del Valle",
-				"¿Deseas realizar el curso SST?",
-				true
-			)
-		elif bus.has_signal("notification_posted"):
-			bus.notification_posted.emit(
-				"PORTERÍA",
-				"Sigue al Inspector SST a Vestidores.",
-				"info"
-			)
+	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+	if hud != null and hud.has_method("show_npc_dialogue"):
+		hud.show_npc_dialogue(
+			SST_SPEAKER_HEADER,
+			"¡Hola! Bienvenido a Agromolinos del Valle. Acércate y habla conmigo para comenzar.",
+			8.0
+		)
 
 func _setup_course_desk_marker() -> void:
 	_course_desk_node = get_node_or_null("CourseDeskInteractable")
@@ -354,7 +353,7 @@ func _start_sst_course_walk() -> void:
 	sst_course_active = true
 	sst_course_completed = false
 	_course_modal_auto_opened = false
-	_set_course_desk_active(true)
+	_set_course_desk_active(false)
 	if _guide_worker != null and is_instance_valid(_guide_worker) and _guide_worker.has_method("set_guide_route"):
 		var wps: Array[Vector3] = []
 		for p in MEETING_COURSE_ROUTE:
@@ -495,11 +494,18 @@ func _process(delta: float) -> void:
 				and Vector2(_guide_worker.global_position.x - MEETING_ROOM_POS.x, _guide_worker.global_position.z - MEETING_ROOM_POS.z).length() <= 2.6
 			)
 		)
-		if not _course_modal_auto_opened and g_arrived and flat_m <= 2.5 and dy_m <= 0.45:
+		if not _course_modal_auto_opened and g_arrived and flat_m <= 2.8 and dy_m <= 0.45:
 			_course_modal_auto_opened = true
-			var bus_m = get_node_or_null("/root/EventBus")
-			if bus_m != null and bus_m.has_signal("sst_course_modal_requested"):
-				bus_m.sst_course_modal_requested.emit()
+			if _guide_worker != null and is_instance_valid(_guide_worker):
+				_guide_worker.set("is_explaining", false)
+				_guide_worker.set("has_arrived_and_explained", true)
+			var hud_m = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+			if hud_m != null and hud_m.has_method("show_npc_dialogue"):
+				hud_m.show_npc_dialogue(
+					SST_SPEAKER_HEADER,
+					"Ya llegamos a la sala de reuniones. Habla conmigo cuando estés listo para iniciar el curso SST.",
+					8.0
+				)
 		return
 
 	if target_station_id >= 1 and target_station_id <= STATIONS.size():
@@ -575,8 +581,6 @@ func is_ready_for_meeting_course() -> bool:
 func get_interact_advance_prompt() -> String:
 	if porteria_story_active and not is_briefing_active:
 		return "Entrar a la empresa"
-	if is_ready_for_meeting_course():
-		return "Abrir curso SST"
 	if not is_ready_for_interact_advance():
 		return ""
 	if target_station_id < STATIONS.size():
@@ -587,11 +591,6 @@ func try_advance_station_by_interact() -> String:
 	if porteria_story_active and not is_briefing_active:
 		finish_porteria_story_and_enter()
 		return "Ingresando a Agromolinos del Valle."
-	if is_ready_for_meeting_course():
-		var bus_m = get_node_or_null("/root/EventBus")
-		if bus_m != null and bus_m.has_signal("sst_course_modal_requested"):
-			bus_m.sst_course_modal_requested.emit()
-		return "Abriendo Curso SST."
 	if not is_ready_for_interact_advance():
 		return ""
 	var completed_id := target_station_id

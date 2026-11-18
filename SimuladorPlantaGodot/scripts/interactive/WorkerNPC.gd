@@ -502,6 +502,11 @@ func interact(_tool_id: int = 1) -> String:
 
 	var bus = get_node_or_null("/root/EventBus")
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	if is_tour_guide and tut != null and not bool(tut.briefing_completed):
+		tut.set("is_briefing_active", true)
+		if bus != null and bus.has_signal("induction_briefing_requested"):
+			bus.induction_briefing_requested.emit("Bienvenido a Agromolinos del Valle", "¿Deseas realizar el curso SST?", true)
+		return "¿Deseas realizar el curso SST?"
 	if is_tour_guide and tut != null and bool(tut.get("porteria_story_active")):
 		if tut.has_method("finish_porteria_story_and_enter"):
 			tut.finish_porteria_story_and_enter()
@@ -513,7 +518,7 @@ func interact(_tool_id: int = 1) -> String:
 			return "Iniciando Curso Rápido SST (RETIE) en Sala de Reuniones."
 	if is_tour_guide and tut != null and tut.has_method("is_ready_for_interact_advance") and bool(tut.is_ready_for_interact_advance()):
 		return String(tut.try_advance_station_by_interact())
-	if is_tour_guide and tut != null and int(tut.get("target_station_id")) == 2 and not bool(tut.get("epp_completed")):
+	if is_tour_guide and tut != null and bool(tut.briefing_completed) and int(tut.get("target_station_id")) == 2 and not bool(tut.get("epp_completed")):
 		var locker_msg := "Tu ropa y el equipo de protección están guardados en los lockers verdes de enfrente. Acércate a los lockers y presiona E para ponértelos."
 		var hud = get_tree().root.find_child("HUDController", true, false)
 		if hud != null and hud.has_method("show_npc_dialogue"):
@@ -525,8 +530,11 @@ func interact(_tool_id: int = 1) -> String:
 	if is_tour_guide and bus != null and bus.has_signal("induction_briefing_requested"):
 		var pending_start := (tut != null and not bool(tut.briefing_completed))
 		var title := "Bienvenido a Agromolinos del Valle" if pending_start else "Supervisor SST"
-		bus.induction_briefing_requested.emit(title, worker_dialogue, pending_start)
-		return worker_dialogue
+		var msg := "¿Deseas realizar el curso SST?" if pending_start else worker_dialogue
+		if tut != null and pending_start:
+			tut.set("is_briefing_active", true)
+		bus.induction_briefing_requested.emit(title, msg, pending_start)
+		return msg
 
 	var hud_node = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
 	if hud_node != null and hud_node.has_method("show_npc_dialogue"):
