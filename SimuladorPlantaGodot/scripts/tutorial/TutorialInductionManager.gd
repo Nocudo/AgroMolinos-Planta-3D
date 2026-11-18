@@ -187,7 +187,7 @@ const STATION_GLOW_GROUPS: Dictionary = {
 	11: ["secador_rotatorio"],
 	12: ["ciclon_separador"],
 	13: ["cyclone"],
-	14: ["bag"],
+	14: [],
 	15: ["intercambiador_calor"],
 	16: ["horno"],
 	17: ["unidad_extraccion"],
@@ -199,7 +199,7 @@ const ALL_EQUIPMENT_GLOW_GROUPS: Array[String] = [
 	"tornillo_trituradora", "motor", "tornillo_secador", "secador_rotatorio",
 	"ciclon_separador", "cyclone", "unidad_extraccion", "horno",
 	"soplador", "intercambiador_calor", "ductos_aire",
-	"locker", "breaker", "bag"
+	"locker", "breaker"
 ]
 
 const MEETING_ROOM_POS: Vector3 = Vector3(27.0, 0.41, 32.9)

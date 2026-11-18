@@ -41,14 +41,30 @@ var _stuck_anchor_xz: Vector2 = Vector2.ZERO
 var _guide_recovery_count: int = 0
 var player_ref: Node3D = null
 var _dock_look_target: Vector3 = Vector3.ZERO
+var _scripted_pose_active: bool = false
 
 func set_work_state(anim_name: String, look_target: Vector3, live_dialogue: String = "") -> void:
 	external_animation_control = true
+	_scripted_pose_active = false
 	_dock_look_target = look_target
 	if not live_dialogue.is_empty():
 		worker_dialogue = live_dialogue
 	if _interact_anim_timer <= 0.0:
 		_play_locomotion_anim(anim_name, 0.25)
+
+func set_carry_pose(world_pos: Vector3, look_target: Vector3, anim_name: String, live_dialogue: String = "") -> void:
+	external_animation_control = true
+	_scripted_pose_active = true
+	global_position = world_pos
+	_dock_look_target = look_target
+	var flat_dir := Vector2(look_target.x - world_pos.x, look_target.z - world_pos.z)
+	if flat_dir.length_squared() > 0.0004:
+		var target_yaw := atan2(-flat_dir.x, -flat_dir.y)
+		rotation.y = lerp_angle(rotation.y, target_yaw, 0.45)
+	if not live_dialogue.is_empty():
+		worker_dialogue = live_dialogue
+	if _interact_anim_timer <= 0.0:
+		_play_locomotion_anim(anim_name, 0.18)
 
 func _resolve_person_name() -> String:
 	if not worker_person_name.strip_edges().is_empty():
@@ -142,6 +158,12 @@ func _physics_process(delta: float) -> void:
 		if _explain_timer <= 0.0:
 			is_explaining = false
 			has_arrived_and_explained = true
+
+	if _scripted_pose_active:
+		velocity = Vector3.ZERO
+		if _dock_look_target != Vector3.ZERO:
+			_face_point(_dock_look_target, delta * 7.5)
+		return
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta

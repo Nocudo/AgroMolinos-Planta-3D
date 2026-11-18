@@ -112,8 +112,7 @@ const ALL_GROUPS: Array[String] = [
 	"intercambiador_calor",
 	"ductos_aire",
 	"locker",
-	"breaker",
-	"bag"
+	"breaker"
 ]
 
 # Mapeo único máquina -> nodos reales del GLB (sin traslapes)
@@ -133,8 +132,7 @@ const GLB_GROUP_NODES: Dictionary = {
 	"soplador": ["Node1495"],
 	"intercambiador_calor": ["Node1172"],
 	"ductos_aire": ["Node1356", "Node1169"],
-	"locker": ["Watson Zone Slot Lockers 20-Pack", "Watson Zone Slot Lockers 20-Pack_1"],
-	"bag": ["super saco", "Node1348", "Pallet 60 sacos"]
+	"locker": ["Watson Zone Slot Lockers 20-Pack", "Watson Zone Slot Lockers 20-Pack_1"]
 }
 
 # Especificación uniforme de fallas y herramientas requeridas para las máquinas del tren de proceso
@@ -548,9 +546,8 @@ func _collect_targets(scene_root: Node) -> void:
 	if _locker_node != null:
 		_append_subtree_meshes(_locker_node, locker_meshes, [])
 
-	var bag_meshes: Array[MeshInstance3D] = _meshes_by_group["bag"] as Array[MeshInstance3D]
-	for bag in get_tree().get_nodes_in_group("grain_bag"):
-		_append_subtree_meshes(bag, bag_meshes, [])
+	# Sacos y bolsas sin contorno glow por solicitud del usuario
+	_meshes_by_group["bag"] = []
 
 	_mesh_to_group.clear()
 	for g in ALL_GROUPS:
@@ -1240,11 +1237,7 @@ func _compute_equipment_state(group_key: String) -> int:
 			return GlowState.WHITE
 
 		"bag":
-			if _prop_bool(_motor_node, "is_e_stop_engaged"):
-				return GlowState.RED
-			if bool(_group_warnings.get("bag", false)):
-				return GlowState.YELLOW
-			return GlowState.WHITE
+			return GlowState.HIDDEN
 
 		"truck":
 			return GlowState.HIDDEN

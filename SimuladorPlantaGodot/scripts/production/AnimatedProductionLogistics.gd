@@ -64,12 +64,36 @@ var _west_rig: Dictionary = {}
 var _staging_mover: Node3D = null
 var _south_spotter = null
 var _west_spotter = null
+var _logistics_loader = null
 var _main_gate = null
 var _exit_gate = null
+var _roll_up_dock_door = null
 var _gate_opened_by_trucks: bool = false
 var _exit_gate_opened_by_trucks: bool = false
+var _rollup_opened_by_loader: bool = false
 var _player_ref: Node3D = null
 var _idle_pulse_t: float = 0.0
+
+# Control cinemático de cargue manual de sacos por operarios (solo con camión parqueado en puerta izquierda)
+var _carried_bag_logistics: Node3D = null
+var _carried_bag_dock: Node3D = null
+var _bag_load_timer: float = 0.0
+var _bay2_truck_parked_for_loading: bool = false
+var _logistics_carry_pos: Vector3 = Vector3(-20.2, 0.80, 27.5)
+var _logistics_returning_home: bool = false
+
+const _LOGISTICS_HOME_POS := Vector3(-20.2, 0.80, 27.5)
+const _DOCK_SOUTH_HOME_POS := Vector3(-13.6, 0.80, 29.8)
+const _LOGISTICS_CARRY_WAYPOINTS: Array[Vector3] = [
+	Vector3(-24.0, 0.80, 28.0),
+	Vector3(-21.8, 0.80, 25.4),
+	Vector3(-15.4, 0.80, 25.4),
+	Vector3(-14.2, 0.79, 25.4),
+	Vector3(-13.5, 0.40, 25.4),
+	Vector3(-12.7, 0.02, 25.4),
+	Vector3(-11.2, 0.02, 26.2),
+	Vector3(-10.85, 0.02, 27.15)
+]
 
 # Rutas 100 % sobre carreteras pavimentadas (ADOQUIN/baldosa, cero pasto) y giros naturales:
 # Salida por vía Norte -> Portón Noreste (55.03, 9.58) -> Bulevar Este (X=71) -> Portón Principal (56.08, 38.04) -> Vía Sur -> Curva Oeste
@@ -348,6 +372,7 @@ func _bind_downloaded_models() -> void:
 
 		_main_gate = plant_model.find_child("Door_Porton Automatico Parcela", true, false)
 		_exit_gate = plant_model.find_child("Door_Porton Automatico Parcela_1", true, false)
+		_roll_up_dock_door = plant_model.find_child("Door_Roll-Up Door - Industrial_1", true, false)
 
 	var mill_unit := scene_root.find_child("MotorMillUnit", true, false) as Node3D
 	if mill_unit != null:
@@ -863,6 +888,9 @@ func _spawn_dock_operators(scene_root: Node) -> void:
 
 	_south_spotter = host.find_child("WorkerDockSouth", false, false)
 	_west_spotter = host.find_child("WorkerDockWest", false, false)
+	_logistics_loader = host.find_child("WorkerLogistics", false, false)
+	if _logistics_loader != null and is_instance_valid(_logistics_loader):
+		_logistics_carry_pos = (_logistics_loader as Node3D).global_position
 
 func _make_truck_audio(parent: Node3D, node_name: String, wav: AudioStreamWAV, vol_db: float, unit_sz: float, max_dist: float) -> AudioStreamPlayer3D:
 	var sp := AudioStreamPlayer3D.new()
@@ -1010,16 +1038,11 @@ func step_production(delta: float) -> void:
 		total_grain_milled_kg += current_flow_kg_s * delta
 		bags_50kg_produced = int(floor(total_grain_milled_kg / bag_weight_kg))
 		pallets_completed = int(floor(float(bags_50kg_produced) / float(bags_per_pallet)))
-
-		# 3. Avance cinemático en banda transportadora de sacos
-		if conveyor_follow != null:
-			var bag_rate: float = float(_product_stage_rates.get("cyclone", 1.0))
-			conveyor_follow.progress_ratio = fmod(conveyor_follow.progress_ratio + delta * 0.18 * (current_rpm / 1750.0) * bag_rate, 1.0)
 	else:
 		if grain_particles != null:
 			grain_particles.emitting = false
 
-	# 4. Ciclo completo articulado para los 3 tractocamiones grandes y el furgón de despacho
+	# 3. Ciclo completo articulado para los 3 tractocamiones grandes, furgón y cargue manual por operarios
 	_update_truck_logistics(delta)
 
 	_metrics_emit_timer += delta
@@ -1045,9 +1068,12 @@ func _update_truck_logistics(delta: float) -> void:
 	truck_cycle_phase = south_state["phase"]
 	truck_tilt_angle_deg = south_state["tilt_deg"]
 
-	_update_single_truck_rig(_bay2_rig, u_bay2, delta, false, _south_spotter, "Muelle de Carga Izquierdo", false)
+	var bay2_spotter = null if (u_bay2 < 0.145) else _south_spotter
+	var bay2_state := _update_single_truck_rig(_bay2_rig, u_bay2, delta, false, bay2_spotter, "Muelle de Carga Izquierdo", false)
 	_update_single_truck_rig(_staging_rig, u_staging, delta, false, null, "Patio Norte", false)
 	_update_single_truck_rig(_west_rig, u_west, delta, false, _west_spotter, "Bahía Oeste (Est. 11)", true)
+
+	_step_operator_bag_loading(delta, u_bay2, str(bay2_state.get("phase", "")))
 
 	if intake_follow != null:
 		intake_follow.progress_ratio = fmod(u_south, 1.0)
@@ -1380,6 +1406,211 @@ func _sync_rig_audio(rig: Dictionary, phase: String, engine_pitch: float, engine
 			sfx.pitch_scale = 1.0 if rig == _south_rig else 1.12
 			sfx.play()
 
+func _sample_polyline_3d(pts: Array[Vector3], s_norm: float) -> Dictionary:
+	if pts.is_empty():
+		return {"pos": Vector3.ZERO, "look": Vector3.FORWARD}
+	if pts.size() == 1:
+		return {"pos": pts[0], "look": pts[0] + Vector3.FORWARD}
+	var seg_lens: Array[float] = []
+	var total := 0.0
+	for i in range(pts.size() - 1):
+		var l := pts[i].distance_to(pts[i + 1])
+		seg_lens.append(l)
+		total += l
+	if total <= 0.001:
+		return {"pos": pts[0], "look": pts[pts.size() - 1]}
+	var target_d := clampf(s_norm, 0.0, 1.0) * total
+	var acc := 0.0
+	for i in range(seg_lens.size()):
+		var l := seg_lens[i]
+		if target_d <= acc + l or i == seg_lens.size() - 1:
+			var lt := clampf((target_d - acc) / maxf(l, 0.001), 0.0, 1.0)
+			var pos := pts[i].lerp(pts[i + 1], lt)
+			var dir := (pts[i + 1] - pts[i]).normalized()
+			return {"pos": pos, "look": pos + dir * 1.5}
+		acc += l
+	return {"pos": pts[pts.size() - 1], "look": pts[pts.size() - 1] + Vector3.RIGHT}
+
+func _place_carried_bag(bag: Node3D, worker: Node3D, push_forward: float = 0.0, lift_y: float = 0.0) -> void:
+	if bag == null or not is_instance_valid(bag) or worker == null or not is_instance_valid(worker):
+		return
+	var yaw := worker.rotation.y
+	var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw)).normalized()
+	bag.global_position = worker.global_position + fwd * (0.36 + push_forward) + Vector3(0.0, 0.76 + lift_y, 0.0)
+	bag.rotation = Vector3(0.0, yaw, 0.0)
+
+func _step_operator_bag_loading(delta: float, u_bay2: float, bay2_phase: String) -> void:
+	if _logistics_loader == null or not is_instance_valid(_logistics_loader):
+		var sr := get_parent()
+		if sr != null:
+			_logistics_loader = sr.find_child("WorkerLogistics", true, false)
+	if _south_spotter == null or not is_instance_valid(_south_spotter):
+		var sr2 := get_parent()
+		if sr2 != null:
+			_south_spotter = sr2.find_child("WorkerDockSouth", true, false)
+
+	var truck_physically_docked := false
+	if not _bay2_rig.is_empty():
+		var b2_pos: Vector3 = _bay2_rig.get("pos", Vector3(999.0, 0.0, 999.0))
+		truck_physically_docked = Vector2(b2_pos.x - BAY2_DOCK_POS.x, b2_pos.z - BAY2_DOCK_POS.z).length() <= 3.5
+
+	var can_load_now: bool = truck_physically_docked and (bay2_phase == "WEIGHING" or bay2_phase == "TILTING_UNLOAD") and u_bay2 < 0.145
+	_bay2_truck_parked_for_loading = can_load_now
+
+	var trailer_rear_target := Vector3(-9.5, 1.05, 27.6)
+
+	if not can_load_now:
+		_bag_load_timer = 0.0
+		if _carried_bag_logistics != null and is_instance_valid(_carried_bag_logistics):
+			_carried_bag_logistics.visible = false
+		if _carried_bag_dock != null and is_instance_valid(_carried_bag_dock):
+			_carried_bag_dock.visible = false
+
+		# Retornar a WorkerLogistics de forma segura al interior si estaba en camino
+		if _logistics_loader != null and is_instance_valid(_logistics_loader):
+			var wlog := _logistics_loader as Node3D
+			var d_home := wlog.global_position.distance_to(_LOGISTICS_HOME_POS)
+			if d_home > 0.18:
+				_logistics_returning_home = true
+				var step_p := wlog.global_position.move_toward(_LOGISTICS_HOME_POS, clampf(delta * 3.8, 0.05, 2.5))
+				step_p.y = 0.80 if step_p.x <= -14.0 else lerpf(0.02, 0.80, clampf((-12.7 - step_p.x) / 1.5, 0.0, 1.0))
+				if _logistics_loader.has_method("set_carry_pose"):
+					_logistics_loader.set_carry_pose(
+						step_p, _LOGISTICS_HOME_POS, "walk",
+						"Camión saliendo del muelle; regresando a la nave hasta el próximo arribo."
+					)
+			else:
+				_logistics_returning_home = false
+				if _logistics_loader.has_method("set_carry_pose"):
+					_logistics_loader.set_carry_pose(
+						_LOGISTICS_HOME_POS, Vector3(-25.5, 0.80, 28.5), "inspect",
+						"Sin camión parqueado en la puerta izquierda; esperando arribo para iniciar el cargue."
+					)
+
+		# Mantener a WorkerDockSouth seguro en su plataforma elevada sin cargar nada
+		if _south_spotter != null and is_instance_valid(_south_spotter):
+			var wdock := _south_spotter as Node3D
+			if wdock.global_position.distance_to(_DOCK_SOUTH_HOME_POS) > 0.12:
+				wdock.global_position = _DOCK_SOUTH_HOME_POS
+
+		# Cerrar cortina enrollable automáticamente cuando el operario ya está adentro
+		if _roll_up_dock_door != null and is_instance_valid(_roll_up_dock_door) and _rollup_opened_by_loader:
+			var loader_inside := (_logistics_loader == null) or ((_logistics_loader as Node3D).global_position.x <= -16.8)
+			if loader_inside:
+				_rollup_opened_by_loader = false
+				if _roll_up_dock_door.has_method("close_door"):
+					_roll_up_dock_door.close_door(false)
+		return
+
+	# Camión parqueado en la puerta izquierda: abrir cortina de enlace y activar cargue manual
+	if _roll_up_dock_door != null and is_instance_valid(_roll_up_dock_door) and not bool(_roll_up_dock_door.is_open):
+		_rollup_opened_by_loader = true
+		if _roll_up_dock_door.has_method("open_door"):
+			_roll_up_dock_door.open_door(false)
+
+	_bag_load_timer += delta
+
+	# 1) WorkerLogistics: recoge sacos en zona de ciclones y los lleva caminando al camión en la puerta izquierda
+	if _logistics_loader != null and is_instance_valid(_logistics_loader) and _logistics_loader.has_method("set_carry_pose"):
+		var cycle_l := 15.0
+		var tl := fmod(_bag_load_timer, cycle_l)
+		var l_pos := _LOGISTICS_CARRY_WAYPOINTS[0]
+		var l_look := Vector3(-25.05, 0.82, 29.15)
+		var l_anim := "interact"
+		var l_has_bag := false
+		var l_push := 0.0
+		var l_lift := 0.0
+
+		if tl < 0.9:
+			# Recogiendo saco en ciclones
+			l_pos = _LOGISTICS_CARRY_WAYPOINTS[0]
+			l_look = Vector3(-25.05, 0.82, 29.15)
+			l_anim = "interact"
+			l_has_bag = (tl >= 0.5)
+		elif tl < 8.1:
+			# Caminando con el saco cargado hacia la puerta izquierda / culata del tractocamión
+			var s_go := (tl - 0.9) / 7.2
+			var sm := _sample_polyline_3d(_LOGISTICS_CARRY_WAYPOINTS, s_go)
+			l_pos = sm["pos"] as Vector3
+			l_look = sm["look"] as Vector3
+			l_anim = "carry_walk"
+			l_has_bag = true
+		elif tl < 9.1:
+			# Subiendo y estibando el saco dentro del semirremolque
+			var p_drop := (tl - 8.1) / 1.0
+			l_pos = _LOGISTICS_CARRY_WAYPOINTS[_LOGISTICS_CARRY_WAYPOINTS.size() - 1]
+			l_look = trailer_rear_target
+			l_anim = "interact"
+			l_has_bag = (p_drop < 0.78)
+			l_push = p_drop * 0.85
+			l_lift = sin(p_drop * PI) * 0.28
+		else:
+			# Regresando vacío por otro saco a los ciclones
+			var s_ret := 1.0 - ((tl - 9.1) / 5.9)
+			var sm_r := _sample_polyline_3d(_LOGISTICS_CARRY_WAYPOINTS, s_ret)
+			l_pos = sm_r["pos"] as Vector3
+			var prev_s := clampf(s_ret - 0.06, 0.0, 1.0)
+			l_look = (_sample_polyline_3d(_LOGISTICS_CARRY_WAYPOINTS, prev_s)["pos"] as Vector3)
+			l_anim = "walk"
+			l_has_bag = false
+
+		_logistics_loader.set_carry_pose(
+			l_pos, l_look, l_anim,
+			"Cargando los sacos desde los ciclones hacia el camión parqueado en la puerta izquierda."
+		)
+		if _carried_bag_logistics != null and is_instance_valid(_carried_bag_logistics):
+			_carried_bag_logistics.visible = l_has_bag
+			if l_has_bag:
+				_place_carried_bag(_carried_bag_logistics, _logistics_loader as Node3D, l_push, l_lift)
+
+	# 2) WorkerDockSouth: carga los sacos estibados en la plataforma amarilla directo al camión
+	if _south_spotter != null and is_instance_valid(_south_spotter) and _south_spotter.has_method("set_carry_pose"):
+		var cycle_d := 8.0
+		var td := fmod(_bag_load_timer, cycle_d)
+		var p_pick := Vector3(-13.1, 0.80, 29.0)
+		var p_edge := Vector3(-11.3, 0.80, 28.4)
+		var d_pos := p_pick
+		var d_look := Vector3(-13.75, 0.80, 29.0)
+		var d_anim := "interact"
+		var d_has_bag := false
+		var d_push := 0.0
+		var d_lift := 0.0
+
+		if td < 1.0:
+			d_pos = p_pick
+			d_look = Vector3(-13.75, 0.80, 29.0)
+			d_anim = "interact"
+			d_has_bag = (td >= 0.55)
+		elif td < 3.8:
+			var u_go := (td - 1.0) / 2.8
+			d_pos = p_pick.lerp(p_edge, u_go)
+			d_look = p_edge + Vector3(1.0, 0.0, -0.3)
+			d_anim = "carry_walk"
+			d_has_bag = true
+		elif td < 5.0:
+			var u_drop := (td - 3.8) / 1.2
+			d_pos = p_edge
+			d_look = trailer_rear_target
+			d_anim = "interact"
+			d_has_bag = (u_drop < 0.78)
+			d_push = u_drop * 0.95
+			d_lift = sin(u_drop * PI) * 0.22
+		else:
+			var u_ret := (td - 5.0) / 3.0
+			d_pos = p_edge.lerp(p_pick, u_ret)
+			d_look = p_pick
+			d_anim = "walk"
+			d_has_bag = false
+
+		_south_spotter.set_carry_pose(
+			d_pos, d_look, d_anim,
+			"Cargando sacos al tractocamión parqueado en la puerta izquierda."
+		)
+		if _carried_bag_dock != null and is_instance_valid(_carried_bag_dock):
+			_carried_bag_dock.visible = d_has_bag
+			if d_has_bag:
+				_place_carried_bag(_carried_bag_dock, _south_spotter as Node3D, d_push, d_lift)
+
 func _update_main_gate_proximity() -> void:
 	_gate_opened_by_trucks = _sync_single_gate_proximity(_main_gate, _gate_opened_by_trucks)
 	_exit_gate_opened_by_trucks = _sync_single_gate_proximity(_exit_gate, _exit_gate_opened_by_trucks)
@@ -1534,20 +1765,29 @@ func _setup_product_flow(plant_model: Node) -> void:
 			qm.material = qmat
 			grain_particles.draw_pass_1 = qm
 
-	if conveyor_follow != null and is_instance_valid(conveyor_follow):
-		var c_path := conveyor_follow.get_parent() as Path3D
-		if c_path != null:
-			var curve := Curve3D.new()
-			curve.add_point(Vector3(-25.05, 0.82, 28.05))
-			curve.add_point(Vector3(-25.05, 0.82, 27.15))
-			curve.add_point(Vector3(-24.85, 0.82, 26.25))
-			c_path.curve = curve
-		if conveyor_follow.get_node_or_null("MovingBag50kg") == null:
-			var follow_bag := _create_normalized_glb_carrier(sack_src, stop_anc, Vector3(0.76, 0.88, 0.76), "MovingBag50kg")
-			if follow_bag != null:
-				conveyor_follow.add_child(follow_bag)
+	# Sacos portados por operarios hacia el camión parqueado en la puerta izquierda (nunca se mueven solos)
+	_carried_bag_logistics = _create_normalized_glb_carrier(sack_src, stop_anc, Vector3(0.46, 0.56, 0.38), "MovingBag50kg")
+	if _carried_bag_logistics != null:
+		host.add_child(_carried_bag_logistics)
+		_carried_bag_logistics.visible = false
 
-	# Super Sacos llenándose bajo ambos ciclones (Group#14 Este + Node1179 Oeste) y estiba en Zona 5
+	_carried_bag_dock = _create_normalized_glb_carrier(sack_src, stop_anc, Vector3(0.46, 0.56, 0.38), "DockCarriedBag50kg")
+	if _carried_bag_dock != null:
+		host.add_child(_carried_bag_dock)
+		_carried_bag_dock.visible = false
+
+	# Sacos estáticos en la puerta izquierda amarilla esperando cargue manual al tractocamión
+	for bay_spec in [
+		{"name": "YellowBay_Saco_0", "pos": Vector3(-13.75, 0.80, 29.45), "yaw": 0.08},
+		{"name": "YellowBay_Saco_1", "pos": Vector3(-13.75, 0.80, 28.60), "yaw": -0.06}
+	]:
+		var bay_bag := _create_normalized_glb_carrier(sack_src, stop_anc, Vector3(0.62, 0.72, 0.62), str(bay_spec["name"]))
+		if bay_bag != null:
+			host.add_child(bay_bag)
+			bay_bag.global_position = bay_spec["pos"] as Vector3
+			bay_bag.rotation.y = float(bay_spec["yaw"])
+
+	# Super Sacos estacionarios llenándose bajo ambos ciclones (Group#14 Este + Node1179 Oeste) y estiba en Zona 5
 	for fill_spec in [
 		{"name": "WestCycloneFillSaco", "pos": Vector3(-26.88, 0.82, 29.15), "yaw": 0.15},
 		{"name": "EastCycloneFillSaco", "pos": Vector3(-25.05, 0.82, 29.15), "yaw": -0.10}
@@ -1749,14 +1989,13 @@ func _step_product_flow(delta: float) -> void:
 		gp.speed_scale = maxf(0.18, rpm_ratio * (0.65 + 0.35 * flow_mult) * e_rate)
 		gp.amount_ratio = clampf(0.35 + 0.55 * flow_mult * e_rate, 0.15, 1.0)
 
-	# 3. Pulso volumétrico real en Tolva (Geom3D1462), Super Saco y estiba de Super Sacos en Zona 5
+	# 3. Pulso volumétrico real en Tolva (Geom3D1462); Super Saco y estiba en Zona 5 permanecen fijos (sin moverse solos)
 	if _tolva_grain_node != null and is_instance_valid(_tolva_grain_node):
 		var hop_rate := float(_product_stage_rates.get("hopper", 1.0))
 		var pulse := sin(_idle_pulse_t * 2.6) * 0.015 if is_production_active else 0.0
 		_tolva_grain_node.position.y = _tolva_grain_base_y + pulse - (1.0 - hop_rate) * 0.08
 	if _super_saco_node != null and is_instance_valid(_super_saco_node):
-		var fill_pulse := 1.0 + (0.025 * sin(_idle_pulse_t * 3.1) if is_production_active else 0.0)
-		_super_saco_node.scale = _super_saco_base_scale * Vector3(fill_pulse, 0.97 + 0.03 * fill_pulse, fill_pulse)
+		_super_saco_node.scale = _super_saco_base_scale
 	if not _bags_pallet_stack_nodes.is_empty():
 		var visible_bags := clampi(1 + (bags_50kg_produced / 2), 1, _bags_pallet_stack_nodes.size()) if bags_50kg_produced > 0 else 1
 		for bi in range(_bags_pallet_stack_nodes.size()):

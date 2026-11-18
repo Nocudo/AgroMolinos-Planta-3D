@@ -1144,8 +1144,8 @@ func _qa_10_main_scene_integration() -> void:
 		if glow_ctrl != null:
 			glow_ctrl.refresh_highlights(true)
 			var gs_norm: Dictionary = glow_ctrl.get_glow_summary()
-			ok = _assert_true(int(gs_norm.get("motor_meshes", 0)) > 0 and int(gs_norm.get("hopper_meshes", 0)) > 0 and int(gs_norm.get("cyclone_meshes", 0)) > 0 and int(gs_norm.get("bag_meshes", 0)) > 0 and int(gs_norm.get("locker_meshes", 0)) > 0 and int(gs_norm.get("truck_meshes", 0)) == 0 and int(gs_norm.get("breaker_meshes", 0)) >= 4 and bool(gs_norm.get("all_15_bound", false)),
-				"InteractableGlowController debe enlazar las 15 máquinas ordenadas sin glow en camiones (%s)" % str(gs_norm.get("ordered_15_meshes", {}))) and ok
+			ok = _assert_true(int(gs_norm.get("motor_meshes", 0)) > 0 and int(gs_norm.get("hopper_meshes", 0)) > 0 and int(gs_norm.get("cyclone_meshes", 0)) > 0 and int(gs_norm.get("bag_meshes", 0)) == 0 and int(gs_norm.get("locker_meshes", 0)) > 0 and int(gs_norm.get("truck_meshes", 0)) == 0 and int(gs_norm.get("breaker_meshes", 0)) >= 4 and bool(gs_norm.get("all_15_bound", false)),
+				"InteractableGlowController debe enlazar las 15 máquinas ordenadas sin glow en camiones ni sacos (%s)" % str(gs_norm.get("ordered_15_meshes", {}))) and ok
 			ok = _assert_true(not bool(gs_norm.get("motor_fault", true)), "Motor sano no debe iniciar con resaltado rojo de falla") and ok
 			if breaker_node != null and breaker_node.has_method("toggle_breaker_l3"):
 				breaker_node.toggle_breaker_l3()
@@ -1436,6 +1436,21 @@ func _qa_10_main_scene_integration() -> void:
 					var prog1: float = float(prod_flow.get_production_metrics().get("product_phase_progress", 0.0))
 					ok = _assert_true(prog1 != prog0 and float(prod_flow.get_production_metrics().get("line_flow_efficiency", 0.0)) >= 0.99,
 						"Con motor a 1743 RPM el flujo de producto debe avanzar (p0=%.3f, p1=%.3f)" % [prog0, prog1]) and ok
+					# Verificar que los sacos NO se cargan sin camión parqueado y SÍ los cargan los operarios al parquear en la puerta izquierda
+					var bag_log := prod_flow.find_child("MovingBag50kg", true, false) as Node3D
+					var bag_dock := prod_flow.find_child("DockCarriedBag50kg", true, false) as Node3D
+					var saved_ct: float = float(prod_flow.truck_cycle_time)
+					prod_flow.truck_cycle_time = 0.0 # u_bay2 = 0.38 -> sin camión en puerta izquierda
+					prod_flow.step_production(0.25)
+					ok = _assert_true(bag_log != null and not bag_log.visible and bag_dock != null and not bag_dock.visible,
+						"Sin camión parqueado en la puerta izquierda ningún operario debe cargar sacos") and ok
+					prod_flow.truck_cycle_time = 0.65 * float(prod_flow.TRUCK_CYCLE_DURATION) # u_bay2 = 0.03 -> TruckBay2Mover parqueado
+					for _bi in range(12):
+						prod_flow.step_production(0.2)
+					ok = _assert_true(bag_log != null and bag_log.visible and bag_dock != null and bag_dock.visible,
+						"Con TruckBay2Mover parqueado en puerta izquierda los operarios deben cargar sacos al camión") and ok
+					prod_flow.truck_cycle_time = saved_ct
+					prod_flow.step_production(0.05)
 					var sample_stream := pvis_chk.get_node_or_null("StreamBeltTrituradora") as GPUParticles3D if pvis_chk != null else null
 					ok = _assert_true(sample_stream != null and sample_stream.emitting,
 						"Con línea sana y activa el flujo StreamBeltTrituradora debe emitir grano") and ok

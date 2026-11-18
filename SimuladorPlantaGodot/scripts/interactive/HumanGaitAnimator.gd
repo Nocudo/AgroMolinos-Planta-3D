@@ -53,8 +53,9 @@ static func upgrade_animations(anim_player: AnimationPlayer, root_visual: Node3D
 	if skel_path.is_empty():
 		return
 
-	lib.add_animation("walk", _build_gait_animation(skeleton, skel_path, 1.02, false))
-	lib.add_animation("run", _build_gait_animation(skeleton, skel_path, 0.68, true))
+	lib.add_animation("walk", _build_gait_animation(skeleton, skel_path, 1.02, false, false))
+	lib.add_animation("run", _build_gait_animation(skeleton, skel_path, 0.68, true, false))
+	lib.add_animation("carry_walk", _build_gait_animation(skeleton, skel_path, 1.12, false, true))
 	lib.add_animation("idle", _build_stance_animation(skeleton, skel_path, "idle"))
 	lib.add_animation("inspect", _build_stance_animation(skeleton, skel_path, "inspect"))
 	lib.add_animation("interact", _build_stance_animation(skeleton, skel_path, "interact"))
@@ -272,19 +273,19 @@ static func _find_skeleton_rel_path(anim_player: AnimationPlayer, skeleton: Skel
 		return ""
 	return str(root_node.get_path_to(skeleton))
 
-static func _build_gait_animation(skeleton: Skeleton3D, skel_path: String, duration: float, is_run: bool) -> Animation:
+static func _build_gait_animation(skeleton: Skeleton3D, skel_path: String, duration: float, is_run: bool, is_carry: bool = false) -> Animation:
 	var anim := Animation.new()
 	anim.length = duration
 	anim.loop_mode = Animation.LOOP_LINEAR
 
-	var hip_amp: float = 2.4 if is_run else 1.2
-	var thigh_fwd: float = 33.0 if is_run else 21.0
-	var thigh_back: float = 25.0 if is_run else 15.0
-	var knee_swing: float = 56.0 if is_run else 35.0
+	var hip_amp: float = 2.4 if is_run else (0.9 if is_carry else 1.2)
+	var thigh_fwd: float = 33.0 if is_run else (18.0 if is_carry else 21.0)
+	var thigh_back: float = 25.0 if is_run else (13.0 if is_carry else 15.0)
+	var knee_swing: float = 56.0 if is_run else (31.0 if is_carry else 35.0)
 	var knee_stance: float = 10.0 if is_run else 4.0
 	var arm_swing: float = 32.0 if is_run else 17.0
 	var elbow_base: float = 48.0 if is_run else 16.0
-	var spine_lean: float = 7.5 if is_run else 2.2
+	var spine_lean: float = 7.5 if is_run else (3.6 if is_carry else 2.2)
 
 	var setup := _prepare_skeleton_tracks(skeleton, skel_path, anim)
 	var rest_map: Dictionary = setup["rest"]
@@ -330,10 +331,16 @@ static func _build_gait_animation(skeleton: Skeleton3D, skel_path: String, durat
 		_insert_rot(anim, rest_map, track_idx, "CC_Base_L_Foot_05", t, Quaternion(Vector3.RIGHT, deg_to_rad(l_foot_deg)))
 		_insert_rot(anim, rest_map, track_idx, "CC_Base_R_Foot_09", t, Quaternion(Vector3.RIGHT, deg_to_rad(r_foot_deg)))
 
-		# Brazos pegados naturalmente a los costados (net ~ -84°) balanceando en contrafase
-		var l_elb_deg := elbow_base + maxf(0.0, sin_r) * 12.0
-		var r_elb_deg := elbow_base + maxf(0.0, sin_l) * 12.0
-		_insert_arm_pose(anim, rest_map, track_idx, t, true, 6.0, 78.5, sin_r * arm_swing, 6.0, l_elb_deg, 6.0)
-		_insert_arm_pose(anim, rest_map, track_idx, t, false, 6.0, 78.5, sin_l * arm_swing, 6.0, r_elb_deg, 6.0)
+		if is_carry:
+			# Ambos brazos flexionados al frente abrazando firmemente el saco contra el torso
+			var carry_bob := sin(phase * 2.0) * 2.2
+			_insert_arm_pose(anim, rest_map, track_idx, t, true, 5.5, 62.0, 34.0 + carry_bob, 24.0, 76.0, 12.0)
+			_insert_arm_pose(anim, rest_map, track_idx, t, false, 5.5, 62.0, 34.0 + carry_bob, 24.0, 76.0, 12.0)
+		else:
+			# Brazos pegados naturalmente a los costados (net ~ -84°) balanceando en contrafase
+			var l_elb_deg := elbow_base + maxf(0.0, sin_r) * 12.0
+			var r_elb_deg := elbow_base + maxf(0.0, sin_l) * 12.0
+			_insert_arm_pose(anim, rest_map, track_idx, t, true, 6.0, 78.5, sin_r * arm_swing, 6.0, l_elb_deg, 6.0)
+			_insert_arm_pose(anim, rest_map, track_idx, t, false, 6.0, 78.5, sin_l * arm_swing, 6.0, r_elb_deg, 6.0)
 
 	return anim
