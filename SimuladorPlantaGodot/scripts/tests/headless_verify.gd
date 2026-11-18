@@ -1356,6 +1356,43 @@ func _qa_10_main_scene_integration() -> void:
 					"En Estación 19 (Exterior) solo Ductos de Aire debe tener glow BLUE_PULSE no seleccionable"
 				) and ok
 
+				# Estación 20: Cierre frente al Tablero Eléctrico CCM 460 V + entrega de labor/instrucciones al hablar con SST
+				var last_sid: int = tut_node.STATIONS.size()
+				var last_st: Dictionary = tut_node.STATIONS[last_sid - 1]
+				var last_pos: Vector3 = last_st["pos"]
+				ok = _assert_true(
+					last_sid == 20 and Vector2(last_pos.x - (-18.69), last_pos.z - 38.5).length() <= 0.5,
+					"La estación final (%d) debe cerrar frente al Tablero Eléctrico CCM (-18.69, 38.5), actual=%s" % [last_sid, str(last_pos)]
+				) and ok
+				tut_node.epp_completed = true
+				tut_node.briefing_completed = true
+				tut_node.is_briefing_active = false
+				tut_node.target_station_id = last_sid
+				tut_node.visited_stations.erase(last_sid)
+				glow_ctrl.refresh_highlights(true)
+				ok = _assert_true(
+					glow_ctrl.get_group_state("breaker") == "BLUE_PULSE",
+					"En Estación 20 (Cierre en Tablero Eléctrico) el Tablero CCM debe destacarse en BLUE_PULSE"
+				) and ok
+				guide.global_position = Vector3(-18.69, 0.83, 38.5)
+				guide.guide_has_target = false
+				guide.is_explaining = false
+				guide.has_arrived_and_explained = true
+				player.global_position = Vector3(-18.69, 0.85, 39.4)
+				var close_reply: String = guide.interact(1)
+				var b_greet_end := hud_ctrl.find_child("BriefingGreeting", true, false) as Label
+				ok = _assert_true(
+					close_reply != ""
+					and bool(tut_node.visited_stations.get(last_sid, false))
+					and hud_ctrl.is_briefing_visible()
+					and b_greet_end != null
+					and b_greet_end.text.contains("TU LABOR")
+					and b_greet_end.text.contains("QUÉ PUEDES HACER")
+					and b_greet_end.text.contains("CÓMO HACERLO"),
+					"Al cerrar el recorrido frente al tablero eléctrico, el SST debe explicar la labor, qué se puede hacer y cómo hacerlo"
+				) and ok
+				hud_ctrl.close_briefing_panel()
+
 				tut_node.skip_tutorial_to_final_station()
 				# Posicionar jugador en pasillo central para auditar visibilidad cercana de los 5 grupos de shells WHITE
 				player.global_position = Vector3(-18.69, 0.85, 40.5)

@@ -31,7 +31,8 @@ const STATIONS: Array[Dictionary] = [
 	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-45.7, 0.04, 34.3), "desc": "Horno 12 exterior de aire caliente."},
 	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-45.6, 0.04, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
 	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-45.2, 0.06, 38.8), "desc": "Soplador 13 de impulsión neumática."},
-	{"id": 19, "title": "Estación 19: Ductos de Aire y Cierre", "pos": Vector3(-44.2, 0.13, 41.2), "desc": "Red 15 de ductos de aire y cierre exterior del recorrido."}
+	{"id": 19, "title": "Estación 19: Ductos de Aire", "pos": Vector3(-44.2, 0.13, 41.2), "desc": "Red 15 de ductos de aire del sistema térmico."},
+	{"id": 20, "title": "Estación 20: Cierre en Tablero Eléctrico CCM", "pos": Vector3(-18.69, 0.79, 38.5), "desc": "Entrega de tu labor, funciones y controles frente al tablero CCM 460 V."}
 ]
 
 # Ruta peatonal natural sobre aceras y rampas reales: 0 muros, 0 invasión de calle vehicular, 0 cruces de líneas de seguridad (Zone1/2/6/8/9)
@@ -85,7 +86,18 @@ const TOUR_ROUTE_POINTS: Array[Vector3] = [
 	Vector3(-45.7, 0.06, 34.3),   # 46: Estación 16 - 12 Horno Térmico (sobre acera Oeste)
 	Vector3(-45.6, 0.06, 36.4),   # 47: Estación 17 - 11 Unidad de Extracción (sobre acera Oeste)
 	Vector3(-45.2, 0.08, 38.8),   # 48: Estación 18 - 13 Soplador (sobre acera Oeste)
-	Vector3(-44.2, 0.15, 41.2)    # 49: Estación 19 - 15 Ductos de Aire y cierre sobre acera Oeste
+	Vector3(-44.2, 0.15, 41.2),   # 49: Estación 19 - 15 Ductos de Aire sobre acera Oeste
+	Vector3(-45.2, 0.08, 38.8),   # 50: Regreso sobre acera curva Oeste
+	Vector3(-45.6, 0.06, 36.4),   # 51: Regreso acera Oeste tramo medio
+	Vector3(-45.7, 0.06, 34.3),   # 52: Regreso acera Oeste frente a horno
+	Vector3(-45.5, 0.06, 32.0),   # 53: Regreso acera Oeste hacia Sur
+	Vector3(-44.6, 0.14, 28.4),   # 54: Curva acera Oeste fuera de Zone9
+	Vector3(-43.4, 0.10, 25.0),   # 55: Salida acera Oeste
+	Vector3(-41.8, 0.06, 22.4),   # 56: Cruce limpio libre de losa hacia Rampa Sur
+	Vector3(-28.5, 0.04, 22.2),   # 57: Pie de Rampa Sur de concreto
+	Vector3(-20.3, 0.83, 22.2),   # 58: Cima de Rampa Sur
+	Vector3(-18.69, 0.83, 22.2),  # 59: Reingreso por Portón Sur a pasillo peatonal verde (Zone4)
+	Vector3(-18.69, 0.83, 38.5)   # 60: Estación 20 - Cierre del recorrido frente al Tablero Eléctrico CCM 460 V
 ]
 
 # Conversación natural con el Supervisor SST durante el recorrido (solo subtítulos, sin voz)
@@ -153,8 +165,22 @@ const STATION_NATURAL_SPEECH: Dictionary = {
 	16: "A continuación está el horno térmico de ladrillos, que genera el flujo de aire caliente necesario para todo el proceso de secado.",
 	17: "Esta es la unidad de extracción adosada a la pared, encargada de mantener la succión constante y evacuar el polvo fino hacia el exterior.",
 	18: "Aquí tienes el soplador industrial. Impulsa el caudal de aire a presión que conecta el horno, el intercambiador y el secador.",
-	19: "Por último, arriba ves la red de ductos de aire que enlaza todo el sistema térmico con la nave. Con esto terminamos el recorrido y ya puedes explorar o usar la tablet."
+	19: "Por último, arriba ves la red de ductos de aire que enlaza todo el sistema térmico con la nave. Ahora acompáñame de regreso frente al tablero eléctrico CCM para explicarte tu labor y terminar el recorrido.",
+	20: "Ya estamos de vuelta frente al tablero eléctrico CCM de 460 voltios. Habla conmigo para explicarte cuál es tu labor, qué puedes hacer en la planta y cómo hacerlo."
 }
+
+const POST_TOUR_MISSION_BRIEFING: String = """TU LABOR:
+Operar y supervisar la línea de molienda de granos (10 HP, 460 V) manteniendo producción estable, eficiencia energética y cumplimiento estricto de las normas RETIE y OSHA.
+
+QUÉ PUEDES HACER:
+• Controlar el arranque (VFD o DOL), la frecuencia y la carga del motor desde la Tablet Industrial, además de revisar oscilogramas, Edge AI, cámaras CCTV y tu nota de seguridad.
+• Intervenir este tablero CCM, aplicar las 5 Reglas de Oro LOTO e inducir o reparar fallas físicas directamente en los equipos (cables, tolva, pernos, rejilla de ventilación y breakers).
+• Recorrer libremente la planta respetando siempre el pasillo peatonal verde sin cruzar líneas amarillas ni rojas.
+
+CÓMO HACERLO:
+• Muévete con WASD (Shift para correr), apunta al tablero o a cualquier máquina y presiona E o Clic para interactuar.
+• Cambia de herramienta con 1–5 o la rueda del mouse (1 Manos, 2 Alicates, 3 Llave 3/4", 4 Multímetro, 5 Kit LOTO).
+• Presiona TAB en cualquier momento para abrir o cerrar tu Tablet Industrial."""
 
 # Líneas de apertura de la conversación de historia en Portería (antes de preguntar por el curso SST)
 const EXTERIOR_NARRATION_SEGMENTS: Array[Dictionary] = [
@@ -174,7 +200,7 @@ const PORTERIA_CONTINUE_CHOICE: Dictionary = {
 
 const STATION_TO_ROUTE_IDX: Dictionary = {
 	1: 0, 2: 19, 3: 24, 4: 25, 5: 28, 6: 29, 7: 30, 8: 31, 9: 32, 10: 33,
-	11: 34, 12: 35, 13: 36, 14: 37, 15: 41, 16: 46, 17: 47, 18: 48, 19: 49
+	11: 34, 12: 35, 13: 36, 14: 37, 15: 41, 16: 46, 17: 47, 18: 48, 19: 49, 20: 60
 }
 
 # Equipos destacados en cada estación durante la presentación del tutorial (una máquina por estación en glow azul parpadeante)
@@ -197,7 +223,8 @@ const STATION_GLOW_GROUPS: Dictionary = {
 	16: ["horno"],
 	17: ["unidad_extraccion"],
 	18: ["soplador"],
-	19: ["ductos_aire"]
+	19: ["ductos_aire"],
+	20: ["breaker"]
 }
 const ALL_EQUIPMENT_GLOW_GROUPS: Array[String] = [
 	"banda_descarga", "banda_inclinada_tolva", "hopper", "banda_trituradora",
@@ -642,9 +669,16 @@ func try_advance_station_by_interact() -> String:
 			hud.show_npc_dialogue(SST_SPEAKER_HEADER, reply, 4.5)
 		return reply
 	_check_tour_completion()
-	var finish_msg := "Listo, terminamos el recorrido y las máquinas ya están operando. Puedes abrir la tablet cuando quieras."
+	var finish_msg := "Listo, cerramos el recorrido frente al tablero eléctrico CCM. Tu labor es operar y supervisar la planta de 10 HP de forma segura: usa TAB para la tablet, 1-5 para herramientas y E para intervenir equipos."
 	if hud != null and hud.has_method("show_npc_dialogue"):
-		hud.show_npc_dialogue(SST_SPEAKER_HEADER, finish_msg, 6.5)
+		hud.show_npc_dialogue(SST_SPEAKER_HEADER, finish_msg, 9.0)
+	var bus = get_node_or_null("/root/EventBus")
+	if bus != null and bus.has_signal("induction_briefing_requested"):
+		bus.induction_briefing_requested.emit(
+			"Tu labor en Agromolinos del Valle",
+			POST_TOUR_MISSION_BRIEFING,
+			false
+		)
 	return finish_msg
 
 func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:

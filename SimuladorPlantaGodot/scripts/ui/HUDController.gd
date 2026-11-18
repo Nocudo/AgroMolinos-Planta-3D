@@ -955,6 +955,10 @@ func show_briefing_panel(title: String, greeting: String, resume_tour_on_close: 
 		return
 	_briefing_resume_tour = resume_tour_on_close
 	_briefing_opened_ms = Time.get_ticks_msec()
+	var is_long_info := (not resume_tour_on_close) and greeting.length() > 140
+	var b_card := briefing_overlay.find_child("BriefingCard", true, false) as PanelContainer
+	if b_card != null:
+		b_card.custom_minimum_size = Vector2(640, 0) if is_long_info else Vector2(460, 0)
 	if _briefing_title != null:
 		_briefing_title.text = (
 			"Bienvenido a Agromolinos del Valle"
@@ -967,11 +971,13 @@ func show_briefing_panel(title: String, greeting: String, resume_tour_on_close: 
 			if resume_tour_on_close
 			else _sanitize_plain_text(greeting)
 		)
+		_briefing_greeting.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if is_long_info else HORIZONTAL_ALIGNMENT_CENTER
+		_briefing_greeting.add_theme_font_size_override("font_size", 14 if is_long_info else 15)
 	if _btn_course_sst != null:
 		_btn_course_sst.visible = resume_tour_on_close
 		_btn_course_sst.text = "Sí"
 	if _btn_close_briefing != null:
-		_btn_close_briefing.text = "No" if resume_tour_on_close else "Continuar"
+		_btn_close_briefing.text = "No" if resume_tour_on_close else ("Comenzar operación" if is_long_info else "Continuar")
 	if _btn_skip_briefing != null:
 		_btn_skip_briefing.visible = resume_tour_on_close
 		_btn_skip_briefing.text = "Saltar tutorial"
