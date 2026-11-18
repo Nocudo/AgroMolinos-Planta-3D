@@ -103,41 +103,40 @@ const SOUTH_EXIT_ROUTE: Array[Vector3] = [
 	Vector3(40.0, 0.0, 13.2),
 	Vector3(48.0, 0.0, 11.2),
 	Vector3(55.03, 0.0, 9.58),
-	Vector3(62.5, 0.0, 9.5),
-	Vector3(68.2, 0.0, 11.2),
-	Vector3(70.2, 0.0, 16.5)
+	Vector3(63.2, 0.0, 9.6),
+	Vector3(69.0, 0.0, 12.2),
+	Vector3(70.5, 0.0, 17.5)
 ]
 const SOUTH_TRANSIT_ROUTE: Array[Vector3] = [
-	Vector3(70.2, 0.0, 16.5),
+	Vector3(70.5, 0.0, 17.5),
 	Vector3(70.8, 0.0, 24.5),
-	Vector3(70.5, 0.0, 32.5),
-	Vector3(68.5, 0.0, 36.4),
-	Vector3(63.5, 0.0, 37.4),
+	Vector3(70.4, 0.0, 30.8),
+	Vector3(68.2, 0.0, 35.4),
+	Vector3(63.2, 0.0, 37.4),
 	Vector3(56.08, 0.0, 38.04)
 ]
 const SOUTH_ENTER_ROUTE: Array[Vector3] = [
 	Vector3(56.08, 0.0, 38.04),
-	Vector3(51.8, 0.0, 40.2),
-	Vector3(47.8, 0.0, 46.0),
-	Vector3(43.6, 0.0, 52.0),
-	Vector3(39.0, 0.0, 54.4),
-	Vector3(34.8, 0.0, 55.0),
-	Vector3(29.5, 0.0, 57.2),
-	Vector3(20.0, 0.0, 58.4),
-	Vector3(5.0, 0.0, 58.4),
+	Vector3(51.5, 0.0, 42.5),
+	Vector3(47.8, 0.0, 48.5),
+	Vector3(44.2, 0.0, 53.8),
+	Vector3(38.0, 0.0, 56.2),
+	Vector3(30.0, 0.0, 58.0),
+	Vector3(20.0, 0.0, 58.6),
+	Vector3(5.0, 0.0, 58.6),
 	Vector3(-15.0, 0.0, 57.8),
-	Vector3(-35.0, 0.0, 57.4),
-	Vector3(-44.0, 0.0, 56.2),
-	Vector3(-49.2, 0.0, 53.2),
-	Vector3(-52.4, 0.0, 47.5),
-	Vector3(-53.2, 0.0, 41.0),
-	Vector3(-52.4, 0.0, 34.0),
-	Vector3(-50.6, 0.0, 27.0),
-	Vector3(-48.4, 0.0, 21.0),
-	Vector3(-44.8, 0.0, 16.0),
-	Vector3(-39.0, 0.0, 12.6),
-	Vector3(-31.0, 0.0, 12.0),
-	Vector3(-22.0, 0.0, 13.6),
+	Vector3(-36.0, 0.0, 57.4),
+	Vector3(-44.8, 0.0, 56.0),
+	Vector3(-50.4, 0.0, 52.0),
+	Vector3(-52.5, 0.0, 46.5),
+	Vector3(-52.4, 0.0, 40.5),
+	Vector3(-51.8, 0.0, 34.0),
+	Vector3(-50.5, 0.0, 27.0),
+	Vector3(-48.6, 0.0, 21.2),
+	Vector3(-45.2, 0.0, 16.0),
+	Vector3(-40.0, 0.0, 12.9),
+	Vector3(-32.0, 0.0, 12.2),
+	Vector3(-22.0, 0.0, 13.8),
 	Vector3(-12.0, 0.0, 16.2),
 	Vector3(-2.0, 0.0, 18.6),
 	Vector3(6.5, 0.0, 20.8),
@@ -160,33 +159,32 @@ const BAY2_EXIT_ROUTE: Array[Vector3] = [
 	Vector3(40.0, 0.0, 13.2),
 	Vector3(48.0, 0.0, 11.2),
 	Vector3(55.03, 0.0, 9.58),
-	Vector3(62.5, 0.0, 9.5),
-	Vector3(68.2, 0.0, 11.2),
-	Vector3(70.2, 0.0, 16.5)
+	Vector3(63.2, 0.0, 9.6),
+	Vector3(69.0, 0.0, 12.2),
+	Vector3(70.5, 0.0, 17.5)
 ]
 const BAY2_ENTER_ROUTE: Array[Vector3] = [
 	Vector3(56.08, 0.0, 38.04),
-	Vector3(51.8, 0.0, 40.2),
-	Vector3(47.8, 0.0, 46.0),
-	Vector3(43.6, 0.0, 52.0),
-	Vector3(39.0, 0.0, 54.4),
-	Vector3(34.8, 0.0, 55.0),
-	Vector3(29.5, 0.0, 57.2),
-	Vector3(20.0, 0.0, 58.4),
-	Vector3(5.0, 0.0, 58.4),
+	Vector3(51.5, 0.0, 42.5),
+	Vector3(47.8, 0.0, 48.5),
+	Vector3(44.2, 0.0, 53.8),
+	Vector3(38.0, 0.0, 56.2),
+	Vector3(30.0, 0.0, 58.0),
+	Vector3(20.0, 0.0, 58.6),
+	Vector3(5.0, 0.0, 58.6),
 	Vector3(-15.0, 0.0, 57.8),
-	Vector3(-35.0, 0.0, 57.4),
-	Vector3(-44.0, 0.0, 56.2),
-	Vector3(-49.2, 0.0, 53.2),
-	Vector3(-52.4, 0.0, 47.5),
-	Vector3(-53.2, 0.0, 41.0),
-	Vector3(-52.4, 0.0, 34.0),
-	Vector3(-50.6, 0.0, 27.0),
-	Vector3(-48.4, 0.0, 21.0),
-	Vector3(-44.8, 0.0, 16.0),
-	Vector3(-39.0, 0.0, 12.6),
-	Vector3(-31.0, 0.0, 12.0),
-	Vector3(-22.0, 0.0, 13.6),
+	Vector3(-36.0, 0.0, 57.4),
+	Vector3(-44.8, 0.0, 56.0),
+	Vector3(-50.4, 0.0, 52.0),
+	Vector3(-52.5, 0.0, 46.5),
+	Vector3(-52.4, 0.0, 40.5),
+	Vector3(-51.8, 0.0, 34.0),
+	Vector3(-50.5, 0.0, 27.0),
+	Vector3(-48.6, 0.0, 21.2),
+	Vector3(-45.2, 0.0, 16.0),
+	Vector3(-40.0, 0.0, 12.9),
+	Vector3(-32.0, 0.0, 12.2),
+	Vector3(-22.0, 0.0, 13.8),
 	Vector3(-12.0, 0.0, 16.2),
 	Vector3(-2.0, 0.0, 18.6),
 	Vector3(6.5, 0.0, 20.8),
@@ -199,14 +197,16 @@ const BAY2_REVERSE_ROUTE: Array[Vector3] = [
 	Vector3(-2.85, 0.0, 23.82)
 ]
 
-# Circuito cerrado holgado 100 % dentro del patio de grava Norte (cero pasto)
+# Circuito cerrado holgado 100 % dentro del patio de grava Norte (radio amplio sin tijereo ni pasto)
 const STAGING_YARD_LOOP: Array[Vector3] = [
-	Vector3(-33.3, 0.0, -11.4),
-	Vector3(-22.0, 0.0, -13.0),
-	Vector3(-21.0, 0.0, -21.0),
-	Vector3(-30.5, 0.0, -23.0),
-	Vector3(-38.5, 0.0, -18.5),
-	Vector3(-38.5, 0.0, -11.5)
+	Vector3(-30.0, 0.0, -9.0),
+	Vector3(-17.0, 0.0, -12.0),
+	Vector3(-10.5, 0.0, -23.0),
+	Vector3(-16.0, 0.0, -34.5),
+	Vector3(-29.0, 0.0, -38.5),
+	Vector3(-42.0, 0.0, -34.5),
+	Vector3(-47.5, 0.0, -23.5),
+	Vector3(-42.0, 0.0, -12.0)
 ]
 
 const WEST_DOCK_POS := Vector3(-38.43, 0.0, 51.31)
@@ -221,9 +221,9 @@ const WEST_TRUCK_REAR_AXLE_Z: float = 1.830
 const WEST_EXIT_ROUTE: Array[Vector3] = [
 	Vector3(-38.43, 0.0, 51.31),
 	Vector3(-47.5, 0.0, 51.0),
-	Vector3(-52.2, 0.0, 47.0),
-	Vector3(-53.2, 0.0, 41.0),
-	Vector3(-52.2, 0.0, 34.0),
+	Vector3(-51.8, 0.0, 47.0),
+	Vector3(-52.2, 0.0, 41.0),
+	Vector3(-52.0, 0.0, 34.0),
 	Vector3(-50.2, 0.0, 27.0),
 	Vector3(-47.8, 0.0, 21.5),
 	Vector3(-44.5, 0.0, 16.8),
@@ -237,28 +237,27 @@ const WEST_EXIT_ROUTE: Array[Vector3] = [
 	Vector3(38.0, 0.0, 13.8),
 	Vector3(48.0, 0.0, 11.2),
 	Vector3(55.03, 0.0, 9.58),
-	Vector3(62.5, 0.0, 9.5),
-	Vector3(68.2, 0.0, 11.2),
-	Vector3(70.2, 0.0, 16.5)
+	Vector3(63.2, 0.0, 9.6),
+	Vector3(69.0, 0.0, 12.2),
+	Vector3(70.5, 0.0, 17.5)
 ]
 const WEST_TRANSIT_ROUTE: Array[Vector3] = [
-	Vector3(70.2, 0.0, 16.5),
+	Vector3(70.5, 0.0, 17.5),
 	Vector3(70.8, 0.0, 24.5),
-	Vector3(70.5, 0.0, 32.5),
-	Vector3(68.5, 0.0, 36.4),
-	Vector3(63.5, 0.0, 37.4),
+	Vector3(70.4, 0.0, 30.8),
+	Vector3(68.2, 0.0, 35.4),
+	Vector3(63.2, 0.0, 37.4),
 	Vector3(56.08, 0.0, 38.04)
 ]
 const WEST_ENTER_ROUTE: Array[Vector3] = [
 	Vector3(56.08, 0.0, 38.04),
-	Vector3(51.8, 0.0, 40.2),
-	Vector3(47.8, 0.0, 46.0),
-	Vector3(43.6, 0.0, 52.0),
-	Vector3(39.0, 0.0, 54.4),
-	Vector3(34.8, 0.0, 55.0),
-	Vector3(29.5, 0.0, 57.2),
-	Vector3(20.0, 0.0, 58.4),
-	Vector3(5.0, 0.0, 58.4),
+	Vector3(51.5, 0.0, 42.5),
+	Vector3(47.8, 0.0, 48.5),
+	Vector3(44.2, 0.0, 53.8),
+	Vector3(38.0, 0.0, 56.2),
+	Vector3(30.0, 0.0, 58.0),
+	Vector3(20.0, 0.0, 58.6),
+	Vector3(5.0, 0.0, 58.6),
 	Vector3(-15.0, 0.0, 57.8),
 	Vector3(-35.0, 0.0, 57.4),
 	Vector3(-44.0, 0.0, 56.2),
@@ -622,6 +621,7 @@ func _create_articulated_semi_rig(
 	if DisplayServer.get_name() != "headless" and diesel_aud.stream != null:
 		diesel_aud.play()
 
+	_ensure_truck_double_sided_materials(level_pivot)
 	var base_yaw := atan2(-cab_fwd.x, -cab_fwd.z)
 	var pre_exit := _precompute_route(exit_or_loop_route, is_closed_loop)
 	var pre_transit := _precompute_route(transit_route, false) if not transit_route.is_empty() else {}
@@ -645,10 +645,12 @@ func _create_articulated_semi_rig(
 		"dock_pos": dock_pos,
 		"dock_yaw": base_yaw,
 		"cur_yaw": base_yaw,
+		"prev_cab_yaw": base_yaw,
 		"trailer_yaw": wrapf(base_yaw + initial_rel_yaw, -PI, PI),
 		"initial_rel_yaw": initial_rel_yaw,
 		"kingpin_to_axle_m": kingpin_to_axle_m,
 		"trailer_axle_xz": Vector2(trailer_axle_world.x, trailer_axle_world.z),
+		"prev_kp_xz": Vector2(kingpin_world.x, kingpin_world.z),
 		"hitch_init": true,
 		"wheel_spin_rad": 0.0,
 		"steer_angle_rad": 0.0,
@@ -665,6 +667,32 @@ func _create_articulated_semi_rig(
 		"pos": kingpin_world,
 		"horn_played": false
 	}
+
+func _ensure_truck_double_sided_materials(truck_root: Node3D) -> void:
+	if truck_root == null:
+		return
+	var cache: Dictionary = {}
+	for ch in truck_root.find_children("*", "MeshInstance3D", true, false):
+		var mi := ch as MeshInstance3D
+		if mi == null or mi.mesh == null or mi.name == "GlowOutlineShell":
+			continue
+		var surfs := mi.mesh.get_surface_count()
+		for s in range(surfs):
+			var mat := mi.get_active_material(s)
+			if not (mat is BaseMaterial3D):
+				continue
+			var bmat := mat as BaseMaterial3D
+			if bmat.cull_mode == BaseMaterial3D.CULL_DISABLED:
+				continue
+			var mid := bmat.get_instance_id()
+			var dup_mat: BaseMaterial3D
+			if cache.has(mid):
+				dup_mat = cache[mid] as BaseMaterial3D
+			else:
+				dup_mat = bmat.duplicate() as BaseMaterial3D
+				dup_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				cache[mid] = dup_mat
+			mi.set_surface_override_material(s, dup_mat)
 
 func _register_semi_wheel_axles(root_node: Node3D, align_basis: Basis, target: Array[Dictionary], is_steer: bool, wheel_r: float) -> void:
 	if root_node == null:
@@ -806,6 +834,7 @@ func _create_truck_rig(
 	if DisplayServer.get_name() != "headless" and diesel_aud.stream != null:
 		diesel_aud.play()
 
+	_ensure_truck_double_sided_materials(level_pivot)
 	var base_yaw := atan2(-initial_fwd.x, -initial_fwd.z)
 	return {
 		"is_semi": false,
@@ -1364,37 +1393,52 @@ func _step_articulated_semi_hitch(
 			else:
 				trl_yaw = cab_yaw
 		else:
-			trl_yaw = wrapf(cab_yaw + (init_rel if not is_moving else 0.0), -PI, PI)
+			trl_yaw = cab_yaw
 		var rel_jump := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(50.0), deg_to_rad(50.0))
 		trl_yaw = cab_yaw + rel_jump
 		var u0 := Vector2(-sin(trl_yaw), -cos(trl_yaw))
 		rig["trailer_axle_xz"] = kp_xz - u0 * axle_dist
+		rig["prev_kp_xz"] = kp_xz
+		rig["prev_cab_yaw"] = cab_yaw
 	elif reverse_mode:
 		# En reversa: el semirremolque se endereza con fluidez hacia el eje del muelle
 		var dock_y := float(rig.get("dock_yaw", cab_yaw))
 		var back_blend := _smooth_u(clampf((route_s - 0.05) / 0.85, 0.0, 1.0))
-		trl_yaw = lerp_angle(trl_yaw, dock_y, maxf(back_blend * 0.22, clampf(delta * 2.0, 0.0, 1.0)))
+		trl_yaw = lerp_angle(trl_yaw, dock_y, clampf(maxf(back_blend * maxf(delta * 2.5, 0.04), delta * 1.5), 0.0, 1.0))
 		var rel_r := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(24.0), deg_to_rad(24.0))
 		trl_yaw = cab_yaw + rel_r
 		var ur := Vector2(-sin(trl_yaw), -cos(trl_yaw))
 		rig["trailer_axle_xz"] = kp_xz - ur * axle_dist
+		rig["prev_kp_xz"] = kp_xz
+		rig["prev_cab_yaw"] = cab_yaw
 	elif is_moving:
-		# Avance cinemático no holonómico suavizado: el remolque sigue la quinta rueda de forma natural
-		var prev_axle: Vector2 = rig.get("trailer_axle_xz", kp_xz - Vector2(-sin(trl_yaw), -cos(trl_yaw)) * axle_dist)
-		var pull_vec := kp_xz - prev_axle
-		if pull_vec.length_squared() > 0.0001:
-			var u_pull := pull_vec.normalized()
-			var desired_trl_yaw := atan2(-u_pull.x, -u_pull.y)
-			var smooth_trl_yaw := lerp_angle(trl_yaw, desired_trl_yaw, clampf(delta * 5.0, 0.0, 1.0))
-			var rel_fwd := clampf(wrapf(smooth_trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(42.0), deg_to_rad(42.0))
-			trl_yaw = cab_yaw + rel_fwd
-			var u_clamped := Vector2(-sin(trl_yaw), -cos(trl_yaw))
-			rig["trailer_axle_xz"] = kp_xz - u_clamped * axle_dist
+		# Cinemática no-holonómica pura independiente de FPS (tractriz exacta de barra rígida sin rezago delta*5)
+		var prev_kp: Vector2 = rig.get("prev_kp_xz", kp_xz)
+		var prev_cab_y: float = float(rig.get("prev_cab_yaw", cab_yaw))
+		var axle_xz: Vector2 = rig.get("trailer_axle_xz", kp_xz - Vector2(-sin(trl_yaw), -cos(trl_yaw)) * axle_dist)
+		var kp_move := kp_xz.distance_to(prev_kp)
+		var n_sub: int = clampi(int(ceil(kp_move / 0.35)), 1, 32)
+		for si in range(1, n_sub + 1):
+			var st: float = float(si) / float(n_sub)
+			var sub_kp := prev_kp.lerp(kp_xz, st)
+			var sub_cab := lerp_angle(prev_cab_y, cab_yaw, st)
+			var pull_vec := sub_kp - axle_xz
+			if pull_vec.length_squared() > 0.0001:
+				var u_pull := pull_vec.normalized()
+				var desired_trl_yaw := atan2(-u_pull.x, -u_pull.y)
+				var rel_fwd := clampf(wrapf(desired_trl_yaw - sub_cab, -PI, PI), -deg_to_rad(42.0), deg_to_rad(42.0))
+				trl_yaw = sub_cab + rel_fwd
+				axle_xz = sub_kp - Vector2(-sin(trl_yaw), -cos(trl_yaw)) * axle_dist
+		rig["trailer_axle_xz"] = axle_xz
+		rig["prev_kp_xz"] = kp_xz
+		rig["prev_cab_yaw"] = cab_yaw
 	else:
-		# En bahía / báscula: mantener ejes bloqueados con alineación limpia
-		trl_yaw = lerp_angle(trl_yaw, cab_yaw, clampf(delta * 3.0, 0.0, 1.0))
+		# En bahía / báscula: mantener alineación recta limpia
+		trl_yaw = lerp_angle(trl_yaw, cab_yaw, clampf(delta * 4.0, 0.0, 1.0))
 		var u_idle := Vector2(-sin(trl_yaw), -cos(trl_yaw))
 		rig["trailer_axle_xz"] = kp_xz - u_idle * axle_dist
+		rig["prev_kp_xz"] = kp_xz
+		rig["prev_cab_yaw"] = cab_yaw
 
 	rig["trailer_yaw"] = trl_yaw
 	var rel_final := clampf(wrapf(trl_yaw - cab_yaw, -PI, PI), -deg_to_rad(44.0), deg_to_rad(44.0))

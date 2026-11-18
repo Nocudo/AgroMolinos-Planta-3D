@@ -11,8 +11,8 @@ extends Control
 
 const HumanGaitAnimatorScript = preload("res://scripts/interactive/HumanGaitAnimator.gd")
 const OPERARIO_SCENE_PATH := "res://assets/models/trabajador_operario.glb"
-const TEX_CIVIL_PATH := "res://assets/textures_lowres/worker_civil.png"
-const TEX_EPP_PATH := "res://assets/textures_lowres/worker_epp.png"
+const TEX_CIVIL_PATH := "res://assets/models/trabajador_operario_trabajador_operario_0.jpg"
+const TEX_EPP_PATH := "res://assets/models/trabajador_logistica_trabajador_logistica_0.jpg"
 
 const TOOL_SPECS: Array[Dictionary] = [
 	{"id": 1, "short": "Manos", "full": "1 • Manos", "accent": Color(0.78, 0.88, 1.0, 1.0)},
@@ -40,7 +40,6 @@ var _tex_civil: Texture2D = null
 var _tex_epp: Texture2D = null
 var _spin_timer: float = 0.0
 var _idle_t: float = 0.0
-var _render_accum: float = 0.0
 var _base_yaw: float = PI + 0.28
 
 func _ready() -> void:
@@ -149,8 +148,8 @@ func _build_avatar_card(parent_box: Container) -> void:
 	_sub_vp.size = Vector2i(188, 192)
 	_sub_vp.transparent_bg = true
 	_sub_vp.own_world_3d = true
-	_sub_vp.msaa_3d = Viewport.MSAA_DISABLED
-	_sub_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED if DisplayServer.get_name() == "headless" else SubViewport.UPDATE_ONCE
+	_sub_vp.msaa_3d = Viewport.MSAA_4X
+	_sub_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED if DisplayServer.get_name() == "headless" else SubViewport.UPDATE_ALWAYS
 	vp_holder.add_child(_sub_vp)
 
 	_setup_avatar_3d_scene()
@@ -341,7 +340,7 @@ func _apply_avatar_outfit_material(equipped: bool) -> void:
 
 func _request_avatar_redraw() -> void:
 	if _sub_vp != null and DisplayServer.get_name() != "headless":
-		_sub_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+		_sub_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
 func _process(delta: float) -> void:
 	if DisplayServer.get_name() == "headless" or _char_pivot == null:
@@ -355,12 +354,8 @@ func _process(delta: float) -> void:
 		_request_avatar_redraw()
 		return
 
-	# Balanceo sutil estilo papel-doll a ~8 Hz para 0% impacto en FPS
-	_render_accum += delta
-	if _render_accum >= 0.125:
-		_render_accum = 0.0
-		_char_pivot.rotation.y = _base_yaw + sin(_idle_t * 1.4) * 0.14
-		_request_avatar_redraw()
+	# Balanceo fluido a velocidad nativa
+	_char_pivot.rotation.y = _base_yaw + sin(_idle_t * 1.4) * 0.14
 
 
 # ==============================================================================

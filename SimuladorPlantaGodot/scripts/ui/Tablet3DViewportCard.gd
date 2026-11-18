@@ -108,7 +108,7 @@ func _build_ui(title_txt: String, sub_txt: String) -> void:
 
 	_sub_vp = SubViewport.new()
 	_sub_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	_sub_vp.msaa_3d = Viewport.MSAA_DISABLED
+	_sub_vp.msaa_3d = Viewport.MSAA_2X
 	_vp_container.add_child(_sub_vp)
 
 	_camera = Camera3D.new()

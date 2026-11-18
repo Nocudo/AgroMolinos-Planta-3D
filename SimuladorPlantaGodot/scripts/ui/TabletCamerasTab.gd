@@ -105,9 +105,9 @@ func _build_single_view(parent: Control) -> void:
 	_single_wrap.add_child(vpc)
 
 	_single_vp = SubViewport.new()
-	_single_vp.size = Vector2i(640, 360)
+	_single_vp.size = Vector2i(1024, 576)
 	_single_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	_single_vp.msaa_3d = Viewport.MSAA_DISABLED
+	_single_vp.msaa_3d = Viewport.MSAA_2X
 	vpc.add_child(_single_vp)
 
 	_single_cam = Camera3D.new()
@@ -164,9 +164,9 @@ func _build_quad_view(parent: Control) -> void:
 		wrap.add_child(vpc)
 
 		var vp := SubViewport.new()
-		vp.size = Vector2i(360, 202)
+		vp.size = Vector2i(512, 288)
 		vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
-		vp.msaa_3d = Viewport.MSAA_DISABLED
+		vp.msaa_3d = Viewport.MSAA_2X
 		vpc.add_child(vp)
 
 		var cam := Camera3D.new()

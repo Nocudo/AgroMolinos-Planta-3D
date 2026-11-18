@@ -36,11 +36,11 @@ ambient_light_energy = 0.38
 tonemap_mode = 3
 tonemap_exposure = 0.82
 tonemap_white = 1.6
-ssao_enabled = false
+ssao_enabled = true
 ssr_enabled = false
-glow_enabled = false
-glow_intensity = 0.55
-glow_strength = 0.90
+glow_enabled = true
+glow_intensity = 0.45
+glow_strength = 0.85
 glow_bloom = 0.04
 glow_blend_mode = 0
 glow_hdr_threshold = 1.05
@@ -64,8 +64,8 @@ light_energy = 0.85
 shadow_enabled = true
 shadow_bias = 0.03
 shadow_normal_bias = 1.8
-directional_shadow_mode = 0
-directional_shadow_max_distance = 36.0
+directional_shadow_mode = 2
+directional_shadow_max_distance = 90.0
 
 [node name="Architecture" type="Node3D" parent="."]
 

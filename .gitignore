@@ -49,3 +49,6 @@ temp/
 scratch/
 godot_portable/
 AgroMolinos_Planta3D_USB_Portable.zip
+build/
+*.exe
+*.pck

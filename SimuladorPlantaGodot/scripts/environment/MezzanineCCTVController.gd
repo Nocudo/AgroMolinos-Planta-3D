@@ -53,7 +53,7 @@ func _setup_cctv_cameras() -> void:
 	if cctv_viewport == null:
 		cctv_viewport = SubViewport.new()
 		cctv_viewport.name = "CCTVSubViewport"
-		cctv_viewport.size = Vector2i(320, 180)
+		cctv_viewport.size = Vector2i(640, 360)
 		cctv_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		add_child(cctv_viewport)
 

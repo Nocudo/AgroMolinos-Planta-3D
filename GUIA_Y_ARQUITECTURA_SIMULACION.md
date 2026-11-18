@@ -33,7 +33,7 @@ La guía oficial establece como eje central la **Transición de Industria 4.0 a 
 | **Monitoreo de corriente, temperatura y vibración** | Muestreo continuo True-RMS de $I_A, I_B, I_C, IUF, THD$, temperatura de devanado $T_w$ y gradiente $\frac{dT}{dt}$ (aislamiento Clase F), y vibración $Vib_{RMS}, Vib_{peak}$ bajo norma **ISO 10816-3**, graficados en oscilogramas nativos (`TabletOscilloscopeChart.gd`) dentro de la Tablet (`[TAB]`). |
 | **Implementar control de velocidad y optimización energética** | Controlador `VFDDriveController.gd` con conmutación en vivo **VFD vs DOL** desde la Tablet, rampa suave de arranque, control PID proporcional al flujo másico de grano y ley cúbica de afinidad ($7.52$ vs $10.50\text{ kWh/ton}$ → **$28.38\%$ de ahorro** y **$488.7\text{ kg CO}_2\text{e/año}$** evitados). |
 | **Sistema de alertas para sobrecargas, sobrecalentamiento y fallas** | Motor `EdgeAIEngine.gd` clasifica 4 estados (*Normal*, *Sobrecalentamiento*, *Falla Eléctrica*, *Falla Mecánica*), dispara alertas push sonoras (`AudioAlert`), muestra banners en el HUD y despliega diagnóstico explicable + checklist RCM en la Tablet. |
-| **Realizar los planos y entorno en 3D** | Complejo industrial completo en 3D (`planta_completa.glb` derivado de `planta_completa.skp`, `panel_control.glb` y 6 modelos `trabajador_*.glb`), optimizado para **Vulkan 1.3 Forward+** con 470 colisionadores, 28 puertas funcionales y 37 texturas de baja resolución. |
+| **Realizar los planos y entorno en 3D** | Complejo industrial completo en 3D (`planta_completa.glb` de `1,338,166` triángulos derivado de `planta_completa.skp`, `panel_control.glb` y 6 modelos `trabajador_*.glb`), ejecutado en **Vulkan 1.3 Forward+** con 846 colisionadores, 28 puertas funcionales y todas las texturas originales de alta resolución. |
 
 ---
 
@@ -66,7 +66,7 @@ flowchart LR
 | :--- | :---: | :--- |
 | **Entrega y Cumplimiento de Normatividad (IEEE)** | **20%** | Repositorio versionado en GitHub con informes IEEE en LaTeX (`Avance 1/`, `Avance 2/`), documentación técnica actualizada (`README.md`, este documento, `PLAN_EJECUCION_ARGON.md`) e instalador de 1 clic (`INSTALAR_DEPENDENCIAS.bat`). |
 | **Diseño (Fundamento teórico, diagramas, cálculos y simuladores)** | **30%** | Fundamento electromecánico completo (Kloss, Newton-Euler, Arrhenius, ISO 10816-3, IEC 60479-1, RETIE Art. 20, UPME), modelos en MATLAB/Simulink y gemelo digital en Godot 4.7 con correspondencia matemática verificada. |
-| **Implementación (Dominio, innovación y funcionamiento correcto)** | **40%** | Prototipo 3D Serious Game funcional en **Vulkan 1.3 Forward+**, fallas 100% físicas diegéticas (cero botones de trampa), IA nativa embebida, Tablet SCADA de 8 pestañas, logística vehicular natural, 37 texturas de baja resolución optimizadas y **suite TDD `headless_verify.gd` aprobando `10/10`**. |
+| **Implementación (Dominio, innovación y funcionamiento correcto)** | **40%** | Prototipo 3D Serious Game funcional en **Vulkan 1.3 Forward+**, fallas 100% físicas diegéticas (cero botones de trampa), IA nativa embebida, Tablet SCADA de 8 pestañas, logística vehicular natural, modelos 3D de alta densidad con texturas originales HD y **suite TDD `headless_verify.gd` aprobando `10/10`**. |
 | **Conclusiones y Análisis** | **10%** | Exportación de evidencias cuantitativas (ahorro energético $28.38\%$, reducción de picos de arranque de $81.0\text{ A}$ a $<17.5\text{ A}$, exactitud IA $>98.7\%$ y reporte individual `Reporte_Estudiante_RETIE.json`). |
 
 ---
@@ -128,23 +128,20 @@ flowchart TD
 
 ## Parte III — Explicación Detallada de Cada Parte de la Simulación
 
-### 1. Entorno 3D, Motor Vulkan 1.3 Forward+, Texturas de Baja Resolución y Optimización
+### 1. Entorno 3D, Motor Vulkan 1.3 Forward+, Modelos de Alta Densidad y Texturas Originales HD
 
-La escena maestra [`SimuladorPlantaGodot/scenes/main.tscn`](SimuladorPlantaGodot/scenes/main.tscn) integra la planta completa bajo una política estricta de **cero modelos 3D procedurales** (todas las mallas provienen de los `.glb` descargados) combinada con optimización gráfica profunda para correr con alta fluidez incluso en GPUs integradas:
+La escena maestra [`SimuladorPlantaGodot/scenes/main.tscn`](SimuladorPlantaGodot/scenes/main.tscn) integra la planta completa bajo una política estricta de **cero modelos 3D procedurales** (todas las mallas provienen de los `.glb` descargados con geometría original de alta densidad poligonal y texturas originales de alta resolución):
 
-- **API Gráfica Vulkan 1.3 (`Forward Plus`)**: Configurada en `project.godot` con profundidad **Reverse-Z de 32 bits** (eliminando el parpadeo de caras lejanas), cámara `CameraFPS` calibrada (`near = 0.14 m`, `far = 260 m`) y sesgo de sombras (`SunLight`) ajustado para evitar *shadow acne* y *Z-fighting*.
-- **Eliminación Total de Texturas Pesadas y Creación de 37 Texturas Procedurales de Baja Resolución**:
-  - Todas las texturas antiguas (230 archivos sueltos y 107 imágenes incrustadas de hasta `2048×1536`, mapas normales, ORM y extensión heredada `KHR_materials_pbrSpecularGlossiness`) fueron eliminadas por completo.
-  - Se generaron desde cero **37 texturas procedurales limpias** en `SimuladorPlantaGodot/assets/textures_lowres/` (`152.3 KB` totales) e incrustadas en los 8 `.glb` con `gltf/embedded_image_handling=2` (**Basis Universal**, compresión hardware en VRAM):
-    - **32 texturas `64×64` sin costuras** para lámina corrugada (gris, blanca, amarilla, verde), aluminio anodizado, acero oscuro, piso metálico, bloque de concreto, concreto, estuco, adoquín, baldosa, azulejo, césped, grava, ladrillo, madera, tela de saco, malla metálica con canal alfa, vidrio azulado y acero/polímero del tablero CCM.
-    - **5 uniformes `128×128`** horneados directamente desde las coordenadas 3D `(X, Y, Z)` de la malla del trabajador sobre su espacio UV (`worker_civil.png`, `worker_epp.png`, `worker_sst.png`, `worker_mantenimiento.png`, `worker_jefe_planta.png`), diferenciando visualmente casco, rostro, franjas reflectivas, guantes y botas por rol.
-  - **Reducción medida en disco y VRAM**: `panel_control.glb` bajó de `11.13 MB` a `2.06 MB` (**−99.9%** en texturas), `planta_completa.glb` redujo sus texturas incrustadas de `3.31 MB` a `79.3 KB` (**−97.6%**) y los 6 modelos de trabajadores bajaron de `29.61 MB` a `16.92 MB` (**−99.3%** en texturas).
+- **API Gráfica Vulkan 1.3 (`Forward Plus`) en Calidad Nativa**: Configurada en `project.godot` con `scaling_3d/scale=1.0`, MSAA 4x + FXAA, SSAO, Glow, profundidad **Reverse-Z de 32 bits**, cámara `CameraFPS` calibrada (`near = 0.14 m`, `far = 260 m`) y sombras PSSM 4-splits de `4096 px` (`SunLight` hasta `90 m`).
+- **Modelos de Alta Densidad Poligonal y Texturas Originales Completas**:
+  - `planta_completa.glb` conserva su geometría completa de **`1,338,166` triángulos** (preservando el retiro del murete frente al horno del Patio Oeste) junto con sus **69 texturas originales** extraídas (`hasta 2048×1536` y `1974×1024`).
+  - `panel_control.glb` (`42,140` triángulos, 20 texturas `1024×1024`) y los 6 modelos `trabajador_*.glb` (`7,000` triángulos cada uno, mapas difusos, ORM y normales `1024×1024` con compresión de alta calidad).
 - **Construcción Espacial, Colisiones y Alineación Milimétrica de Puertas (`PlantSpatialBuilder.gd` + `InteractiveDoor.gd`)**:
-  - Genera el suelo físico industrial `SueloFisicoPBR` (`StaticBody3D` sólido con fricción $0.85$) y **470 colisionadores** sobre paredes, losas, pasarelas, silos y maquinaria.
+  - Genera el suelo físico industrial `SueloFisicoPBR` (`StaticBody3D` sólido con fricción $0.85$) y **846 colisionadores `BoxShape3D`** sobre paredes, losas, pasarelas, silos y maquinaria.
   - Detecta y convierte las **28 puertas y portones** de la planta en nodos interactivos (`InteractiveDoor.gd`: batientes simples, dobles, enrollables y portones corredizos automáticos). Las 23 puertas batientes y dobles se alinean automáticamente al plano exacto del marco mediante **PCA 2D de vértices** y ajuste de jamba (`error angular = 0.000°`, `error posicional <= 0.01 mm`, giro limpio de `90°`).
   - Traza en piso las **zonas de seguridad industrial** (`FloorDecal` sin Z-fighting): Zona 1 Molienda (amarillo/negro OSHA), Zona 2 CCM 460 V (rojo $1.0\text{ m}$ RETIE Art. 20 / NFPA 70E), Pasillos Peatonales (verde), Recepción (azul), Almacén (blanco) y Atmósfera de Polvo Combustible (ATEX Zona 22 / NFPA 61).
-- **Optimización Espacial (`PlantVisibilityOptimizer.gd`)**:
-  - Convierte materiales sólidos de SketchUp con `alphaMode=MASK` innecesario a opacos reales (habilitando *Early-Z*), reemplaza la malla alfa multicapa de los lockers por material opaco optimizado, elimina mallas duplicadas coplanares y agrupa geometría estática en **celdas espaciales de $16\text{ m}$ por bandas LOD** (`MICRO`, `SMALL`, `MEDIUM`) más oclusión Este/Oeste y *culling* de camiones lejanos (`> 68 m`), reduciendo los *draw calls* en la nave de `1,562` a `~351`.
+- **Gestión Espacial (`PlantVisibilityOptimizer.gd`)**:
+  - Convierte materiales sólidos de SketchUp con `alphaMode=MASK` innecesario a opacos reales (habilitando *Early-Z*), reemplaza la malla alfa multicapa de los lockers por material opaco optimizado, elimina mallas duplicadas coplanares y agrupa geometría estática en **celdas espaciales de $16\text{ m}$** con rangos de distancia extendidos (`70 m / 120 m / 200 m`), sombras completas en maquinaria (`>= 0.45 m`) y camiones visibles hasta `160 m`.
 
 ---
 
@@ -314,5 +311,5 @@ godot --headless --audio-driver Dummy --path SimuladorPlantaGodot --script res:/
 | `scripts/interactive/` | `PlayerOperator.gd`, `WorkerNPC.gd`, `HumanGaitAnimator.gd`, `InteractiveDoor.gd`, `LockerEPPStation.gd`, `InteractableGlowController.gd` y los 6 scripts de equipos/fallas | Control en 1ra persona, animación biomecánica de operarios, puertas, EPP y las 5 fallas físicas diegéticas. |
 | `scripts/tutorial/` | `TutorialInductionManager.gd`, `LotoGoldenRulesController.gd`, `SafetyEvaluationScorecard.gd` | Recorrido seguro de 19 estaciones, 5 Reglas de Oro LOTO y rúbrica RETIE (`0.0–5.0`). |
 | `scripts/ui/` | `HUDController.gd`, `HUDHotbarAndAvatar.gd`, `PauseMenuController.gd`, `RetieCourseModal.gd`, `IndustrialTabletController.gd` y 7 módulos `Tablet*.gd` | HUD limpio con mira fija, avatar 3D EPP, pausa, Curso/Quiz SST y Tablet SCADA de 8 pestañas. |
-| `assets/` | `models/*.glb` (8 modelos) y `textures_lowres/*.png` (37 texturas `64×64` / `128×128`) | Geometría 3D descargada optimizada con texturas procedurales de baja resolución y compresión Basis Universal. |
+| `assets/` | `models/*.glb` (8 modelos) y sus texturas originales extraídas (`*.png`, `*.jpg`) | Geometría 3D descargada con malla de alta densidad poligonal (`1,338,166` tris) y texturas originales HD (`hasta 2048×1536`). |
 | `scripts/tests/` | `headless_verify.gd` | Suite maestra automatizada de certificación `10/10 PASS`. |

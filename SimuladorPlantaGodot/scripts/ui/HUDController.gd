@@ -239,7 +239,7 @@ func resolve_plant_location(p: Vector3) -> String:
 		return "Sala de Reuniones"
 	if p.x >= 11.5 and p.x <= 44.5 and p.z >= 20.5 and p.z <= 51.5:
 		return "Oficinas Administrativas"
-	if p.x >= -18.0 and p.x <= -12.6 and p.z >= 44.6 and p.z <= 50.2:
+	if p.x >= -16.95 and p.x <= -12.6 and p.z >= 44.8 and p.z <= 48.95:
 		return "Vestidores EPP"
 	if p.x >= -21.8 and p.x <= -19.2 and p.z >= 37.0 and p.z <= 40.0:
 		return "Tablero CCM 460 V"

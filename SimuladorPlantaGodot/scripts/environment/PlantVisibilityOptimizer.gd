@@ -14,9 +14,9 @@ const LOD_MICRO_DIAG: float = 0.45
 const LOD_SMALL_DIAG: float = 1.40
 const LOD_MEDIUM_DIAG: float = 3.80
 
-const DIST_MICRO: float = 20.0
-const DIST_SMALL: float = 38.0
-const DIST_MEDIUM: float = 62.0
+const DIST_MICRO: float = 140.0
+const DIST_SMALL: float = 200.0
+const DIST_MEDIUM: float = 280.0
 
 var _admin_nodes: Array[Node3D] = []
 var _nave_nodes: Array[Node3D] = []
@@ -88,10 +88,10 @@ func _build_locker_opaque_mesh_material(src_mat: StandardMaterial3D) -> Standard
 		if work.is_compressed():
 			work.decompress()
 		work.convert(Image.FORMAT_RGBA8)
-		work.resize(128, 64, Image.INTERPOLATE_BILINEAR)
-		var out_img := Image.create(128, 64, false, Image.FORMAT_RGB8)
-		for y in range(64):
-			for x in range(128):
+		work.resize(256, 128, Image.INTERPOLATE_BILINEAR)
+		var out_img := Image.create(256, 128, false, Image.FORMAT_RGB8)
+		for y in range(128):
+			for x in range(256):
 				var px: Color = work.get_pixel(x, y)
 				var a: float = clampf(px.a, 0.0, 1.0)
 				var lum: float = clampf((px.r + px.g + px.b) / 3.0 * 1.40 + 0.24, 0.25, 1.0)
@@ -526,7 +526,7 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 				mi.visibility_range_end = 0.0
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 				mi.visible = true
-				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if world_diag < LOD_SMALL_DIAG else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 				continue
 
 			var world_center := mi.global_transform * aabb.get_center()
@@ -546,7 +546,7 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 				mi.visibility_range_end = DIST_SMALL
 				mi.visibility_range_end_margin = 5.0
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 				_lod_mesh_items.append({
 					"node": mi, "pos": world_center, "max_d2": DIST_SMALL * DIST_SMALL,
 					"orig_range": DIST_SMALL, "orig_fade": GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
@@ -556,7 +556,7 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 				mi.visibility_range_end = DIST_MEDIUM
 				mi.visibility_range_end_margin = 8.0
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 				_lod_mesh_items.append({
 					"node": mi, "pos": world_center, "max_d2": DIST_MEDIUM * DIST_MEDIUM,
 					"orig_range": DIST_MEDIUM, "orig_fade": GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
@@ -711,11 +711,7 @@ func _update_mesh_distance_culling(cam: Camera3D) -> void:
 		var m_pos: Vector3 = item["pos"]
 		var d2: float = cam_pos.distance_squared_to(m_pos)
 		var max_d2: float = float(item["max_d2"])
-		var should_be_vis: bool = true
-		if d2 > max_d2:
-			should_be_vis = false
-		elif d2 > 49.0 and cam.is_position_behind(m_pos):
-			should_be_vis = false
+		var should_be_vis: bool = (d2 <= max_d2)
 		if mi.visible != should_be_vis:
 			mi.visible = should_be_vis
 
@@ -729,12 +725,12 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 	var new_sector := "EXTERIOR"
 	
 	# Delimitación geométrica de sectores de la planta
-	if p.x >= -17.9 and p.x <= -13.0 and p.z >= 44.8 and p.z <= 50.2:
-		# Vestidores cerrados (muros de concreto/azulejo separan tanto la nave como oficinas)
+	if p.x >= -16.95 and p.x <= -12.6 and p.z >= 44.8 and p.z <= 48.95:
+		# Vestidores cerrados (estrictamente dentro del cuarto de lockers sin invadir pasillo ni patio)
 		new_sector = "VESTIDORES"
 	elif p.x <= -13.5 and p.z >= 18.0 and p.z <= 52.0:
 		new_sector = "NAVE_PRODUCCION"
-	elif p.x >= 12.0 and p.x <= 40.5 and p.z >= 20.0 and p.z <= 52.0:
+	elif p.x >= 13.5 and p.x <= 41.5 and p.z >= 21.0 and p.z <= 50.5:
 		new_sector = "SECTOR_ADMIN"
 	elif p.x > 8.0:
 		new_sector = "EXTERIOR_EAST"
@@ -752,37 +748,36 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 	
 	match _current_sector:
 		"VESTIDORES":
-			# Cuarto de lockers cerrado: ocultar oficinas, nave pesada, baños adyacentes y luces/sombras exteriores
-			_set_nodes_visible(_admin_nodes, false)
-			_set_nodes_visible(_nave_nodes, false)
-			_set_nodes_visible(_aux_room_nodes, false)
-			_set_vestidores_light_mode(true)
-		"NAVE_PRODUCCION":
-			# Ocultar oficinas administrativas (tras muros macizos a >30m)
+			# Vestidores tiene puerta/ventanas hacia la nave y patio: nunca desaparecer maquinaria ni luces
 			_set_nodes_visible(_admin_nodes, false)
 			_set_nodes_visible(_nave_nodes, true)
-			_set_nodes_visible(_aux_room_nodes, false)
+			_set_nodes_visible(_aux_room_nodes, true)
+			_set_vestidores_light_mode(false)
+		"NAVE_PRODUCCION":
+			# Ocultar oficinas administrativas lejanas; mantener maquinaria y cuartos adyacentes con ventanas visibles
+			_set_nodes_visible(_admin_nodes, false)
+			_set_nodes_visible(_nave_nodes, true)
+			_set_nodes_visible(_aux_room_nodes, true)
 			_set_vestidores_light_mode(false)
 		"SECTOR_ADMIN":
-			# Ocultar maquinaria de la nave de molienda
+			# Dentro de oficinas administrativas cerradas: ocultar maquinaria pesada de la nave
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, false)
 			_set_nodes_visible(_aux_room_nodes, false)
 			_set_vestidores_light_mode(false)
 		"EXTERIOR_EAST":
-			# Patio Este / Portería: maquinaria interior de la nave queda oculta tras muros (>30m), camiones 100% visibles
+			# En exteriores mantener visibles tolvas/bandas exteriores y maquinaria sin pop-in al caminar por los patios
 			_set_nodes_visible(_admin_nodes, true)
-			_set_nodes_visible(_nave_nodes, false)
+			_set_nodes_visible(_nave_nodes, true)
 			_set_nodes_visible(_aux_room_nodes, true)
 			_set_vestidores_light_mode(false)
 		"EXTERIOR_WEST":
-			# Lado Oeste de la nave: mobiliario interior de oficinas queda oculto tras muros, camiones 100% visibles
 			_set_nodes_visible(_admin_nodes, false)
 			_set_nodes_visible(_nave_nodes, true)
 			_set_nodes_visible(_aux_room_nodes, true)
 			_set_vestidores_light_mode(false)
 		_:
-			# Patio central: ambos activos con LOD por distancia
+			# Patio central: todo visible sin pop-in
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, true)
 			_set_nodes_visible(_aux_room_nodes, true)
@@ -811,13 +806,11 @@ func _update_trucks_visibility(cam_pos: Vector3) -> void:
 		if trk == null or not is_instance_valid(trk):
 			continue
 		var want_vis: bool = true
-		if _current_sector == "VESTIDORES":
-			want_vis = false
-		elif _current_sector == "NAVE_PRODUCCION" or _current_sector == "SECTOR_ADMIN":
-			want_vis = (cam_pos.distance_to(trk.global_position) <= 46.0)
+		if _current_sector == "SECTOR_ADMIN":
+			want_vis = (cam_pos.distance_to(trk.global_position) <= 65.0)
 		else:
-			# En exteriores mantener visibles todos los camiones cercanos/medios y ocultar mallas pesadas (>68 m tras edificios)
-			want_vis = (cam_pos.distance_to(trk.global_position) <= 68.0)
+			# Mantener visibles los camiones desde vestidores/ventanas/patios sin desapariciones
+			want_vis = (cam_pos.distance_to(trk.global_position) <= 180.0)
 		if trk.visible != want_vis:
 			trk.visible = want_vis
 

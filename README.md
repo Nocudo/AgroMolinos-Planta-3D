@@ -58,10 +58,10 @@ Plataforma integral de modelado electromecánico, mantenimiento predictivo basad
 
 ## 🎮 Características del Serious Game en Godot 4.7 (`SimuladorPlantaGodot/`)
 
-### 1. Motor Gráfico Vulkan 1.3, Texturas de Baja Resolución y Optimización de Rendimiento
-- **Renderizado Nativo Vulkan 1.3 Forward+:** Configurado con profundidad Reverse-Z de 32 bits, `CameraFPS` calibrada (`near = 0.14 m`, `far = 260 m`) y eliminación integral de *Z-fighting* coplanar y mallas duplicadas.
-- **Activos 3D Descargados con 37 Texturas Procedurales de Baja Resolución:** Todos los modelos 3D descargados (`planta_completa.glb`, `panel_control.glb` y los 6 `trabajador_*.glb`) conservan su geometría original intacta, mientras que el **100% de las texturas pesadas originales** fueron eliminadas y reemplazadas por **37 texturas procedurales limpias de baja resolución** (`64×64` para arquitectura/equipos y `128×128` horneadas desde geometría 3D para uniformes de operarios, `152.3 KB` totales) con compresión VRAM **Basis Universal** (reducción $>97\%$ a $99.9\%$ en peso de texturas incrustadas).
-- **Optimización Espacial y Puertas Alineadas por PCA:** `PlantVisibilityOptimizer.gd` aplica *batching* espacial en celdas de $16\text{ m}$ por bandas LOD, oclusión exterior Este/Oeste y *culling* vehicular a distancia; `PlantSpatialBuilder.gd` genera 470 colisionadores sólidos y alinea milimétricamente las **28 puertas interactivas** (23 batientes/dobles alineadas al plano exacto del marco por PCA + portones enrollables y corredizos).
+### 1. Motor Gráfico Vulkan 1.3, Alta Calidad Visual y Modelos Completos
+- **Renderizado Nativo Vulkan 1.3 Forward+:** Configurado en resolución nativa (`scaling_3d/scale=1.0`), MSAA 4x + FXAA, SSAO, Glow, sombras direccionales de `4096 px` (`90 m`), profundidad Reverse-Z de 32 bits, `CameraFPS` calibrada (`near = 0.14 m`, `far = 260 m`) y eliminación integral de *Z-fighting* coplanar y mallas duplicadas.
+- **Activos 3D Descargados Completos con Texturas Originales HD:** Todos los modelos 3D descargados conservan su **geometría original de alta densidad poligonal** (`planta_completa.glb` con `1,338,166` triángulos preservando el retiro del murete Oeste, `panel_control.glb` con `42,140` triángulos y los 6 `trabajador_*.glb` con `7,000` triángulos c/u) y sus **texturas originales completas** extraídas en `SimuladorPlantaGodot/assets/models/` (`hasta 2048×1536` en planta y `1024×1024` difuso/ORM/normal en operarios).
+- **Gestión Espacial y Puertas Alineadas por PCA:** `PlantVisibilityOptimizer.gd` aplica *batching* espacial en celdas de $16\text{ m}$ con rangos extendidos (`70 m / 120 m / 200 m`), sombras en maquinaria y *culling* lejano (`> 160 m`); `PlantSpatialBuilder.gd` genera 846 colisionadores `BoxShape3D` y alinea milimétricamente las **28 puertas interactivas** (23 batientes/dobles alineadas al plano exacto del marco por PCA + portones enrollables y corredizos).
 - **Demarcación Vial y Seguridad (OSHA / RETIE / ATEX):** Delimitación en piso de la zona de molienda (amarillo/negro), perímetro de riesgo eléctrico de $1.0\text{ m}$ frente al tablero CCM $460\text{ V}$ (rojo RETIE Art. 20 / NFPA 70E), pasillos peatonales seguros (verde), recepción (azul), almacén (blanco) y zona de polvo combustible (NFPA 61 / ATEX Zona 22).
 
 ### 2. Modo Tutorial Interactivo y Recorrido Seguro de 19 Estaciones (RETIE & 5 Reglas de Oro)
@@ -114,8 +114,7 @@ Todas las averías se inducen y reparan mediante acciones físicas directas sobr
 │   └── Informe/simulaciones/           # Modelos de inyección de fallas en Simulink
 ├── Modelos descargados/                # Fuentes 3D originales (.skp)
 ├── SimuladorPlantaGodot/               # PROYECTO MAESTRO DEL SERIOUS GAME EN GODOT 4.7 (VULKAN 1.3)
-│   ├── assets/models/                  # 8 modelos .glb optimizados (sin texturas antiguas, Basis Universal)
-│   ├── assets/textures_lowres/         # 37 texturas procedurales 64x64 / 128x128 (152.3 KB total)
+│   ├── assets/models/                  # 8 modelos .glb alta densidad + texturas originales extraídas (.png/.jpg)
 │   ├── scenes/                         # Escenas modulares (.tscn): environment, equipment, infrastructure, player, production, ui, workers
 │   ├── scripts/                        # Módulos GDScript 2.0: ai, core, environment, interactive, physics, production, tests, tutorial, ui
 │   └── project.godot                   # Configuración de Godot 4.7 Forward+ (Vulkan 1.3) e Input Map
