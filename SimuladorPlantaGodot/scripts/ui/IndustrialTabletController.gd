@@ -1345,7 +1345,7 @@ func _sync_live_plant_context() -> void:
 			if lbl != null:
 				lbl.text = str(spec["station"])
 
-	# Sincronizar 5 Reglas de Oro en Tab 3
+	# Sincronizar 5 Reglas de Oro en Tab 3 (mostrar insignia únicamente cuando la regla esté aplicada, sin etiqueta "Pendiente")
 	if not _retie_handles.is_empty():
 		var tour := r.find_child("TutorialInductionManager", true, false)
 		if tour != null and tour.get("loto_controller") != null:
@@ -1353,7 +1353,11 @@ func _sync_live_plant_context() -> void:
 			var badges: Array = _retie_handles["rule_badges"]
 			for i in range(mini(st_arr.size(), badges.size())):
 				var done := bool(st_arr[i].get("done", false))
-				TTheme.set_badge_state(badges[i]["panel"], badges[i]["label"], "Lista" if done else "Pendiente", "NORMAL" if done else "WARNING")
+				var bp := badges[i]["panel"] as Control
+				if bp != null:
+					bp.visible = done
+				if done:
+					TTheme.set_badge_state(badges[i]["panel"], badges[i]["label"], "Aplicada", "NORMAL")
 
 	# Sincronizar estaciones del recorrido en Tab 8
 	if not _cctv_handles.is_empty():

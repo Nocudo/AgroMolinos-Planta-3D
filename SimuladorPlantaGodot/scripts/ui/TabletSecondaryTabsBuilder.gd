@@ -58,10 +58,11 @@ static func build_retie_tab() -> Dictionary:
 		txt_vb.add_child(dl)
 
 		var pill := PanelContainer.new()
+		pill.visible = false
 		pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.28, 0.18, 0.04, 0.9), TTheme.ACCENT_AMBER))
+		pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.05, 0.24, 0.16, 0.92), TTheme.ACCENT_EMERALD))
 		hb.add_child(pill)
-		var plbl := TTheme.make_label("Pendiente", 10, Color(1.0, 0.85, 0.45), HORIZONTAL_ALIGNMENT_CENTER)
+		var plbl := TTheme.make_label("Aplicada", 10, TTheme.ACCENT_EMERALD, HORIZONTAL_ALIGNMENT_CENTER)
 		pill.add_child(plbl)
 		rule_badges.append({"panel": pill, "label": plbl})
 
