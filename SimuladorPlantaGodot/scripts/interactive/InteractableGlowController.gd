@@ -634,9 +634,9 @@ func _setup_machine_aisle_labels(scene_root: Node) -> void:
 		lbl.no_depth_test = true
 		lbl.font_size = int(spec.get("font_size", 84))
 		lbl.pixel_size = float(spec.get("pixel_size", 0.0026))
-		lbl.outline_size = 6
+		lbl.outline_size = maxi(16, int(round(float(lbl.font_size) * 0.22)))
 		lbl.modulate = Color(1.15, 1.15, 1.15, 1.0)
-		lbl.outline_modulate = Color(0.03, 0.04, 0.06, 0.85)
+		lbl.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.render_priority = 25
@@ -1839,25 +1839,20 @@ func _apply_group_shells(group_key: String, state: int, is_occluded: bool) -> vo
 		var lbl := _machine_labels_by_group[group_key] as Label3D
 		if lbl != null and is_instance_valid(lbl):
 			lbl.visible = (state != GlowState.HIDDEN)
+			lbl.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
 			match state:
 				GlowState.BLUE_PULSE:
 					lbl.modulate = Color(0.42, 0.86, 1.30, 1.0)
-					lbl.outline_modulate = Color(0.02, 0.08, 0.22, 0.85)
 				GlowState.GREEN:
 					lbl.modulate = Color(0.35, 1.25, 0.65, 1.0)
-					lbl.outline_modulate = Color(0.01, 0.12, 0.04, 0.85)
 				GlowState.YELLOW:
 					lbl.modulate = Color(1.25, 1.05, 0.30, 1.0)
-					lbl.outline_modulate = Color(0.12, 0.08, 0.01, 0.85)
 				GlowState.RED:
 					lbl.modulate = Color(1.25, 0.25, 0.25, 1.0)
-					lbl.outline_modulate = Color(0.15, 0.01, 0.01, 0.85)
 				GlowState.RED_HOVER:
 					lbl.modulate = Color(1.30, 0.65, 0.60, 1.0)
-					lbl.outline_modulate = Color(0.25, 0.03, 0.03, 0.85)
 				_:
 					lbl.modulate = Color(1.15, 1.15, 1.15, 1.0)
-					lbl.outline_modulate = Color(0.03, 0.04, 0.06, 0.85)
 
 func _sync_zone_floor_state(zone_name: String, state: int) -> void:
 	var sr := get_parent()
