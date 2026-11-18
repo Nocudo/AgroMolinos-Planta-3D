@@ -931,7 +931,7 @@ func _apply_industrial_floor_safety_shaders() -> void:
 
 	var sh_hazard := Shader.new()
 	sh_hazard.code = """shader_type spatial;
-render_mode cull_back, blend_mix, depth_draw_opaque;
+render_mode cull_back, blend_mix, depth_draw_never;
 uniform vec3 stripe_color : source_color = vec3(0.98, 0.78, 0.08);
 uniform vec3 base_tint : source_color = vec3(0.95, 0.72, 0.08);
 uniform vec2 zone_size = vec2(8.0, 6.0);
@@ -962,7 +962,7 @@ void fragment() {
 
 	var sh_walkway := Shader.new()
 	sh_walkway.code = """shader_type spatial;
-render_mode cull_back, blend_mix, depth_draw_opaque;
+render_mode cull_back, blend_mix, depth_draw_never;
 uniform vec3 lane_color : source_color = vec3(0.11, 0.52, 0.22);
 uniform vec3 line_color : source_color = vec3(0.98, 0.84, 0.18);
 uniform vec2 zone_size = vec2(1.9, 22.0);
@@ -985,12 +985,12 @@ void fragment() {
 """
 
 	var zone_cfg: Dictionary = {
-		"Zone1_Milling_OSHA": {"type": "hazard", "size": Vector2(9.3, 23.5), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.96, 0.72, 0.10), "bw": 0.30, "alpha": 0.12},
-		"Zone2_CCM460V_RETIE": {"type": "hazard", "size": Vector2(1.7, 2.6), "stripe": Color(0.98, 0.18, 0.15), "tint": Color(0.88, 0.15, 0.15), "bw": 0.22, "alpha": 0.30},
-		"Zone6_DispatchBay": {"type": "hazard", "size": Vector2(8.2, 5.2), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.92, 0.72, 0.15), "bw": 0.34, "alpha": 0.24},
-		"Zone8_IntakeConveyor_OSHA": {"type": "hazard", "size": Vector2(5.8, 4.3), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.95, 0.72, 0.10), "bw": 0.28, "alpha": 0.18},
-		"Zone9_AirThermal_OSHA": {"type": "hazard", "size": Vector2(9.2, 10.0), "stripe": Color(0.98, 0.76, 0.06), "tint": Color(0.96, 0.56, 0.08), "bw": 0.28, "alpha": 0.16},
-		"Zone4_PedestrianWalkway_OSHA": {"type": "walkway", "size": Vector2(1.75, 24.5), "lane": Color(0.10, 0.56, 0.24), "line": Color(0.98, 0.86, 0.20), "corridor": 1.0}
+		"Zone1_Milling_OSHA": {"type": "hazard", "size": Vector2(9.3, 23.5), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.96, 0.72, 0.10), "bw": 0.30, "alpha": 0.12, "y": 0.016, "rp": 1},
+		"Zone2_CCM460V_RETIE": {"type": "hazard", "size": Vector2(1.7, 2.6), "stripe": Color(0.98, 0.18, 0.15), "tint": Color(0.88, 0.15, 0.15), "bw": 0.22, "alpha": 0.30, "y": 0.024, "rp": 3},
+		"Zone6_DispatchBay": {"type": "hazard", "size": Vector2(8.2, 5.2), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.92, 0.72, 0.15), "bw": 0.34, "alpha": 0.24, "y": 0.024, "rp": 2},
+		"Zone8_IntakeConveyor_OSHA": {"type": "hazard", "size": Vector2(5.8, 4.3), "stripe": Color(0.98, 0.78, 0.06), "tint": Color(0.95, 0.72, 0.10), "bw": 0.28, "alpha": 0.18, "y": 0.026, "rp": 2},
+		"Zone9_AirThermal_OSHA": {"type": "hazard", "size": Vector2(9.2, 10.0), "stripe": Color(0.98, 0.76, 0.06), "tint": Color(0.96, 0.56, 0.08), "bw": 0.28, "alpha": 0.16, "y": 0.026, "rp": 2},
+		"Zone4_PedestrianWalkway_OSHA": {"type": "walkway", "size": Vector2(1.75, 24.5), "lane": Color(0.10, 0.56, 0.24), "line": Color(0.98, 0.86, 0.20), "corridor": 1.0, "y": 0.020, "rp": 2}
 	}
 
 	for child in zones_root.get_children():
@@ -1001,8 +1001,11 @@ void fragment() {
 			decal.visible = false
 			continue
 		decal.visible = true
+		decal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var cfg: Dictionary = zone_cfg[child.name]
+		decal.position.y = float(cfg["y"])
 		var sm := ShaderMaterial.new()
+		sm.render_priority = int(cfg["rp"])
 		if cfg["type"] == "hazard":
 			sm.shader = sh_hazard
 			sm.set_shader_parameter("zone_size", cfg["size"])

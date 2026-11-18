@@ -25,7 +25,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 [node name="CameraFPS" type="Camera3D" parent="Head"]
 current = true
 fov = 75.0
-near = 0.08
+near = 0.14
+far = 260.0
 
 [node name="InteractionRay" type="RayCast3D" parent="Head/CameraFPS"]
 target_position = Vector3(0, 0, -2.8)

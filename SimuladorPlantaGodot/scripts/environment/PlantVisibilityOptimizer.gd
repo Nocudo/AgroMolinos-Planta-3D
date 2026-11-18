@@ -30,6 +30,19 @@ var _cctv_override_active: bool = false
 var _locker_mesh_opaque_mat: StandardMaterial3D = null
 var _materials_optimized: bool = false
 
+const _GLOW_PROTECTED_ROOTS: Array[String] = [
+	"Group#510", "Node1472", "Node1583", "Node1365", "Group#149",
+	"Node1246", "Node2150", "Node2161", "Group#54", "Group#10",
+	"Group#501", "Group#689", "Group#14", "Node1179", "Node1313",
+	"Node1503", "Node1495", "Node1172", "Node1356", "Node1169",
+	"Watson Zone Slot Lockers 20-Pack", "Watson Zone Slot Lockers 20-Pack_1",
+	"super saco", "Node1348", "Pallet 60 sacos",
+	"PhysicalBreakerPanel", "MotorMillUnit"
+]
+
+var _static_batch_nodes_admin: Array[Node3D] = []
+var _static_batch_nodes_nave: Array[Node3D] = []
+
 func _ready() -> void:
 	call_deferred("_setup_optimizer")
 
@@ -39,7 +52,9 @@ func _setup_optimizer() -> void:
 		return
 	
 	_optimize_plant_materials_and_lockers(scene_root)
+	_fix_coplanar_zfighting_and_duplicates(scene_root)
 	_apply_lod_and_shadow_bands(scene_root)
+	_batch_static_plant_architecture(scene_root)
 	_collect_sectors(scene_root)
 	if _cctv_override_active:
 		_apply_cctv_override_visible()
@@ -87,9 +102,15 @@ func _build_locker_opaque_mesh_material(src_mat: StandardMaterial3D) -> Standard
 	_locker_mesh_opaque_mat = mat
 	return _locker_mesh_opaque_mat
 
-func _merge_static_meshes_under(root_node: Node3D, sources: Array[MeshInstance3D], merged_name: String, mat: Material) -> void:
+func _merge_static_meshes_under(
+	root_node: Node3D,
+	sources: Array[MeshInstance3D],
+	merged_name: String,
+	mat: Material,
+	cast_shadow_mode: GeometryInstance3D.ShadowCastingSetting = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+) -> MeshInstance3D:
 	if root_node == null or sources.size() < 2:
-		return
+		return null
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var inv_root: Transform3D = root_node.global_transform.affine_inverse()
@@ -128,16 +149,16 @@ func _merge_static_meshes_under(root_node: Node3D, sources: Array[MeshInstance3D
 					st.add_vertex(rel_xf * verts[vi])
 					added_any = true
 	if not added_any:
-		return
+		return null
 	var merged_mesh := st.commit()
 	if merged_mesh == null:
-		return
+		return null
 	var merged_mi := MeshInstance3D.new()
 	merged_mi.name = merged_name
 	merged_mi.mesh = merged_mesh
 	if mat != null:
 		merged_mi.set_surface_override_material(0, mat)
-	merged_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	merged_mi.cast_shadow = cast_shadow_mode
 	root_node.add_child(merged_mi)
 	for mi in sources:
 		if mi != null and is_instance_valid(mi):
@@ -146,6 +167,7 @@ func _merge_static_meshes_under(root_node: Node3D, sources: Array[MeshInstance3D
 			var g_sh := mi.get_node_or_null("GlowOutlineShell") as MeshInstance3D
 			if g_sh != null:
 				g_sh.visible = false
+	return merged_mi
 
 func _optimize_plant_materials_and_lockers(scene_root: Node) -> void:
 	if _materials_optimized:
@@ -230,6 +252,212 @@ func _optimize_plant_materials_and_lockers(scene_root: Node) -> void:
 		_merge_static_meshes_under(lroot, fence_list, "MergedLockerMeshPanels", fence_mat)
 		_merge_static_meshes_under(lroot, inner_list, "MergedLockerInnerDividers", inner_mat)
 
+func _is_glow_protected_node(node: Node) -> bool:
+	var cur := node
+	while cur != null:
+		var nm := str(cur.name)
+		if _GLOW_PROTECTED_ROOTS.has(nm) or nm.begins_with("Watson Zone Slot Lockers"):
+			return true
+		if nm == "PlantaCompletaSketchUp" or nm == "MainPlantScene":
+			break
+		cur = cur.get_parent()
+	return false
+
+func _fix_coplanar_zfighting_and_duplicates(scene_root: Node) -> void:
+	var plant := scene_root.find_child("PlantaCompletaSketchUp", true, false) as Node3D
+	if plant == null:
+		return
+
+	# 1. Estratificar capas exteriores coplanares en Y=0.0000 (elimina >3,700 m² de Z-fighting entre pasto, grava y vías)
+	for ch in plant.find_children("*", "MeshInstance3D", true, false):
+		var mi := ch as MeshInstance3D
+		if mi == null or not is_instance_valid(mi) or mi.mesh == null:
+			continue
+		if mi.get_meta("merged_into_batch", false) or mi.name == "GlowOutlineShell":
+			continue
+		var m0 := mi.get_active_material(0)
+		var mname := m0.resource_name if m0 != null else ""
+		var mname_l := mname.to_lower()
+		var nm := str(mi.name)
+
+		# Optimizar vidrios translúcidos para evitar Z-fighting con marcos y hojas opacas coplanares
+		if m0 is StandardMaterial3D and ("translucent_glass" in mname_l or "glass" in mname_l):
+			var gsm := m0 as StandardMaterial3D
+			if gsm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+				gsm.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY
+				gsm.render_priority = 3
+
+		if nm == "Geom3D312":
+			mi.global_position.y -= 0.014 # Pasto base exterior
+		elif nm == "Geom3D318":
+			mi.global_position.y -= 0.007 # Pasto interior
+		elif nm == "Geom3D311":
+			mi.global_position.y += 0.002 # Patio de grava Norte sobre el pasto
+		elif nm == "Geom3D315" or "adoquin" in mname_l:
+			mi.global_position.y += 0.010 # Vías pavimentadas y baldosa sobre grava/pasto
+		elif nm == "Geom3D_346":
+			mi.global_position.z += 0.006 # Separar par vertical coplanar exacto d=0.000
+		elif nm == "Geom3D_356":
+			mi.global_position.x += 0.006 # Separar par vertical coplanar d=0.007
+
+	# 2. Eliminar mallas estáticas exactamente superpuestas (duplicados de SketchUp y respaldos opacos coplanares tras vidrio)
+	var buckets: Dictionary = {}
+	var glass_items: Array[Dictionary] = []
+	var untextured_panes: Array[Dictionary] = []
+
+	for ch in plant.find_children("*", "MeshInstance3D", true, false):
+		var mi := ch as MeshInstance3D
+		if mi == null or not is_instance_valid(mi) or mi.mesh == null or not mi.visible:
+			continue
+		if mi.name == "GlowOutlineShell" or mi.mesh is ImmediateMesh or mi.get_meta("merged_into_batch", false):
+			continue
+		if _is_dynamic_or_truck_node(mi):
+			continue
+		var is_glow_prot := _is_glow_protected_node(mi)
+		# En lockers (3_WZSLOT201578R_*) sí depurar cuerpos verdes duplicados idénticos; proteger el resto de máquinas glow
+		var is_locker_dup_candidate := str(mi.get_parent().name).begins_with("3_WZSLOT")
+		if is_glow_prot and not is_locker_dup_candidate:
+			continue
+		var box := _calc_node_aabb(mi)
+		if box.size.length() < 0.12:
+			continue
+		var c := box.get_center()
+		var m0 := mi.get_active_material(0)
+		var mname := m0.resource_name if m0 != null else ""
+		var mname_l := mname.to_lower()
+		var info := {"mi": mi, "c": c, "sz": box.size, "mat": mname}
+
+		if "translucent_glass" in mname_l:
+			glass_items.append(info)
+		elif mname == "" and str(mi.name).begins_with("3DGeom-"):
+			untextured_panes.append(info)
+
+		var bk := "%s|%d|%d|%d" % [mname, int(round(c.x * 16.0)), int(round(c.y * 16.0)), int(round(c.z * 16.0))]
+		if buckets.has(bk):
+			var prev: Dictionary = buckets[bk]
+			if c.distance_to(prev["c"] as Vector3) < 0.022 and (box.size - (prev["sz"] as Vector3)).length() < 0.030:
+				mi.visible = false
+				mi.set_meta("dedup_hidden", true)
+				continue
+		buckets[bk] = info
+
+	# Ocultar hojas opacas sin textura exactamente superpuestas (0.4 mm) a paneles Translucent_Glass_Aqua en ventanas Grupo#35
+	for up in untextured_panes:
+		var up_mi := up["mi"] as MeshInstance3D
+		if not up_mi.visible:
+			continue
+		var uc: Vector3 = up["c"]
+		var usz: Vector3 = up["sz"]
+		for gp in glass_items:
+			if uc.distance_to(gp["c"] as Vector3) < 0.015 and (usz - (gp["sz"] as Vector3)).length() < 0.025:
+				up_mi.visible = false
+				up_mi.set_meta("dedup_hidden", true)
+				break
+
+func _batch_static_plant_architecture(scene_root: Node) -> void:
+	_static_batch_nodes_admin.clear()
+	_static_batch_nodes_nave.clear()
+	var plant := scene_root.find_child("PlantaCompletaSketchUp", true, false) as Node3D
+	if plant == null:
+		return
+	var batch_host := plant.get_node_or_null("StaticBatches") as Node3D
+	if batch_host != null:
+		return
+	batch_host = Node3D.new()
+	batch_host.name = "StaticBatches"
+	plant.add_child(batch_host)
+
+	var groups: Dictionary = {}
+	for ch in plant.find_children("*", "MeshInstance3D", true, false):
+		var mi := ch as MeshInstance3D
+		if mi == null or not is_instance_valid(mi) or mi.mesh == null or not mi.visible:
+			continue
+		if mi.name == "GlowOutlineShell" or mi.mesh is ImmediateMesh:
+			continue
+		if mi.get_meta("merged_into_batch", false) or mi.get_meta("dedup_hidden", false):
+			continue
+		if str(mi.name).begins_with("MergedLocker") or str(mi.name).begins_with("StaticBatch_"):
+			continue
+		if _is_dynamic_or_truck_node(mi) or _is_glow_protected_node(mi):
+			continue
+		if mi.mesh.get_surface_count() != 1:
+			continue
+		var mat := mi.get_active_material(0)
+		if not (mat is StandardMaterial3D):
+			continue
+		var sm := mat as StandardMaterial3D
+		if sm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+			continue
+
+		var box := _calc_node_aabb(mi)
+		var c := box.get_center()
+		var d := box.size.length()
+		# Solo agrupar mallas estáticas pequeñas/medianas en celdas compactas de 16 m para preservar frustum culling + LOD
+		if d > 10.0:
+			continue
+		var sector := "EXTERIOR"
+		if c.x > 12.0 and d < 55.0:
+			sector = "ADMIN"
+		elif c.x < -18.2 and c.z > 18.0 and c.z < 52.0 and d < 35.0:
+			sector = "NAVE"
+
+		var cell_x := int(floor(c.x / 16.0))
+		var cell_z := int(floor(c.z / 16.0))
+		var lod_band := 3
+		if d < LOD_MICRO_DIAG:
+			lod_band = 0
+		elif d < LOD_SMALL_DIAG:
+			lod_band = 1
+		elif d < LOD_MEDIUM_DIAG:
+			lod_band = 2
+		var sh_key := 1 if mi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF else 0
+		var gkey := "%s|%d|%d|%d|%d|%d" % [sector, cell_x, cell_z, lod_band, sm.get_instance_id(), sh_key]
+		if not groups.has(gkey):
+			groups[gkey] = {"sector": sector, "lod": lod_band, "mat": sm, "shadow": mi.cast_shadow, "list": [] as Array[MeshInstance3D]}
+		(groups[gkey]["list"] as Array[MeshInstance3D]).append(mi)
+
+	var batch_idx := 0
+	for gkey in groups.keys():
+		var g: Dictionary = groups[gkey]
+		var src_list: Array[MeshInstance3D] = g["list"]
+		if src_list.size() < 4:
+			continue
+		batch_idx += 1
+		var sector_tag: String = str(g["sector"])
+		var b_mi := _merge_static_meshes_under(
+			batch_host,
+			src_list,
+			"StaticBatch_%s_%03d" % [sector_tag, batch_idx],
+			g["mat"] as Material,
+			g["shadow"] as GeometryInstance3D.ShadowCastingSetting
+		)
+		if b_mi != null:
+			var lb: int = int(g["lod"])
+			if lb == 0:
+				b_mi.visibility_range_end = DIST_MICRO
+				b_mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+			elif lb == 1:
+				b_mi.visibility_range_end = DIST_SMALL
+				b_mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+			elif lb == 2:
+				b_mi.visibility_range_end = DIST_MEDIUM
+				b_mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+			else:
+				b_mi.visibility_range_end = 0.0
+				b_mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+			if sector_tag == "ADMIN":
+				_static_batch_nodes_admin.append(b_mi)
+			elif sector_tag == "NAVE":
+				_static_batch_nodes_nave.append(b_mi)
+
+	# Purgar del array LOD las mallas recién fusionadas para ahorrar iteración CPU en _process
+	var pruned_lod: Array[Dictionary] = []
+	for item in _lod_mesh_items:
+		var lmi := item["node"] as MeshInstance3D
+		if lmi != null and is_instance_valid(lmi) and not lmi.get_meta("merged_into_batch", false) and not lmi.get_meta("dedup_hidden", false):
+			pruned_lod.append(item)
+	_lod_mesh_items = pruned_lod
+
 func _is_dynamic_or_truck_node(node: Node) -> bool:
 	var cur := node
 	while cur != null:
@@ -268,7 +496,7 @@ func _apply_lod_and_shadow_bands(scene_root: Node) -> void:
 				continue
 			if mi.name == "GlowOutlineShell" or mi.mesh is ImmediateMesh:
 				continue
-			if mi.get_meta("merged_into_batch", false):
+			if mi.get_meta("merged_into_batch", false) or mi.get_meta("dedup_hidden", false):
 				mi.visible = false
 				continue
 			
@@ -352,6 +580,12 @@ func _collect_sectors(scene_root: Node) -> void:
 	var mill_unit := scene_root.find_child("MotorMillUnit", true, false) as Node3D
 	if mill_unit != null:
 		_nave_nodes.append(mill_unit)
+	for ab in _static_batch_nodes_admin:
+		if is_instance_valid(ab) and not _admin_nodes.has(ab):
+			_admin_nodes.append(ab)
+	for nb in _static_batch_nodes_nave:
+		if is_instance_valid(nb) and not _nave_nodes.has(nb):
+			_nave_nodes.append(nb)
 
 	# Solo registrar los nodos raíz de cada camión para ocultamiento atómico (nunca por partes)
 	for mover_name in ["TruckIntakeMover", "TruckDispatchMover", "TruckBay2Mover", "TruckStagingMover"]:
@@ -463,8 +697,12 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 		new_sector = "VESTIDORES"
 	elif p.x <= -13.5 and p.z >= 18.0 and p.z <= 52.0:
 		new_sector = "NAVE_PRODUCCION"
-	elif p.x >= 12.0 and p.z >= 20.0 and p.z <= 52.0:
+	elif p.x >= 12.0 and p.x <= 40.5 and p.z >= 20.0 and p.z <= 52.0:
 		new_sector = "SECTOR_ADMIN"
+	elif p.x > 8.0:
+		new_sector = "EXTERIOR_EAST"
+	elif p.x < -8.0:
+		new_sector = "EXTERIOR_WEST"
 	else:
 		new_sector = "EXTERIOR"
 		
@@ -488,8 +726,16 @@ func _update_sector_visibility(force: bool, cam: Camera3D = null) -> void:
 			# Ocultar maquinaria de la nave de molienda
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, false)
+		"EXTERIOR_EAST":
+			# Patio Este / Portería: maquinaria interior de la nave queda oculta tras muros (>30m), camiones 100% visibles
+			_set_nodes_visible(_admin_nodes, true)
+			_set_nodes_visible(_nave_nodes, false)
+		"EXTERIOR_WEST":
+			# Lado Oeste de la nave: mobiliario interior de oficinas queda oculto tras muros, camiones 100% visibles
+			_set_nodes_visible(_admin_nodes, false)
+			_set_nodes_visible(_nave_nodes, true)
 		_:
-			# Exterior / Sendero / Puertas abiertas: ambos activos con LOD por distancia
+			# Patio central: ambos activos con LOD por distancia
 			_set_nodes_visible(_admin_nodes, true)
 			_set_nodes_visible(_nave_nodes, true)
 			
@@ -508,7 +754,10 @@ func _update_trucks_visibility(cam_pos: Vector3) -> void:
 			continue
 		var want_vis: bool = true
 		if _current_sector == "NAVE_PRODUCCION" or _current_sector == "SECTOR_ADMIN" or _current_sector == "VESTIDORES":
-			want_vis = (cam_pos.distance_to(trk.global_position) <= 48.0)
+			want_vis = (cam_pos.distance_to(trk.global_position) <= 46.0)
+		else:
+			# En exteriores mantener visibles todos los camiones cercanos/medios y ocultar mallas pesadas (>68 m tras edificios)
+			want_vis = (cam_pos.distance_to(trk.global_position) <= 68.0)
 		if trk.visible != want_vis:
 			trk.visible = want_vis
 
