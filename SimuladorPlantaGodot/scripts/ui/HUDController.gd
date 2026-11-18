@@ -78,6 +78,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_mouse_filter_recursive(self)
 	_setup_hotbar_and_avatar()
+	_setup_fixed_crosshair()
 	_setup_location_top_banner()
 	_setup_controls_tips_card()
 	_setup_notification_stack()
@@ -836,20 +837,43 @@ func _on_safety_line_crossed(active: bool, _zone_id: String, title: String, mess
 func is_safety_line_alert_visible() -> bool:
 	return _safety_line_banner != null and _safety_line_banner.visible
 
+func _setup_fixed_crosshair() -> void:
+	var reticle := get_node_or_null("Reticle") as Control
+	if reticle == null:
+		return
+	if reticle_dot != null:
+		reticle_dot.visible = false
+	var old_cross := reticle.get_node_or_null("CrosshairFixed")
+	if old_cross != null:
+		old_cross.queue_free()
+
+	var cross := Control.new()
+	cross.name = "CrosshairFixed"
+	cross.custom_minimum_size = Vector2(18, 18)
+	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	reticle.add_child(cross)
+
+	# Borde fino negro (1 px) alrededor de toda la cruz blanca sin cortar la intersección central
+	var parts: Array[Dictionary] = [
+		{"name": "OutlineH", "pos": Vector2(1, 7), "sz": Vector2(16, 4), "col": Color(0.0, 0.0, 0.0, 0.92)},
+		{"name": "OutlineV", "pos": Vector2(7, 1), "sz": Vector2(4, 16), "col": Color(0.0, 0.0, 0.0, 0.92)},
+		{"name": "BarH",     "pos": Vector2(2, 8), "sz": Vector2(14, 2), "col": Color(1.0, 1.0, 1.0, 1.0)},
+		{"name": "BarV",     "pos": Vector2(8, 2), "sz": Vector2(2, 14), "col": Color(1.0, 1.0, 1.0, 1.0)},
+	]
+	for p in parts:
+		var r := ColorRect.new()
+		r.name = str(p["name"])
+		r.position = p["pos"] as Vector2
+		r.size = p["sz"] as Vector2
+		r.color = p["col"] as Color
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cross.add_child(r)
+
 func _on_prompt_updated(txt: String) -> void:
 	var low := txt.to_lower()
 	var is_fault := "reparar falla" in low or "[falla]" in low
 	var is_green_sel := (txt != "" and not is_fault)
-	if reticle_dot != null:
-		if is_fault:
-			reticle_dot.color = Color(1.0, 0.45, 0.42, 1.0)
-			reticle_dot.custom_minimum_size = Vector2(6, 6)
-		elif is_green_sel:
-			reticle_dot.color = Color(0.18, 1.0, 0.42, 1.0)
-			reticle_dot.custom_minimum_size = Vector2(6, 6)
-		else:
-			reticle_dot.color = Color(1.0, 1.0, 1.0, 0.45)
-			reticle_dot.custom_minimum_size = Vector2(3, 3)
+	# La cruz central es siempre blanca con borde fino negro y nunca cambia de color
 	if prompt_label != null:
 		prompt_label.text = txt
 		prompt_label.visible = (txt != "")
@@ -1146,15 +1170,12 @@ func _setup_skip_tutorial_hud_button() -> void:
 	_btn_skip_hud.add_theme_stylebox_override("normal", _build_briefing_button_style(Color(0.24, 0.16, 0.05, 0.88), Color(0.98, 0.72, 0.22, 0.92)))
 	_btn_skip_hud.add_theme_stylebox_override("hover", _build_briefing_button_style(Color(0.38, 0.24, 0.07, 0.96), Color(1.0, 0.85, 0.35, 1.0)))
 	_btn_skip_hud.pressed.connect(_on_skip_tutorial_pressed)
+	_btn_skip_hud.visible = false
 	add_child(_btn_skip_hud)
 
 func refresh_skip_button_visibility() -> void:
-	if _btn_skip_hud == null or not is_inside_tree():
-		return
-	var tut := get_tree().root.find_child("TutorialInductionManager", true, false)
-	if tut != null:
-		var done := bool(tut.get("tutorial_skipped")) or bool(tut.get("induction_certified"))
-		_btn_skip_hud.visible = not done
+	if _btn_skip_hud != null:
+		_btn_skip_hud.visible = false
 
 func _on_skip_tutorial_pressed() -> void:
 	if not is_inside_tree():
