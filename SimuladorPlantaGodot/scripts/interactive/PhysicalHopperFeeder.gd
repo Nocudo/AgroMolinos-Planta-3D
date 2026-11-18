@@ -35,13 +35,13 @@ func _ready() -> void:
 
 func interact(tool_id: int) -> String:
 	if tool_id != 3:
-		return "Tolva de Recepción T-301. Equipa [3] Llave 3/4\" (tecla 3) para intervenir compuerta o desatascar."
+		return "Usa la llave 3/4\" para operar la tolva."
 	if is_jammed or manual_gate_opening_pct > 120.0:
 		clear_jam()
-		return "Has desatascado físicamente la tolva con Llave 3/4\" y ajustado compuerta al 80% (0.8 kg/s nominal)."
+		return "Tolva desatascada. Flujo normalizado a 0.8 kg/s."
 	else:
 		set_gate_opening(160.0)
-		return "Has forzado la compuerta manual al 160% con Llave 3/4\". ¡Sobrealimentación masiva (4.5 kg/s)!"
+		return "Compuerta forzada al 160%. Sobrealimentación activa."
 
 func throw_bag_into_hopper() -> void:
 	bags_thrown_count += 1
@@ -87,14 +87,14 @@ func set_gate_opening(pct: float) -> void:
 		bus.hopper_overfed.emit(current_feed_rate)
 		if is_jammed:
 			bus.notification_posted.emit(
-				"SOBREALIMENTACIÓN MASIVA Y ATASCO EN TOLVA",
-				"Flujo másico supera 4.0 kg/s. Par resistente excede Tmax de Kloss (101.75 Nm). Polvo ATEX elevado.",
+				"Atasco en tolva",
+				"Sobrealimentación sobre 4.0 kg/s. Riesgo de polvo ATEX.",
 				"error"
 			)
 		else:
 			bus.notification_posted.emit(
-				"FLUJO NORMALIZADO EN TOLVA",
-				"Compuerta en %.0f%%. Caudal de cereal dosificado a %.2f kg/s." % [manual_gate_opening_pct, current_feed_rate],
+				"Flujo normalizado en tolva",
+				"Compuerta en %.0f%% · %.2f kg/s." % [manual_gate_opening_pct, current_feed_rate],
 				"info"
 			)
 

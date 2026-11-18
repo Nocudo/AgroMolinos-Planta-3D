@@ -266,7 +266,7 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 			return {
 				"class_index": 0,
 				"predicted_class": "NORMAL",
-				"title": "OPERACIÓN NOMINAL CONFORME (IE3)",
+				"title": "Operación normal",
 				"severity": "NORMAL",
 				"confidence": mlp_conf,
 				"mlp_confidence": mlp_conf,
@@ -274,13 +274,13 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 				"probabilities": probs,
 				"mhi": mhi,
 				"rul_hours": rul_hours,
-				"root_cause": "Sistema trifásico balanceado (Irms=%.1f A, IUF=%.1f%%, V=%.0f V, T=%.1f °C)." % [i_rms, iuf, v_rms, temp_c],
-				"prognosis": "Vida útil remanente estimada: %.0f horas de servicio continuo." % rul_hours,
-				"prescription": "Mantener régimen VFD optimizado e inspección preventiva mensual.",
+				"root_cause": "Sistema trifásico balanceado. %.1f A, IUF %.1f%%, %.0f V, %.1f °C." % [i_rms, iuf, v_rms, temp_c],
+				"prognosis": "Vida útil estimada: %.0f horas." % rul_hours,
+				"prescription": "Mantener régimen VFD e inspección preventiva.",
 				"maintenance_steps": [
-					"1. Verificar telemetría True-RMS dentro de banda 460 V ±5%.",
-					"2. Confirmar vibración en Zona A/B ISO 10816-3 (< 2.3 mm/s).",
-					"3. Continuar operación bajo supervisión Edge AI."
+					"1. Verificar tensión dentro de 460 V ±5%.",
+					"2. Confirmar vibración bajo 2.3 mm/s.",
+					"3. Continuar supervisión."
 				]
 			}
 		1:
@@ -288,7 +288,7 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 			return {
 				"class_index": 1,
 				"predicted_class": "SOBRECALENTAMIENTO",
-				"title": "ALERTA TÉRMICA / SOBRECARGA EN MOTOR 10 HP",
+				"title": "Alerta térmica en motor",
 				"severity": sev,
 				"confidence": mlp_conf,
 				"mlp_confidence": mlp_conf,
@@ -296,20 +296,20 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 				"probabilities": probs,
 				"mhi": mhi,
 				"rul_hours": rul_hours,
-				"root_cause": "Temperatura devanado %.1f °C (dT/dt=%.1f °C/min) e Irms=%.1f A por encima del régimen térmico nominal." % [temp_c, d_temp, i_rms],
-				"prognosis": "Degradación acelerada de aislamiento Clase F (155 °C). RUL reducida a %.0f h." % rul_hours,
-				"prescription": "Desatascar/reducir caudal de tolva T-301 al 80% y despejar rejilla de ventilación forzada.",
+				"root_cause": "Temperatura %.1f °C, tasa %.1f °C/min e Irms %.1f A sobre el rango nominal." % [temp_c, d_temp, i_rms],
+				"prognosis": "Desgaste acelerado de aislamiento Clase F. RUL: %.0f h." % rul_hours,
+				"prescription": "Reducir caudal en tolva y despejar rejilla de ventilación.",
 				"maintenance_steps": [
-					"1. Verificar compuerta manual de tolva T-301 (reducir a 0.8 kg/s).",
-					"2. Retirar obstrucción (trapo/polvo) en rejilla posterior del ventilador.",
-					"3. Confirmar descenso térmico < 85 °C en Tablet SCADA."
+					"1. Reducir caudal de tolva a 0.8 kg/s.",
+					"2. Retirar obstrucción en rejilla del ventilador.",
+					"3. Confirmar descenso térmico bajo 85 °C."
 				]
 			}
 		2:
 			return {
 				"class_index": 2,
 				"predicted_class": "FALLA_ELECTRICA",
-				"title": "CRÍTICO: FALLA ELÉCTRICA (MONOFASIZACIÓN / BAJÓN CCM)",
+				"title": "Falla eléctrica crítica",
 				"severity": "CRITICAL",
 				"confidence": mlp_conf,
 				"mlp_confidence": mlp_conf,
@@ -317,20 +317,20 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 				"probabilities": probs,
 				"mhi": mhi,
 				"rul_hours": rul_hours,
-				"root_cause": "Asimetría severa de fases (IUF=%.1f%%, THD=%.1f%%, V=%.0f V). Pérdida de fase L3 o falso contacto en breaker." % [iuf, thd, v_rms],
-				"prognosis": "Campo inverso a 120 Hz y sobrecorriente de 173%% en fases sanas. RUL crítica: %.0f h." % rul_hours,
-				"prescription": "Detener máquinas desde la Tablet, aplicar 5 Reglas de Oro LOTO en CCM y reparar conductor L3 o rearmar breaker.",
+				"root_cause": "Asimetría de fases. IUF %.1f%%, THD %.1f%%, %.0f V. Pérdida de fase L3 o breaker abierto." % [iuf, thd, v_rms],
+				"prognosis": "Sobrecorriente en fases sanas. RUL: %.0f h." % rul_hours,
+				"prescription": "Parar máquinas desde la tablet, aplicar LOTO en CCM y reparar fase L3.",
 				"maintenance_steps": [
-					"1. Accionar parada segura y abrir seccionador CCM (Regla 1).",
-					"2. Bloquear LOTO [5] y medir ausencia de tensión 0.0 V [4] (Reglas 2-3).",
-					"3. Empalmar conductor L3 [5] o rearmar breaker CCM 460 V."
+					"1. Parar máquinas desde la tablet y abrir CCM.",
+					"2. Aplicar candado LOTO y medir 0 V con multímetro.",
+					"3. Empalmar conductor L3 o rearmar breaker."
 				]
 			}
 		_:
 			return {
 				"class_index": 3,
 				"predicted_class": "FALLA_MECANICA",
-				"title": "CRÍTICO: FALLA MECÁNICA (PERNOS / RODAMIENTOS ISO ZONA D)",
+				"title": "Falla mecánica crítica",
 				"severity": "CRITICAL",
 				"confidence": mlp_conf,
 				"mlp_confidence": mlp_conf,
@@ -338,12 +338,12 @@ func _build_rcm_payload(pred_idx: int, mlp_conf: float, svm_conf: float, probs: 
 				"probabilities": probs,
 				"mhi": mhi,
 				"rul_hours": rul_hours,
-				"root_cause": "Vibración severa %.2f mm/s (Zona D > 4.5 mm/s) con armónicos 1X/2X por soltura de bancada o desalineación." % vib_rms,
-				"prognosis": "Fatiga prematura de rodamientos SKF 6308 y riesgo de roce rotor-estator. RUL: %.0f h." % rul_hours,
-				"prescription": "Detener máquina, inspeccionar bancada y reapretar pernos de anclaje con Llave 3/4\" [3].",
+				"root_cause": "Vibración severa de %.2f mm/s por soltura de bancada o desalineación." % vib_rms,
+				"prognosis": "Fatiga prematura de rodamientos. RUL: %.0f h." % rul_hours,
+				"prescription": "Detener máquina y reapretar pernos de anclaje con llave 3/4\".",
 				"maintenance_steps": [
-					"1. Detener giro del rotor antes de intervenir bancada.",
-					"2. Seleccionar Llave Fija 3/4\" (tecla [3]) y reapretar pernos de anclaje.",
-					"3. Verificar retorno a Zona A (< 1.4 mm/s) en el espectro de la Tablet."
+					"1. Detener el motor antes de intervenir.",
+					"2. Reapretar pernos de anclaje con llave 3/4\".",
+					"3. Confirmar vibración bajo 1.4 mm/s."
 				]
 			}

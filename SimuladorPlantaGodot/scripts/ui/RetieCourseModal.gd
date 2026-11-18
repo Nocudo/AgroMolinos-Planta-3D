@@ -9,36 +9,36 @@ signal course_finished(passed: bool, score: int, total: int)
 
 const INFO_SLIDES: Array[Dictionary] = [
 	{
-		"badge": "MÓDULO 1 DE 3  •  RETIE ARTÍCULO 20 & OSHA 1910",
-		"title": "1. Equipo de Protección Personal (EPP) Obligatorio",
-		"body": "Antes de cruzar la Esclusa Norte e ingresar a la nave de molienda (460 V AC / > 85 dBA), todo operario debe equipar en los lockers de Vestidores las 6 prendas certificadas:\n\n"
-		+ "• [b]Casco dieléctrico Tipo I Clase E (20,000 V)[/b] y [b]Gafas ANSI Z87.1[/b]\n"
-		+ "• [b]Protección auditiva NRR 27 dB[/b] (ruido continuo de martillos > 85 dBA)\n"
-		+ "• [b]Guantes aislantes Clase 0 (1,000 V)[/b] y [b]Botas dieléctricas (18 kV)[/b]\n"
-		+ "• [b]Overol ignífugo Arc Flash Categoría 2 (8 cal/cm²)[/b]"
+		"badge": "MÓDULO 1 DE 3",
+		"title": "1. Equipo de Protección Personal",
+		"body": "Antes de entrar a la nave de molienda, equipa en los lockers de Vestidores las 6 prendas certificadas:\n\n"
+		+ "• [b]Casco dieléctrico[/b] y [b]Gafas de seguridad[/b]\n"
+		+ "• [b]Protección auditiva[/b] para ruido continuo\n"
+		+ "• [b]Guantes aislantes[/b] y [b]Botas dieléctricas[/b]\n"
+		+ "• [b]Overol ignífugo[/b] contra arco eléctrico"
 	},
 	{
-		"badge": "MÓDULO 2 DE 3  •  TABLERO CCM 460 V & LOTO",
-		"title": "2. Las 5 Reglas de Oro de Seguridad Eléctrica",
-		"body": "Para intervenir el motor de 10 HP, borneras o el Variador de Frecuencia (VFD) en el Tablero CCM 460 V sin riesgo de electrocución ni arco eléctrico, aplica siempre:\n\n"
-		+ "1. [b]Corte visible[/b]: abrir seccionador y breaker principal L1/L2/L3.\n"
-		+ "2. [b]Bloqueo y etiquetado (LOTO)[/b]: asegurar con [color=#ffd15c][b][5] Kit LOTO[/b][/color].\n"
-		+ "3. [b]Verificar ausencia de tensión[/b]: comprobar 0 V con [color=#ffd15c][b][4] Multímetro[/b][/color].\n"
-		+ "4. [b]Puesta a tierra temporal y cortocircuito[/b].\n"
-		+ "5. [b]Señalizar área roja[/b] (despeje mínimo 1.0 m frente al tablero)."
+		"badge": "MÓDULO 2 DE 3",
+		"title": "2. Las 5 Reglas de Oro Eléctricas",
+		"body": "Antes de intervenir el motor de 10 HP o el Tablero CCM de 460 V aplica siempre:\n\n"
+		+ "1. [b]Corte visible[/b]: abrir seccionador y breaker principal.\n"
+		+ "2. [b]Bloqueo LOTO[/b]: asegurar con [color=#ffd15c][b]Kit LOTO[/b][/color].\n"
+		+ "3. [b]Ausencia de tensión[/b]: comprobar 0 V con [color=#ffd15c][b]Multímetro[/b][/color].\n"
+		+ "4. [b]Puesta a tierra[/b] temporal y cortocircuito.\n"
+		+ "5. [b]Señalizar área[/b] manteniendo despeje frente al tablero."
 	},
 	{
-		"badge": "MÓDULO 3 DE 3  •  MOLINO M-101, ATEX & TELEMETRÍA [TAB]",
-		"title": "3. Operación Segura, Polvo Combustible ATEX y Fallas",
-		"body": "• [b]Fallas físicas en campo[/b]: nunca repares conductores cortados (L3), pernos flojos ni tolva atascada T-301 con el motor energizado; detén las máquinas desde la [color=#ff7575][b]Tablet Industrial[/b][/color] o abre el breaker primero.\n"
-		+ "• [b]Zona ATEX 22 (NFPA 61)[/b]: los ciclones generan polvo combustible de cereal; evita chispas y mantén la ventilación despejada.\n"
-		+ "• [b]Tablet Industrial [TAB][/b]: supervisa corrientes, temperatura Clase F, vibración ISO 10816-3, diagnóstico Edge IA (MLP/SVM), cámaras CCTV y ahorro energético VFD vs DOL."
+		"badge": "MÓDULO 3 DE 3",
+		"title": "3. Operación Segura y Fallas",
+		"body": "• [b]Fallas en campo[/b]: nunca repares cables cortados, pernos flojos ni tolva atascada con el motor energizado; detén las máquinas desde la [color=#ff7575][b]Tablet Industrial[/b][/color] o abre el breaker primero.\n"
+		+ "• [b]Zona ATEX[/b]: los ciclones generan polvo combustible de cereal; evita chispas y mantén la ventilación activa.\n"
+		+ "• [b]Tablet Industrial[/b]: supervisa equipos, diagnóstico IA, cámaras y parada de emergencia."
 	}
 ]
 
 const QUIZ_QUESTIONS: Array[Dictionary] = [
 	{
-		"q": "1. Según el RETIE Art. 20, ¿qué debes hacer ANTES de entrar a la zona de molienda de 460 V?",
+		"q": "1. Según el RETIE, ¿qué debes hacer ANTES de entrar a la zona de molienda?",
 		"options": [
 			"A) Vestir la ropa ignífuga y las 6 prendas EPP en Vestidores",
 			"B) Entrar directo sin casco para caminar más rápido",
@@ -56,7 +56,7 @@ const QUIZ_QUESTIONS: Array[Dictionary] = [
 		"correct": 1
 	},
 	{
-		"q": "3. Si llega una alerta crítica a la Tablet [TAB] (falla de fase L3 o sobrecalentamiento), ¿cuál es la acción correcta?",
+		"q": "3. Si llega una alerta crítica a la Tablet, ¿cuál es la acción correcta?",
 		"options": [
 			"A) Ignorar el sonido y arrojar más maíz a la tolva",
 			"B) Quitar la alarma sin revisar la máquina",
@@ -328,7 +328,7 @@ func _refresh_view() -> void:
 		_lbl_title.text = sl["title"]
 		_rtl_info.text = sl["body"]
 		_btn_prev.visible = (_slide_idx > 0)
-		_btn_primary.text = "Ir al Quiz" if _slide_idx == INFO_SLIDES.size() - 1 else "Siguiente (%d/%d)" % [_slide_idx + 2, INFO_SLIDES.size()]
+		_btn_primary.text = "Ir al Quiz" if _slide_idx == INFO_SLIDES.size() - 1 else "Siguiente"
 		_style_btn(_btn_primary, Color(0.08, 0.45, 0.34), Color(0.25, 0.95, 0.65))
 	else:
 		_lbl_badge.visible = false
@@ -341,7 +341,7 @@ func _refresh_view() -> void:
 			var passed := (sc >= 2)
 			_lbl_quiz_feedback.visible = true
 			if passed:
-				_lbl_quiz_feedback.text = "Curso SST RETIE aprobado (%d/3). Bono de +0.5 pt otorgado. Ya puedes ir a Vestidores." % sc
+				_lbl_quiz_feedback.text = "Curso aprobado: %d/3. Bono +0.5 otorgado. Ya puedes ir a vestidores." % sc
 				_lbl_quiz_feedback.add_theme_color_override("font_color", Color(0.28, 0.95, 0.65))
 				_btn_primary.text = "Continuar a Vestidores EPP"
 				_style_btn(_btn_primary, Color(0.08, 0.48, 0.35), Color(0.28, 0.95, 0.68))

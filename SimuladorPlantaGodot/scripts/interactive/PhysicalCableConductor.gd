@@ -43,20 +43,20 @@ func interact(tool_id: int) -> String:
 	if tool_id == 2:
 		if not is_cut:
 			cut_cable()
-			return "Has cortado físicamente el conductor " + phase_id + " con los alicates."
+			return "Conductor " + phase_id + " cortado."
 		else:
-			return "El conductor " + phase_id + " ya se encuentra cortado."
+			return "El conductor " + phase_id + " ya está cortado."
 	elif tool_id == 5:
 		if is_cut:
 			repair_cable()
-			return "Has empalmado y aislado el conductor " + phase_id + " bajo norma RETIE."
+			return "Conductor " + phase_id + " empalmado y aislado."
 		else:
-			return "El conductor " + phase_id + " está en perfecto estado."
+			return "El conductor " + phase_id + " está en buen estado."
 	else:
 		if is_cut:
-			return "Conductor " + phase_id + " cortado. Usa el Kit LOTO/Reparación (tecla 5) para empalmar."
+			return "Conductor " + phase_id + " cortado. Usa el Kit LOTO para empalmar."
 		else:
-			return "Conductor " + phase_id + " activo (460 V). Usa los Alicates 1000V (tecla 2) para cortar."
+			return "Conductor " + phase_id + " activo. Usa los alicates para cortar."
 
 func cut_cable() -> void:
 	is_cut = true
@@ -79,12 +79,12 @@ func cut_cable() -> void:
 		if not loto_is_active and bus.has_signal("safety_violation_committed"):
 			bus.safety_violation_committed.emit(
 				"CORTE_SIN_LOTO",
-				"Intervención/corte en conductor " + phase_id + " a 460 V sin ejecutar LOTO (5 Reglas de Oro).",
+				"Corte en conductor " + phase_id + " energizado sin LOTO.",
 				3.0
 			)
 		bus.notification_posted.emit(
-			"CORTE FÍSICO DE CONDUCTOR ELÉCTRICO",
-			"Se ha seccionado el conductor " + phase_id + ". Desbalance crítico y monofasización activa.",
+			"Conductor cortado",
+			"Fase " + phase_id + " abierta. Desbalance crítico activo.",
 			"error"
 		)
 
@@ -98,8 +98,8 @@ func repair_cable() -> void:
 		if bus.has_signal("fault_resolved"):
 			bus.fault_resolved.emit("FALLA_ELECTRICA_CABLE")
 		bus.notification_posted.emit(
-			"CONDUCTOR RESTAURADO CONFORME A RETIE",
-			"Empalme y aislamiento certificado en " + phase_id + ". Fases balanceadas a 460 V.",
+			"Conductor restaurado",
+			"Empalme completado en " + phase_id + ". Fases balanceadas.",
 			"info"
 		)
 

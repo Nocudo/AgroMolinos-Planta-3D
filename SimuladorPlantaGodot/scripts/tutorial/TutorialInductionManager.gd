@@ -14,7 +14,7 @@ const CCM_STATION_ID: int = 10
 
 const STATIONS: Array[Dictionary] = [
 	{"id": 1, "title": "Estación 1: Portería", "pos": Vector3(52.0, 0.02, 34.0), "desc": "Inicio del recorrido en Portería."},
-	{"id": 2, "title": "Estación 2: Vestidores EPP", "pos": Vector3(-15.9, 0.79, 47.88), "desc": "Ropa EPP en lockers. Presiona [E] para vestirte."},
+	{"id": 2, "title": "Estación 2: Vestidores EPP", "pos": Vector3(-15.9, 0.79, 47.88), "desc": "Equipa tu EPP en los lockers."},
 	{"id": 3, "title": "Estación 3: Zona de Carga y Banda de Descarga", "pos": Vector3(-25.6, 0.59, 51.2), "desc": "Recepción de camión y Banda 01 de descarga."},
 	{"id": 4, "title": "Estación 4: Banda Inclinada hacia Tolva", "pos": Vector3(-24.6, 0.59, 50.2), "desc": "Banda 02 elevadora hacia la tolva receptora."},
 	{"id": 5, "title": "Estación 5: Tolva de Recepción T-301", "pos": Vector3(-18.69, 0.79, 46.6), "desc": "Tolva 03 dosificadora de grano crudo."},
@@ -25,7 +25,7 @@ const STATIONS: Array[Dictionary] = [
 	{"id": 10, "title": "Estación 10: Tablero CCM 460 V", "pos": Vector3(-18.69, 0.79, 38.5), "desc": "Centro de Control de Motores, VFD y 5 Reglas LOTO."},
 	{"id": 11, "title": "Estación 11: Secador Rotatorio", "pos": Vector3(-18.69, 0.79, 36.6), "desc": "Secador 08 térmico para control de humedad."},
 	{"id": 12, "title": "Estación 12: Ciclón Separador", "pos": Vector3(-18.69, 0.79, 33.4), "desc": "Ciclón 09 separador neumático de sólidos."},
-	{"id": 13, "title": "Estación 13: Ciclones Clasificadores (ATEX)", "pos": Vector3(-18.69, 0.79, 29.4), "desc": "Ciclones 10 clasificadores y control de polvo ATEX 22."},
+	{"id": 13, "title": "Estación 13: Ciclones Clasificadores", "pos": Vector3(-18.69, 0.79, 29.4), "desc": "Ciclones clasificadores y control de polvo ATEX 22."},
 	{"id": 14, "title": "Estación 14: Almacén de Sacos 50 kg", "pos": Vector3(-18.69, 0.79, 26.5), "desc": "Empaque, estiba en pallets y despacho."},
 	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-36.5, 0.02, 22.2), "desc": "Equipo 14 exterior de transferencia térmica."},
 	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-44.2, 0.02, 34.3), "desc": "Horno 12 exterior de aire caliente."},
@@ -373,13 +373,13 @@ func _on_sst_course_completed_event(passed: bool, score: int, total: int) -> voi
 		if bus.has_signal("safety_bonus_awarded"):
 			bus.safety_bonus_awarded.emit(
 				"CURSO_RAPIDO_RETIE",
-				"Curso rápido SST (RETIE) y quiz aprobados en Sala de Reuniones (%d/%d)." % [score, total],
+				"Curso SST y quiz aprobados: %d/%d." % [score, total],
 				0.5
 			)
 		if bus.has_signal("notification_posted"):
 			bus.notification_posted.emit(
-				"CURSO SST (+0.5 PT)",
-				"Quiz aprobado (%d/%d). Sigue al Inspector a Vestidores." % [score, total],
+				"Curso SST aprobado",
+				"Sigue al supervisor hacia vestidores.",
 				"success"
 			)
 
@@ -414,8 +414,8 @@ func _start_porteria_story() -> void:
 	var bus = get_node_or_null("/root/EventBus")
 	if bus != null and bus.has_signal("notification_posted"):
 		bus.notification_posted.emit(
-			"PORTERÍA",
-			"Conoce la empresa o pulsa [0] para entrar.",
+			"Portería",
+			"Conoce la empresa o entra cuando estés listo.",
 			"info"
 		)
 	_notify_glow_controller()
@@ -438,8 +438,8 @@ func finish_porteria_story_and_enter() -> void:
 			)
 		if bus != null and bus.has_signal("notification_posted"):
 			bus.notification_posted.emit(
-				"CURSO SST",
-				"Sigue al Inspector hacia Sala de Reuniones.",
+				"Curso SST",
+				"Sigue al supervisor a la sala de reuniones.",
 				"info"
 			)
 	else:
@@ -452,8 +452,8 @@ func finish_porteria_story_and_enter() -> void:
 			)
 		if bus != null and bus.has_signal("notification_posted"):
 			bus.notification_posted.emit(
-				"RECORRIDO GUIADO",
-				"Sigue al Inspector hacia Vestidores.",
+				"Recorrido guiado",
+				"Sigue al supervisor hacia vestidores.",
 				"info"
 			)
 	_notify_glow_controller()
@@ -525,8 +525,8 @@ func _process(delta: float) -> void:
 						var bus = get_node_or_null("/root/EventBus")
 						if bus != null and bus.has_signal("notification_posted"):
 							bus.notification_posted.emit(
-								"EPP OBLIGATORIO",
-								"Equipa ropa EPP en Vestidores (Estación 2).",
+								"EPP obligatorio",
+								"Equipa tu protección en vestidores.",
 								"warning"
 							)
 				elif target_station_id == 2:
@@ -574,14 +574,14 @@ func is_ready_for_meeting_course() -> bool:
 
 func get_interact_advance_prompt() -> String:
 	if porteria_story_active and not is_briefing_active:
-		return "[E] Entrar a la empresa"
+		return "Entrar a la empresa"
 	if is_ready_for_meeting_course():
-		return "[E] Curso SST (RETIE)"
+		return "Abrir curso SST"
 	if not is_ready_for_interact_advance():
 		return ""
 	if target_station_id < STATIONS.size():
-		return "[E] Estación %d/%d" % [target_station_id + 1, STATIONS.size()]
-	return "[E] Finalizar Recorrido (%d/%d)" % [STATIONS.size(), STATIONS.size()]
+		return "Siguiente estación"
+	return "Finalizar recorrido"
 
 func try_advance_station_by_interact() -> String:
 	if porteria_story_active and not is_briefing_active:
@@ -649,7 +649,7 @@ func visit_station(station_id: int) -> Dictionary:
 			if bus.has_signal("tutorial_station_reached"):
 				bus.tutorial_station_reached.emit(station_id, st["title"])
 			if station_id > 1 and bus.has_signal("notification_posted"):
-				bus.notification_posted.emit(st["title"].to_upper(), st["desc"], "info")
+				bus.notification_posted.emit(st["title"], st["desc"], "info")
 
 	if station_id == target_station_id:
 		if station_id == 2 and not epp_completed:
@@ -920,7 +920,7 @@ func load_previous_checkpoint() -> Dictionary:
 	var bus = get_node_or_null("/root/EventBus")
 	if bus != null and bus.has_signal("notification_posted"):
 		bus.notification_posted.emit(
-			"PUNTO ANTERIOR",
+			"Punto anterior",
 			"%s" % prev_st["title"],
 			"info"
 		)
@@ -1052,8 +1052,8 @@ func skip_tutorial_to_final_station() -> Dictionary:
 			bus.tutorial_station_reached.emit(STATIONS.size(), final_st["title"])
 		if bus.has_signal("notification_posted"):
 			bus.notification_posted.emit(
-				"ESTACIÓN %d/%d" % [STATIONS.size(), STATIONS.size()],
-				"EPP equipado. Sistemas en línea.",
+				"Recorrido completado",
+				"EPP equipado. Planta en marcha.",
 				"success"
 			)
 
@@ -1235,10 +1235,10 @@ class CourseDeskInteractable extends StaticBody3D:
 			_shape.disabled = not active
 
 	func get_interact_prompt() -> String:
-		return "[E] Abrir Curso Rápido SST (RETIE)"
+		return "Abrir curso SST"
 
 	func interact(_tool_id: int = 1) -> String:
 		var bus = get_node_or_null("/root/EventBus")
 		if bus != null and bus.has_signal("sst_course_modal_requested"):
 			bus.sst_course_modal_requested.emit()
-		return "Abriendo curso rápido SST (RETIE) en Sala de Reuniones."
+		return "Abriendo curso SST."

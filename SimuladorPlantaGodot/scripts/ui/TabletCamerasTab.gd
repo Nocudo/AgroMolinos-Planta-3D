@@ -53,19 +53,19 @@ func _build_ui() -> void:
 
 	var rec_pill := PanelContainer.new()
 	rec_pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.32, 0.06, 0.07), TTheme.ACCENT_RED))
-	rec_pill.add_child(TTheme.make_label("● REC EN VIVO", 10, Color(1.0, 0.65, 0.65)))
+	rec_pill.add_child(TTheme.make_label("En vivo", 10, Color(1.0, 0.65, 0.65)))
 	hb.add_child(rec_pill)
 
-	_lbl_status = TTheme.make_label("CAM 01 · Molienda 10 HP — Zona 1", 11, TTheme.TEXT_WHITE)
+	_lbl_status = TTheme.make_label("CAM 01 · Molienda", 11, TTheme.TEXT_WHITE)
 	_lbl_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_lbl_status.clip_text = true
 	hb.add_child(_lbl_status)
 
-	_btn_single = _make_bar_btn("Vista Principal (HD)", func(): set_view_mode("SINGLE"))
-	_btn_quad = _make_bar_btn("Mosaico 2×2 (4 Puntos)", func(): set_view_mode("QUAD"))
+	_btn_single = _make_bar_btn("Vista principal", func(): set_view_mode("SINGLE"))
+	_btn_quad = _make_bar_btn("Mosaico 2×2", func(): set_view_mode("QUAD"))
 	_btn_bank0 = _make_bar_btn("CAM 01–04", func(): _set_quad_bank(0))
 	_btn_bank1 = _make_bar_btn("CAM 05–08", func(): _set_quad_bank(1))
-	_btn_tour = _make_bar_btn("▶ Ronda Auto", _toggle_auto_tour)
+	_btn_tour = _make_bar_btn("Ronda auto", _toggle_auto_tour)
 
 	for b in [_btn_single, _btn_quad, _btn_bank0, _btn_bank1, _btn_tour]:
 		hb.add_child(b)
@@ -192,8 +192,7 @@ func _build_camera_sidebar(body: HBoxContainer) -> void:
 	var svb := VBoxContainer.new()
 	svb.add_theme_constant_override("separation", 6)
 	side.add_child(svb)
-	svb.add_child(TTheme.make_label("Puntos de Vigilancia (8 Cámaras)", 12, TTheme.ACCENT_CYAN))
-	svb.add_child(TTheme.make_label("Seleccione una ubicación de la planta:", 10, TTheme.TEXT_MUTED))
+	svb.add_child(TTheme.make_label("Cámaras", 12, TTheme.ACCENT_CYAN))
 
 	var sc := ScrollContainer.new()
 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -219,8 +218,8 @@ func _build_camera_sidebar(body: HBoxContainer) -> void:
 	var nav_hb := HBoxContainer.new()
 	nav_hb.add_theme_constant_override("separation", 6)
 	svb.add_child(nav_hb)
-	var b_prev := _make_bar_btn("◀ Anterior", func(): step_camera(-1))
-	var b_next := _make_bar_btn("Siguiente ▶", func(): step_camera(1))
+	var b_prev := _make_bar_btn("Anterior", func(): step_camera(-1))
+	var b_next := _make_bar_btn("Siguiente", func(): step_camera(1))
 	b_prev.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b_next.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nav_hb.add_child(b_prev)
@@ -373,10 +372,10 @@ func _sync_bar_buttons() -> void:
 	TTheme.apply_btn_colors(_btn_tour, Color(0.06, 0.42, 0.28) if auto_tour_enabled else TTheme.BG_SUBCARD, TTheme.ACCENT_EMERALD if auto_tour_enabled else TTheme.BORDER_SUBTLE)
 	if _lbl_status != null:
 		if view_mode == "QUAD":
-			_lbl_status.text = "Mosaico 2×2 — %s (clic en cuadrante para ampliar)" % ("CAM 01 a CAM 04" if quad_bank == 0 else "CAM 05 a CAM 08")
+			_lbl_status.text = "Mosaico 2×2 · %s" % ("CAM 01–04" if quad_bank == 0 else "CAM 05–08")
 		else:
 			var spec: Dictionary = TCatalog.PLANT_CCTV_CAMERAS[selected_camera_idx]
-			_lbl_status.text = "%s — %s" % [spec["short"], spec["zone"]]
+			_lbl_status.text = "%s · %s" % [spec["short"], spec["zone"]]
 
 func _make_bar_btn(txt: String, cb: Callable) -> Button:
 	var b := Button.new()

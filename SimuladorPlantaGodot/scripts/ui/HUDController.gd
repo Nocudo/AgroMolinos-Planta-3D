@@ -687,12 +687,13 @@ func _setup_tablet_notify_legend() -> void:
 
 	_tablet_notify_badge = PanelContainer.new()
 	_tablet_notify_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tablet_notify_badge.visible = false
 	_tablet_notify_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.add_child(_tablet_notify_badge)
 
 	_tablet_notify_badge_lbl = Label.new()
 	_tablet_notify_badge_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tablet_notify_badge_lbl.text = "TABLET"
+	_tablet_notify_badge_lbl.text = ""
 	_tablet_notify_badge_lbl.add_theme_font_size_override("font_size", 11)
 	_tablet_notify_badge.add_child(_tablet_notify_badge_lbl)
 
@@ -705,7 +706,8 @@ func _setup_tablet_notify_legend() -> void:
 	_tablet_notify_title = Label.new()
 	_tablet_notify_title.name = "TabletLegendTitle"
 	_tablet_notify_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tablet_notify_title.text = "NOTIFICACIÓN NUEVA - [TAB]"
+	_tablet_notify_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tablet_notify_title.text = "Nueva alerta en tablet"
 	_tablet_notify_title.add_theme_font_size_override("font_size", 11)
 	_tablet_notify_title.add_theme_color_override("font_color", Color(1.0, 0.86, 0.30, 1.0))
 	txt_vb.add_child(_tablet_notify_title)
@@ -713,6 +715,7 @@ func _setup_tablet_notify_legend() -> void:
 	_tablet_notify_detail = Label.new()
 	_tablet_notify_detail.name = "TabletLegendDetail"
 	_tablet_notify_detail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tablet_notify_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_tablet_notify_detail.text = ""
 	_tablet_notify_detail.clip_text = true
 	_tablet_notify_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -757,9 +760,8 @@ func _on_tablet_warning_received(warning_data: Dictionary) -> void:
 	_tablet_notify_is_crit = (sev == "CRITICAL")
 	_apply_tablet_legend_style(_tablet_notify_is_crit)
 	var unread := int(warning_data.get("unread_count", 1))
-	_tablet_notify_badge_lbl.text = "CRIT (%d)" % unread if _tablet_notify_is_crit else "ALERTA (%d)" % unread
-	_tablet_notify_title.text = "NOTIFICACIÓN NUEVA (%d) - [TAB]" % unread
-	_tablet_notify_detail.text = _sanitize_plain_text(str(warning_data.get("title", "Alerta")))
+	_tablet_notify_title.text = "Nueva alerta en tablet" if unread <= 1 else "%d alertas en tablet" % unread
+	_tablet_notify_detail.text = _compact_text(str(warning_data.get("title", "")), 44)
 	_tablet_notify_pulse_t = 0.0
 	_tablet_notify_legend.modulate = Color.WHITE
 	_tablet_notify_legend.visible = true
@@ -835,8 +837,9 @@ func is_safety_line_alert_visible() -> bool:
 	return _safety_line_banner != null and _safety_line_banner.visible
 
 func _on_prompt_updated(txt: String) -> void:
-	var is_fault := "[FALLA]" in txt or "reparar falla" in txt
-	var is_green_sel := ("Modo Selección" in txt or "[E]" in txt or "[Req:" in txt or "inducir falla" in txt) and not is_fault
+	var low := txt.to_lower()
+	var is_fault := "reparar falla" in low or "[falla]" in low
+	var is_green_sel := (txt != "" and not is_fault)
 	if reticle_dot != null:
 		if is_fault:
 			reticle_dot.color = Color(1.0, 0.45, 0.42, 1.0)

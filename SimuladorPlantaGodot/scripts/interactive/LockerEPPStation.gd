@@ -45,19 +45,19 @@ func interact(_tool_id: int) -> String:
 	if epp_equipped:
 		if bus != null:
 			bus.notification_posted.emit(
-				"EPP REGLAMENTARIO EQUIPADO (6/6)",
-				"Protocolo RETIE Art. 20 cumplido: Casco Clase E, Gafas Z87.1, Copa NRR 27dB, Guantes 1000V, Botas 18kV y Overol Arc Flash. Esclusa desbloqueada.",
+				"EPP equipado",
+				"Protección completa. Acceso a planta habilitado.",
 				"info"
 			)
-		return "Has equipado las 6 prendas EPP certificadas RETIE. Esclusa hacia planta desbloqueada."
+		return "EPP equipado. Acceso habilitado."
 	else:
 		if bus != null:
 			bus.notification_posted.emit(
-				"EPP RETIRADO",
-				"Has guardado el EPP en el casillero. Esclusa de planta bloqueada por seguridad.",
+				"EPP retirado",
+				"Acceso a planta bloqueado por seguridad.",
 				"warning"
 			)
-		return "Has guardado tu dotación de EPP en el casillero."
+		return "EPP guardado en el casillero."
 
 func set_epp_equipped(equipped: bool) -> void:
 	epp_equipped = equipped
@@ -109,13 +109,13 @@ func _on_interlock_area_entered(body: Node3D) -> void:
 		if bus != null:
 			if bus.has_signal("notification_posted"):
 				bus.notification_posted.emit(
-					"ACCESO BLOQUEADO POR ENCLAVAMIENTO RETIE",
-					"Zumbador de seguridad: Equipe el EPP completo (6 prendas) en los Vestidores antes de cruzar la esclusa.",
+					"Acceso bloqueado",
+					"Equipa tu EPP en vestidores antes de entrar.",
 					"error"
 				)
 			if bus.has_signal("safety_violation_committed"):
 				bus.safety_violation_committed.emit(
 					"INGRESO_SIN_EPP",
-					"Intento de cruce de esclusa hacia zona de molienda sin EPP reglamentario RETIE.",
+					"Intento de ingreso a la zona de molienda sin EPP.",
 					0.8
 				)

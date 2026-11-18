@@ -162,7 +162,7 @@ func close_door(play_sfx: bool = true) -> void:
 	set_door_open(false, play_sfx)
 
 func get_interact_prompt() -> String:
-	return "[E] Cerrar %s" % door_label if is_open else "[E] Abrir %s" % door_label
+	return "Cerrar %s" % door_label if is_open else "Abrir %s" % door_label
 
 func set_door_open(open_state: bool, play_sfx: bool = true) -> void:
 	is_open = open_state

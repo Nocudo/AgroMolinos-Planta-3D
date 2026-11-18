@@ -58,8 +58,8 @@ func start_plant_machines() -> void:
 			var bus = get_node_or_null("/root/EventBus")
 			if bus != null and bus.has_signal("notification_posted"):
 				bus.notification_posted.emit(
-					"PLANTA EN OPERACIÓN",
-					"Recorrido finalizado. Tren de molienda y máquinas encendidas.",
+					"Planta en operación",
+					"Máquinas encendidas.",
 					"success"
 				)
 
@@ -110,8 +110,8 @@ func set_emergency_stop(engaged: bool, source: String = "TABLET_SCADA") -> bool:
 			induction_motor.is_e_stop_engaged = true
 		if bus != null and bus.has_signal("notification_posted"):
 			bus.notification_posted.emit(
-				"PARADA DE EMERGENCIA",
-				"Máquinas detenidas desde la tablet.",
+				"Parada de emergencia",
+				"Máquinas detenidas.",
 				"error"
 			)
 		return true
@@ -124,8 +124,8 @@ func set_emergency_stop(engaged: bool, source: String = "TABLET_SCADA") -> bool:
 		induction_motor.set_vfd_target_frequency(60.0)
 	if bus != null and bus.has_signal("notification_posted"):
 		bus.notification_posted.emit(
-			"MÁQUINAS REANUDADAS",
-			"Parada rearmada desde la tablet.",
+			"Máquinas reanudadas",
+			"Parada liberada.",
 			"info"
 		)
 	return false

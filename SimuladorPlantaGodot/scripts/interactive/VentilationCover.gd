@@ -19,12 +19,12 @@ func _ready() -> void:
 func interact(tool_id: int) -> String:
 	# Tool 2 = Alicates / pinzas aisladas para intervenir rejilla cerca de partes móviles
 	if tool_id != 2:
-		return "Rejilla de ventilación Motor 10 HP. Equipa [2] Alicates (tecla 2) para obstruir o despejar."
+		return "Usa los alicates para obstruir o despejar la rejilla."
 	set_blocked(not is_blocked)
 	if is_blocked:
-		return "Has obstruido la rejilla de ventilación con [2] Alicates. ¡Enfriamiento bloqueado!"
+		return "Rejilla de ventilación obstruida."
 	else:
-		return "Has retirado la obstrucción de la rejilla con [2] Alicates. Flujo de aire normalizado."
+		return "Rejilla de ventilación despejada."
 
 func set_blocked(blocked: bool) -> void:
 	is_blocked = blocked
@@ -36,15 +36,15 @@ func set_blocked(blocked: bool) -> void:
 		bus.ventilation_blocked.emit(is_blocked)
 		if is_blocked:
 			bus.notification_posted.emit(
-				"VENTILACIÓN TRASERA OBSTRUIDA",
-				"Saco arrojado sobre la tapa del ventilador. Rth sube de 0.068 a 0.210 °C/W. Alza térmica acelerada.",
+				"Ventilación obstruida",
+				"Enfriamiento del motor bloqueado. Alza térmica en curso.",
 				"error"
 			)
 		else:
 			if bus.has_signal("fault_resolved"):
 				bus.fault_resolved.emit("VENTILACION_OBSTRUIDA")
 			bus.notification_posted.emit(
-				"OBSTRUCCIÓN DE VENTILACIÓN RETIRADA",
-				"Flujo de aire forzado restaurado. Enfriamiento progresivo.",
+				"Ventilación despejada",
+				"Flujo de aire restaurado.",
 				"info"
 			)

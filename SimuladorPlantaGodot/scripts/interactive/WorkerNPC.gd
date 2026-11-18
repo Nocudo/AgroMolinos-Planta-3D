@@ -448,17 +448,17 @@ func _toggle_idle_animation() -> void:
 
 func get_interact_prompt() -> String:
 	if not is_tour_guide:
-		return "[E] Hablar con " + worker_role_name
+		return "Hablar con " + worker_role_name
 	var tut = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
 	if tut != null and bool(tut.get("porteria_story_active")):
-		return "[E] Entrar a la empresa"
+		return "Entrar a la empresa"
 	if tut != null and bool(tut.get("sst_course_active")) and not bool(tut.get("sst_course_completed")):
-		return "[E] Iniciar Curso Rápido SST (RETIE)"
+		return "Iniciar curso SST"
 	if tut != null and int(tut.get("target_station_id")) == 2 and not bool(tut.get("epp_completed")):
-		return "[E] Hablar con Supervisor SST (Ver indicación de lockers)"
+		return "Hablar con Supervisor SST"
 	if tut != null and tut.has_method("is_ready_for_interact_advance") and bool(tut.is_ready_for_interact_advance()):
 		return String(tut.get_interact_advance_prompt())
-	return "[E] Pausa: Controles y Guía SST"
+	return "Hablar con Supervisor SST"
 
 func interact(_tool_id: int = 1) -> String:
 	if not can_interact():

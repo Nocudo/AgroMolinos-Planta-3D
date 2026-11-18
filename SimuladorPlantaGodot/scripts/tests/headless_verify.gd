@@ -603,11 +603,13 @@ func _qa_10_main_scene_integration() -> void:
 			bus_qa.notification_posted.emit("ADVERTENCIA TOLVA T-301", "Sobrealimentación detectada en compuerta manual.", "warning")
 			ok = _assert_true(tab_ctrl._has_unread_warning == true, "Tablet debe marcar warning no leído cuando está cerrada") and ok
 			ok = _assert_true(hud_tab_ctrl._tablet_notify_legend.visible == true, "HUD debe mostrar leyenda de notificación nueva") and ok
-			ok = _assert_true(hud_tab_ctrl._tablet_notify_title.text.contains("NOTIFICACIÓN NUEVA") and hud_tab_ctrl._tablet_notify_title.text.contains("[TAB]"), "Leyenda HUD debe indicar notificación nueva y [TAB] para revisar") and ok
+			ok = _assert_true(hud_tab_ctrl._tablet_notify_title.text.to_lower().contains("alerta en tablet") and not hud_tab_ctrl._tablet_notify_title.text.contains("[TAB]"), "Leyenda HUD debe indicar alerta en tablet limpia sin [TAB] (obtuvo: %s)" % hud_tab_ctrl._tablet_notify_title.text) and ok
 			tab_ctrl.toggle_tablet()
 			ok = _assert_true(tab_ctrl.visible == true and tab_ctrl._active_tab_idx == 0 and tab_ctrl._warning_banner_card.visible == true, "Abrir tablet debe llevar directo al warning en Monitoreo IoT") and ok
 			ok = _assert_true(hud_tab_ctrl._tablet_notify_legend.visible == false, "Al abrir tablet la leyenda de notificación nueva debe ocultarse") and ok
 			ok = _assert_true(tab_ctrl.get_node("TabletChassis").size == Vector2(1320, 830) and tab_ctrl.get_node("Frame").size == Vector2(1180, 700), "Tamaño de tablet debe mantenerse invariante con warning visible") and ok
+			var btn_close_qa := tab_ctrl.find_child("BtnClose", true, false) as Button
+			ok = _assert_true(btn_close_qa != null and btn_close_qa.text == "Salir", "BtnClose de tablet debe decir 'Salir' sin [TAB]") and ok
 			tab_ctrl.toggle_tablet()
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		var listener_3d := inst.get_node_or_null("PlayerOperator/Head/AudioListener3D") as AudioListener3D
@@ -821,8 +823,8 @@ func _qa_10_main_scene_integration() -> void:
 							ok = _assert_true(resolved == owner_node and resolved.has_method("interact"),
 								"Area de %s debe resolver al dueño con interact(), obtuvo %s" % [owner_name, resolved.name if resolved else "null"]) and ok
 							var p_txt := String(player._get_minimal_prompt_for(resolved))
-							ok = _assert_true(p_txt != "[E] Interactuar" and p_txt != "",
-								"Prompt de %s no debe caer en '[E] Interactuar' genérico (%s)" % [owner_name, p_txt]) and ok
+							ok = _assert_true(p_txt != "Interactuar" and p_txt != "" and not p_txt.contains("[E]"),
+								"Prompt de %s debe ser específico y limpio sin [E] (%s)" % [owner_name, p_txt]) and ok
 
 			# Verificar diálogo de Vestidores indicando lockers e interacción directa con LockerEPPStation
 			if hud_ctrl != null:
@@ -866,8 +868,9 @@ func _qa_10_main_scene_integration() -> void:
 				tut_node._process(0.1)
 				ok = _assert_true(int(tut_node.target_station_id) == 3 and not bool(tut_node.visited_stations.get(3, false)),
 					"Estación 3 no debe avanzar automáticamente solo por proximidad sin pulsar [E]") and ok
-				ok = _assert_true(bool(tut_node.is_ready_for_interact_advance()) and String(guide.get_interact_prompt()).contains("[E]"),
-					"SST en Estación 3 debe ofrecer prompt [E] para avanzar a Estación 4") and ok
+				var g_adv_prompt := String(guide.get_interact_prompt())
+				ok = _assert_true(bool(tut_node.is_ready_for_interact_advance()) and g_adv_prompt == "Siguiente estación" and not g_adv_prompt.contains("[E]"),
+					"SST en Estación 3 debe ofrecer prompt limpio 'Siguiente estación' sin [E] (obtuvo: %s)" % g_adv_prompt) and ok
 				var adv_out: String = guide.interact(1)
 				ok = _assert_true(adv_out != "" and int(tut_node.target_station_id) == 4 and bool(tut_node.visited_stations.get(3, false)),
 					"Pulsar [E] sobre SST en Estación 3 debe completar Estación 3 y avanzar a Estación 4") and ok

@@ -403,13 +403,13 @@ func _handle_interaction() -> void:
 		if close_target is InteractiveGrainBag and active_tool_id == 1:
 			carried_bag = close_target
 			close_target.pick_up(hand_mount)
-			_emit_prompt("[E / Clic] Soltar bulto")
+			_emit_prompt("Soltar bulto")
 			return
 		if close_target.has_method("interact"):
 			var result_msg: String = close_target.interact(active_tool_id)
 			var bus = get_node_or_null("/root/EventBus")
 			if bus != null and result_msg != "" and bus.has_signal("notification_posted"):
-				bus.notification_posted.emit("INTERACCIÓN", result_msg, "info")
+				bus.notification_posted.emit("Acción", result_msg, "info")
 		return
 
 	var glow := _get_glow_controller()
@@ -418,7 +418,7 @@ func _handle_interaction() -> void:
 		var fault_msg: String = str(glow.induce_fault_for_hovered_machine(active_tool_id))
 		var bus_f = get_node_or_null("/root/EventBus")
 		if bus_f != null and fault_msg != "" and bus_f.has_signal("notification_posted"):
-			bus_f.notification_posted.emit("MODO SELECCIÓN", fault_msg, "info")
+			bus_f.notification_posted.emit("Equipo", fault_msg, "info")
 		_update_ray_prompt()
 		return
 
@@ -430,7 +430,7 @@ func _handle_interaction() -> void:
 			var result_msg2: String = close_target.interact(active_tool_id)
 			var bus2 = get_node_or_null("/root/EventBus")
 			if bus2 != null and result_msg2 != "" and bus2.has_signal("notification_posted"):
-				bus2.notification_posted.emit("INTERACCIÓN", result_msg2, "info")
+				bus2.notification_posted.emit("Acción", result_msg2, "info")
 		return
 
 	# Si el jugador está dentro de la estación activa (3..12) y presiona [E] sin apuntar a otro equipo, avanzar de estación
@@ -784,7 +784,7 @@ func _find_interactable(node: Node) -> Node:
 
 func _update_ray_prompt() -> void:
 	if carried_bag != null:
-		_emit_prompt("[E / Clic] Soltar bulto")
+		_emit_prompt("Soltar bulto")
 		return
 
 	var close_target: Node = null
@@ -822,48 +822,33 @@ func _get_minimal_prompt_for(target: Node) -> String:
 	if target is WorkerNPC:
 		if target.has_method("can_interact") and not target.can_interact():
 			if target.guide_has_target:
-				return "SST en camino..."
-			return "SST explicando..."
+				return "En camino..."
+			return "Hablando..."
 		if target.is_tour_guide:
 			if target.has_method("get_interact_prompt"):
 				return target.get_interact_prompt()
-			return "[E] Guía SST"
-		return "[E] " + target.worker_role_name
+			return "Hablar"
+		return "Hablar con " + target.worker_role_name
 	elif target is PhysicalCableConductor:
-		if target.is_cut:
-			return "[E] para reparar falla\n(Kit LOTO)"
-		else:
-			return "[E] para inducir falla\n(Alicates)"
+		return "Reparar falla · Kit LOTO" if target.is_cut else "Inducir falla · Alicates"
 	elif target is PhysicalBreakerPanel:
 		if not target.is_door_open:
-			return "[E] Abrir CCM 460 V"
+			return "Abrir tablero CCM"
 		var is_tripped: bool = target.breaker_state != PhysicalBreakerPanel.BreakerState.NORMAL_460V
-		if is_tripped:
-			return "[E] para reparar falla\n(Kit LOTO)"
-		else:
-			return "[E] para inducir falla\n(Alicates)"
+		return "Reparar falla · Kit LOTO" if is_tripped else "Inducir falla · Alicates"
 	elif target is PhysicalHopperFeeder:
-		if target.is_jammed:
-			return "[E] para reparar falla\n(Llave 3/4\")"
-		else:
-			return "[E] para inducir falla\n(Llave 3/4\")"
+		return "Reparar falla · Llave 3/4\"" if target.is_jammed else "Inducir falla · Llave 3/4\""
 	elif target is MechanicalBolt:
-		if target.is_loosened:
-			return "[E] para reparar falla\n(Llave 3/4\")"
-		else:
-			return "[E] para inducir falla\n(Llave 3/4\")"
+		return "Reparar falla · Llave 3/4\"" if target.is_loosened else "Inducir falla · Llave 3/4\""
 	elif target is VentilationCover:
-		if target.is_blocked:
-			return "[E] para reparar falla\n(Alicates)"
-		else:
-			return "[E] para inducir falla\n(Alicates)"
+		return "Reparar falla · Alicates" if target.is_blocked else "Inducir falla · Alicates"
 	elif target is InteractiveGrainBag:
-		return "[E] Cargar bulto"
+		return "Cargar bulto"
 	elif "epp_equipped" in target:
-		return "[E] Guardar EPP (Lockers)" if target.epp_equipped else "[E] Equipar EPP (Lockers)"
+		return "Guardar EPP" if target.epp_equipped else "Equipar EPP"
 	elif target.has_method("get_interact_prompt"):
 		return target.get_interact_prompt()
-	return "[E] Operar"
+	return "Interactuar"
 
 func _emit_prompt(txt: String) -> void:
 	if txt != last_prompt_text:

@@ -82,6 +82,7 @@ func _build_ui(title_txt: String, sub_txt: String) -> void:
 
 	_lbl_sub = TTheme.make_label(sub_txt, 10, TTheme.TEXT_MUTED)
 	_lbl_sub.clip_text = true
+	_lbl_sub.visible = (sub_txt != "")
 	title_box.add_child(_lbl_sub)
 
 	_badge_panel = PanelContainer.new()
@@ -122,7 +123,7 @@ func _build_ui(title_txt: String, sub_txt: String) -> void:
 	hud_panel.add_theme_stylebox_override("panel", TTheme.make_panel_style(Color(0.03, 0.05, 0.10, 0.78), Color(0.22, 0.40, 0.65, 0.7), 6, 8, 5, 1))
 	stage_wrap.add_child(hud_panel)
 
-	_hud_lbl = TTheme.make_label("Inicializando gemelo 3D...", 10, Color(0.86, 0.94, 1.0))
+	_hud_lbl = TTheme.make_label("Cargando...", 10, Color(0.86, 0.94, 1.0))
 	_hud_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud_panel.add_child(_hud_lbl)
 

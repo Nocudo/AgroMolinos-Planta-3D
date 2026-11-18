@@ -20,9 +20,9 @@ func interact(tool_id: int) -> String:
 	# Tool 3 = Llave fija 3/4"
 	if tool_id == 3:
 		set_loosened(not is_loosened)
-		return "Has " + ("aflojado" if is_loosened else "apretado") + " el perno de anclaje con la llave de 3/4\"."
+		return "Perno " + ("aflojado." if is_loosened else "apretado.")
 	else:
-		return "Perno de bancada 3/4\". Selecciona [3] Llave 3/4\" para intervenirlo."
+		return "Usa la llave 3/4\" para intervenir el perno."
 
 func set_loosened(loosened: bool) -> void:
 	is_loosened = loosened
@@ -37,15 +37,15 @@ func set_loosened(loosened: bool) -> void:
 		bus.bolt_loosened.emit(bolt_id, is_loosened)
 		if is_loosened:
 			bus.notification_posted.emit(
-				"PERNO DE BANCADA AFLOJADO",
-				"Desajuste mecánico en anclaje. Vibración se dispara a Zona D (> 5 mm/s).",
+				"Perno de bancada aflojado",
+				"Desajuste mecánico. Vibración en Zona D.",
 				"error"
 			)
 		else:
 			if bus.has_signal("fault_resolved"):
 				bus.fault_resolved.emit("PERNOS_FLOJOS")
 			bus.notification_posted.emit(
-				"PERNO DE BANCADA APRETADO",
-				"Torque de apriete certificado según RETIE. Vibración normalizada.",
+				"Perno de bancada apretado",
+				"Torque ajustado. Vibración normalizada.",
 				"info"
 			)

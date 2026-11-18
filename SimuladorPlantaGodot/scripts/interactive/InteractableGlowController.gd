@@ -77,22 +77,22 @@ const MACHINE_GROUPS: Array[String] = [
 ]
 
 const MACHINE_DISPLAY_NAMES: Dictionary = {
-	"banda_descarga": "01 · Banda Descarga (Roja)",
-	"banda_inclinada_tolva": "02 · Banda Inclinada Tolva (Verde)",
-	"hopper": "03 · Tolva de Recepción (Gris)",
-	"banda_trituradora": "04 · Banda hacia Sinfín Trituradora (Verde)",
-	"tornillo_trituradora": "05 · Tornillo Sin Fin Trituradora (Verde)",
-	"motor": "06 · Trituradora + Motor 10 HP (Gris/Rojo)",
-	"tornillo_secador": "07 · Tornillo Sin Fin Secador (Verde)",
-	"secador_rotatorio": "08 · Secador Rotatorio (Gris Rugoso)",
-	"ciclon_separador": "09 · Ciclón Separador (Gris Liso)",
-	"cyclone": "10 · Ciclones Clasificadores (Amarillos)",
-	"unidad_extraccion": "11 · Unidad de Extracción (Pared)",
-	"horno": "12 · Horno Térmico (Ladrillos)",
-	"soplador": "13 · Soplador (Caja Blanca Azul/Morado)",
-	"intercambiador_calor": "14 · Intercambiador de Calor (Caracol Gris)",
+	"banda_descarga": "01 · Banda de Descarga",
+	"banda_inclinada_tolva": "02 · Banda Inclinada",
+	"hopper": "03 · Tolva de Recepción",
+	"banda_trituradora": "04 · Banda Trituradora",
+	"tornillo_trituradora": "05 · Tornillo Trituradora",
+	"motor": "06 · Trituradora y Motor 10 HP",
+	"tornillo_secador": "07 · Tornillo al Secador",
+	"secador_rotatorio": "08 · Secador Rotatorio",
+	"ciclon_separador": "09 · Ciclón Separador",
+	"cyclone": "10 · Ciclones Clasificadores",
+	"unidad_extraccion": "11 · Unidad de Extracción",
+	"horno": "12 · Horno Térmico",
+	"soplador": "13 · Soplador",
+	"intercambiador_calor": "14 · Intercambiador de Calor",
 	"ductos_aire": "15 · Ductos de Aire",
-	"breaker": "CCM · Tablero Eléctrico 460 V / VFD"
+	"breaker": "CCM · Tablero Eléctrico 460 V"
 }
 
 const ALL_GROUPS: Array[String] = [
@@ -143,92 +143,92 @@ const PROCESS_FAULT_SPECS: Dictionary = {
 	"banda_descarga": {
 		"induce_tool": 3, "repair_tool": 3, "code": "FALLA_BANDA_DESCARGA",
 		"induce_desc": "Destensar rodillo y atascar descarga", "repair_desc": "Tensar y alinear rodillo",
-		"fault_title": "ATASCO EN BANDA DESCARGA (ROJA)", "fault_msg": "Rodillo tensor destensado en descarga de camión (-35% flujo de grano).",
-		"repair_title": "BANDA DESCARGA NORMALIZADA", "repair_msg": "Rodillo alineado y tensión restablecida.",
+		"fault_title": "Atasco en banda de descarga", "fault_msg": "Rodillo tensor destensado en descarga de camión. Flujo reducido 35%.",
+		"repair_title": "Banda de descarga normalizada", "repair_msg": "Rodillo alineado y tensión restablecida.",
 		"load": 6.5, "temp": 2.0, "vib": 0.9, "flow_scale": 0.65, "aux_kw": 0.4
 	},
 	"banda_inclinada_tolva": {
 		"induce_tool": 2, "repair_tool": 5, "code": "FALLA_BANDA_INCLINADA_TOLVA",
 		"induce_desc": "Cortar lazo de control elevador", "repair_desc": "Empalmar sensor y rearmar",
-		"fault_title": "FALLA EN BANDA INCLINADA A TOLVA", "fault_msg": "Corte de sensor/alimentación en banda inclinada verde (-50% caudal).",
-		"repair_title": "BANDA INCLINADA RESTABLECIDA", "repair_msg": "Lazo de seguridad rearmado bajo RETIE.",
+		"fault_title": "Falla en banda inclinada", "fault_msg": "Corte de alimentación en banda elevadora. Caudal reducido 50%.",
+		"repair_title": "Banda inclinada restablecida", "repair_msg": "Lazo de seguridad rearmado bajo RETIE.",
 		"load": 5.0, "temp": 2.0, "vib": 1.1, "flow_scale": 0.50, "aux_kw": 0.5
 	},
 	"banda_trituradora": {
 		"induce_tool": 2, "repair_tool": 5, "code": "FALLA_BANDA_TRITURADORA",
 		"induce_desc": "Cortar alimentación de banda transportadora", "repair_desc": "Restablecer banda transportadora",
-		"fault_title": "BANDA TRANSPORTADORA DETENIDA", "fault_msg": "Interrupción en banda verde hacia tornillo sin fin de trituradora.",
-		"repair_title": "BANDA HACIA TRITURADORA OPERATIVA", "repair_msg": "Transferencia de grano hacia tornillo sin fin normalizada.",
+		"fault_title": "Banda hacia trituradora detenida", "fault_msg": "Interrupción en banda hacia tornillo de trituradora.",
+		"repair_title": "Banda hacia trituradora operativa", "repair_msg": "Transferencia de grano normalizada.",
 		"load": 9.0, "temp": 3.0, "vib": 1.4, "flow_scale": 0.25, "aux_kw": 0.6
 	},
 	"tornillo_trituradora": {
 		"induce_tool": 3, "repair_tool": 3, "code": "FALLA_TORNILLO_TRITURADORA",
-		"induce_desc": "Aflojar chumacera helicoidal", "repair_desc": "Apretar chumacera con Llave 3/4\"",
-		"fault_title": "DESAJUSTE EN TORNILLO SIN FIN TRITURADORA", "fault_msg": "Chumacera floja y rozamiento helicoidal (+3.2 mm/s vibración ISO 10816-3).",
-		"repair_title": "TORNILLO DE TRITURADORA ALINEADO", "repair_msg": "Torque de chumacera ajustado y vibración normalizada.",
+		"induce_desc": "Aflojar chumacera helicoidal", "repair_desc": "Apretar chumacera con llave 3/4\"",
+		"fault_title": "Desajuste en tornillo trituradora", "fault_msg": "Chumacera floja y rozamiento helicoidal. Vibración +3.2 mm/s.",
+		"repair_title": "Tornillo trituradora alineado", "repair_msg": "Chumacera ajustada y vibración normalizada.",
 		"load": 14.0, "temp": 4.0, "vib": 3.2, "flow_scale": 0.70, "aux_kw": 0.5
 	},
 	"tornillo_secador": {
 		"induce_tool": 3, "repair_tool": 3, "code": "FALLA_TORNILLO_SECADOR",
 		"induce_desc": "Desacoplar brida y obstruir sinfín", "repair_desc": "Reacoplar brida y despejar",
-		"fault_title": "OBSTRUCCIÓN EN TORNILLO SIN FIN AL SECADOR", "fault_msg": "Contrapresión en descarga de trituradora (+22 N·m par resistente).",
-		"repair_title": "TORNILLO HACIA SECADOR DESPEJADO", "repair_msg": "Descarga continua hacia secador rotatorio restaurada.",
+		"fault_title": "Obstrucción en tornillo al secador", "fault_msg": "Contrapresión en descarga de trituradora. Par +22 N·m.",
+		"repair_title": "Tornillo al secador despejado", "repair_msg": "Descarga continua hacia secador restaurada.",
 		"load": 22.0, "temp": 7.0, "vib": 1.8, "flow_scale": 0.45, "aux_kw": 0.7
 	},
 	"secador_rotatorio": {
 		"induce_tool": 4, "repair_tool": 5, "code": "FALLA_SECADOR_ROTATORIO",
 		"induce_desc": "Inducir deriva térmica en tambor", "repair_desc": "Resetear control LOTO y purgar",
-		"fault_title": "SOBRETEMPERATURA EN SECADOR ROTATORIO", "fault_msg": "Desbalance térmico y falla de lazo en cilindro secador (+26 °C).",
-		"repair_title": "SECADOR ROTATORIO ESTABILIZADO", "repair_msg": "Lazo térmico calibrado y cámara purgada.",
+		"fault_title": "Sobretemperatura en secador rotatorio", "fault_msg": "Desbalance térmico y falla de lazo en tambor. +26 °C.",
+		"repair_title": "Secador rotatorio estabilizado", "repair_msg": "Lazo térmico calibrado y cámara purgada.",
 		"load": 6.0, "temp": 26.0, "vib": 1.6, "flow_scale": 0.80, "aux_kw": 1.8
 	},
 	"ciclon_separador": {
 		"induce_tool": 3, "repair_tool": 3, "code": "FALLA_CICLON_SEPARADOR",
 		"induce_desc": "Trabar válvula rotativa inferior", "repair_desc": "Desbloquear válvula rotativa",
-		"fault_title": "BLOQUEO EN CICLÓN SEPARADOR", "fault_msg": "Válvula rotativa trabada y acumulación de harina en cono gris.",
-		"repair_title": "CICLÓN SEPARADOR DESBLOQUEADO", "repair_msg": "Descarga neumática de sólidos normalizada.",
+		"fault_title": "Bloqueo en ciclón separador", "fault_msg": "Válvula rotativa trabada con acumulación de harina.",
+		"repair_title": "Ciclón separador desbloqueado", "repair_msg": "Descarga neumática de sólidos normalizada.",
 		"load": 9.5, "temp": 6.0, "vib": 1.2, "flow_scale": 0.60, "aux_kw": 0.6
 	},
 	"cyclone": {
 		"induce_tool": 2, "repair_tool": 5, "code": "SOBREPRESION_CICLON_ATEX",
 		"induce_desc": "Cortar lazo presostato ATEX 22", "repair_desc": "Restablecer lazo ATEX con Kit LOTO",
-		"fault_title": "FALLA ATEX EN CICLONES CLASIFICADORES", "fault_msg": "Corte de presostato diferencial y nube crítica de polvo ATEX Zona 22.",
-		"repair_title": "CICLONES CLASIFICADORES NORMALIZADOS", "repair_msg": "Presión diferencial y contención ATEX 22 restauradas.",
+		"fault_title": "Falla ATEX en ciclones clasificadores", "fault_msg": "Corte de presostato diferencial y nube crítica de polvo.",
+		"repair_title": "Ciclones clasificadores normalizados", "repair_msg": "Presión diferencial y contención ATEX restauradas.",
 		"load": 5.0, "temp": 10.0, "vib": 1.5, "flow_scale": 0.55, "aux_kw": 0.8
 	},
 	"unidad_extraccion": {
 		"induce_tool": 2, "repair_tool": 5, "code": "FALLA_UNIDAD_EXTRACCION",
 		"induce_desc": "Cortar alimentación de extractor", "repair_desc": "Empalmar y rearmar extractor",
-		"fault_title": "FALLA EN UNIDAD DE EXTRACCIÓN (PARED)", "fault_msg": "Pérdida de succión en unidad gris de pared (+18 °C carga térmica).",
-		"repair_title": "UNIDAD DE EXTRACCIÓN OPERATIVA", "repair_msg": "Caudal de extracción y ventilación recuperados.",
+		"fault_title": "Falla en unidad de extracción", "fault_msg": "Pérdida de succión en extractor. Carga térmica +18 °C.",
+		"repair_title": "Unidad de extracción operativa", "repair_msg": "Caudal de extracción y ventilación recuperados.",
 		"load": 3.0, "temp": 18.0, "vib": 1.0, "flow_scale": 0.85, "aux_kw": 0.9
 	},
 	"horno": {
 		"induce_tool": 4, "repair_tool": 5, "code": "FALLA_HORNO_TERMICO",
-		"induce_desc": "Simular falla de termopar (+35 °C)", "repair_desc": "Resetear enclavamiento térmico",
-		"fault_title": "SOBRETEMPERATURA EN HORNO (LADRILLOS)", "fault_msg": "Deriva de termopar en cámara de combustión (+35 °C choque térmico).",
-		"repair_title": "HORNO TÉRMICO NORMALIZADO", "repair_msg": "Enclavamiento de quemador restablecido bajo LOTO.",
+		"induce_desc": "Simular falla de termopar", "repair_desc": "Resetear enclavamiento térmico",
+		"fault_title": "Sobretemperatura en horno térmico", "fault_msg": "Deriva de termopar en cámara de combustión. +35 °C.",
+		"repair_title": "Horno térmico normalizado", "repair_msg": "Enclavamiento de quemador restablecido bajo LOTO.",
 		"load": 2.0, "temp": 35.0, "vib": 0.6, "flow_scale": 0.90, "aux_kw": 2.4
 	},
 	"soplador": {
 		"induce_tool": 3, "repair_tool": 3, "code": "FALLA_SOPLADOR",
-		"induce_desc": "Aflojar brida de succión/descarga", "repair_desc": "Torqueado de brida con Llave 3/4\"",
-		"fault_title": "VIBRACIÓN Y FUGA EN SOPLADOR (BLANCO)", "fault_msg": "Brida floja entre ductos azul y morado (+2.4 mm/s vibración).",
-		"repair_title": "SOPLADOR SELLADO Y ALINEADO", "repair_msg": "Caudal hacia intercambiador y horno normalizado.",
+		"induce_desc": "Aflojar brida de succión", "repair_desc": "Apretar brida con llave 3/4\"",
+		"fault_title": "Vibración y fuga en soplador", "fault_msg": "Brida floja en impulsión. Vibración +2.4 mm/s.",
+		"repair_title": "Soplador sellado y alineado", "repair_msg": "Caudal hacia intercambiador y horno normalizado.",
 		"load": 4.0, "temp": 12.0, "vib": 2.4, "flow_scale": 0.80, "aux_kw": 1.0
 	},
 	"intercambiador_calor": {
 		"induce_tool": 4, "repair_tool": 3, "code": "FALLA_INTERCAMBIADOR_CALOR",
-		"induce_desc": "Forzar cierre de compuerta térmica", "repair_desc": "Abrir circuito con Llave 3/4\"",
-		"fault_title": "FALLA EN INTERCAMBIADOR DE CALOR (CARACOL)", "fault_msg": "Baja transferencia térmica hacia ducto amarillo (+20 °C retorno).",
-		"repair_title": "INTERCAMBIADOR DE CALOR OPERATIVO", "repair_msg": "Circuito de intercambio caracol-ducto restablecido.",
+		"induce_desc": "Forzar cierre de compuerta térmica", "repair_desc": "Abrir circuito con llave 3/4\"",
+		"fault_title": "Falla en intercambiador de calor", "fault_msg": "Baja transferencia térmica en circuito. Retorno +20 °C.",
+		"repair_title": "Intercambiador de calor operativo", "repair_msg": "Circuito térmico restablecido.",
 		"load": 3.0, "temp": 20.0, "vib": 0.8, "flow_scale": 0.85, "aux_kw": 1.1
 	},
 	"ductos_aire": {
 		"induce_tool": 3, "repair_tool": 5, "code": "FALLA_DUCTOS_AIRE",
-		"induce_desc": "Aflojar abrazadera de ducto (-40% P)", "repair_desc": "Sellar junta y presurizar LOTO",
-		"fault_title": "FUGA DE PRESIÓN EN DUCTOS DE AIRE", "fault_msg": "Junta floja en línea neumática principal (-40% presión de transporte).",
-		"repair_title": "DUCTOS DE AIRE PRESURIZADOS", "repair_msg": "Junta sellada y presión neumática nominal recuperada.",
+		"induce_desc": "Aflojar abrazadera de ducto", "repair_desc": "Sellar junta y presurizar LOTO",
+		"fault_title": "Fuga de presión en ductos de aire", "fault_msg": "Junta floja en línea neumática. Presión reducida 40%.",
+		"repair_title": "Ductos de aire presurizados", "repair_msg": "Junta sellada y presión nominal recuperada.",
 		"load": 4.0, "temp": 9.0, "vib": 1.1, "flow_scale": 0.65, "aux_kw": 0.5
 	}
 }
@@ -1600,7 +1600,7 @@ func _build_interaction_plan(group_key: String, tool_id: int) -> Dictionary:
 			}
 		return {
 			"allowed": [2, 3], "pref": (3 if tool_id == 3 else 2), "label": label,
-			"desc": "Aflojar perno bancada" if tool_id == 3 else "Cortar Fase L3 (o [3] Llave para perno)",
+			"desc": "Aflojar perno bancada" if tool_id == 3 else "Cortar fase L3",
 			"fault": false
 		}
 	if group_key == "hopper":
@@ -1640,10 +1640,10 @@ func get_hover_selection_prompt(tool_id: int) -> String:
 	var plan := _build_interaction_plan(_hovered_machine_group, tool_id)
 	var pref: int = int(plan["pref"])
 	var is_fault := bool(plan["fault"])
-	var tool_name := str(TOOL_CLEAN_NAMES.get(pref, "Herramienta %d" % pref))
+	var tool_name := str(TOOL_CLEAN_NAMES.get(pref, "Herramienta"))
 	if is_fault:
-		return "[E] para reparar falla\n(%s)" % tool_name
-	return "[E] para inducir falla\n(%s)" % tool_name
+		return "Reparar falla · %s" % tool_name
+	return "Inducir falla · %s" % tool_name
 
 func induce_fault_for_hovered_machine(tool_id: int = 1) -> String:
 	if not _is_post_tutorial() or _hovered_machine_group == "":
@@ -1652,8 +1652,8 @@ func induce_fault_for_hovered_machine(tool_id: int = 1) -> String:
 	var allowed: Array = plan["allowed"]
 	if not allowed.has(tool_id):
 		var pref: int = int(plan["pref"])
-		return "Herramienta incorrecta en %s. Equipa [%s] (tecla %d) para %s." % [
-			str(plan["label"]), str(TOOL_NAMES.get(pref, str(pref))), pref, str(plan["desc"]).to_lower()
+		return "Usa %s para %s." % [
+			str(TOOL_CLEAN_NAMES.get(pref, "otra herramienta")), str(plan["desc"]).to_lower()
 		]
 
 	var msg := ""

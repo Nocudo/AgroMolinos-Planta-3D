@@ -114,7 +114,7 @@ func _draw() -> void:
 		_draw_series(buf_b, 0.0, peak_val, plot_rect, Color(0.96, 0.62, 0.04, 0.95))
 		_draw_series(buf_c, 0.0, peak_val, plot_rect, Color(0.94, 0.35, 0.42, 0.95))
 		if font != null:
-			draw_string(font, Vector2(0.0, 16.0), "L1(Cyan) L2(Ámbar) L3(Rojo)", HORIZONTAL_ALIGNMENT_RIGHT, w - 10.0, 10, Color(0.75, 0.85, 0.95, 0.9))
+			draw_string(font, Vector2(0.0, 16.0), "L1 · L2 · L3", HORIZONTAL_ALIGNMENT_RIGHT, w - 10.0, 10, Color(0.75, 0.85, 0.95, 0.9))
 
 	elif chart_mode == "TEMPERATURE":
 		var t_min: float = 20.0

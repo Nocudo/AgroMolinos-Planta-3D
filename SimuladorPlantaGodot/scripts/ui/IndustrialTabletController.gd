@@ -19,171 +19,171 @@ const TAB_NAMES: Array[String] = [
 
 const MACHINE_CHART_CONFIGS: Dictionary = {
 	"banda_descarga": {
-		"group": "G1", "title": "01 · Banda Descarga (Roja)",
-		"chart_title": "Velocidad & Caudal Descarga [kg/s]",
-		"unit": "kg/s", "legend": "Vel%(Cyan) Caudal(Ámbar)", "warn": 1.25, "trip": 1.80,
+		"group": "G1", "title": "01 · Banda de Descarga",
+		"chart_title": "Velocidad y caudal",
+		"unit": "kg/s", "legend": "Vel · Caudal", "warn": 1.25, "trip": 1.80,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "spd", "title": "VELOCIDAD", "val": "100 %", "badge": "Nominal"},
-			{"key": "flow", "title": "CAUDAL", "val": "0.80 kg/s", "badge": "Tolva"},
-			{"key": "cur", "title": "CORRIENTE", "val": "4.5 A", "badge": "Motorreductor"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "spd", "title": "VELOCIDAD", "val": "100 %", "badge": "Normal"},
+			{"key": "flow", "title": "CAUDAL", "val": "0.80 kg/s", "badge": "Normal"},
+			{"key": "cur", "title": "CORRIENTE", "val": "4.5 A", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"banda_inclinada_tolva": {
-		"group": "G1", "title": "02 · Banda Inclinada Tolva (Verde)",
-		"chart_title": "Elevador a Tolva · Corriente & Caudal [A]",
-		"unit": "A", "legend": "Ia(Cyan) Caudal(Ámbar)", "warn": 7.5, "trip": 9.5,
+		"group": "G1", "title": "02 · Banda Inclinada",
+		"chart_title": "Corriente y caudal",
+		"unit": "A", "legend": "Ia · Caudal", "warn": 7.5, "trip": 9.5,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "cur", "title": "CORRIENTE", "val": "5.2 A", "badge": "Nominal"},
-			{"key": "flow", "title": "ELEVACIÓN", "val": "0.80 kg/s", "badge": "Caudal"},
-			{"key": "spd", "title": "VELOCIDAD", "val": "100 %", "badge": "Cinta Verde"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "cur", "title": "CORRIENTE", "val": "5.2 A", "badge": "Normal"},
+			{"key": "flow", "title": "CAUDAL", "val": "0.80 kg/s", "badge": "Normal"},
+			{"key": "spd", "title": "VELOCIDAD", "val": "100 %", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"hopper": {
-		"group": "G1", "title": "03 · Tolva Receptora T-301 (Gris)",
-		"chart_title": "Perfil Dinámico Tolva T-301 [% Llenado]",
-		"unit": "%", "legend": "Nivel%(Cyan) Flujo(Ámbar)", "warn": 85.0, "trip": 95.0,
+		"group": "G1", "title": "03 · Tolva Receptora",
+		"chart_title": "Nivel y flujo",
+		"unit": "%", "legend": "Nivel · Flujo", "warn": 85.0, "trip": 95.0,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "level", "title": "NIVEL TOLVA", "val": "65.0 %", "badge": "Capacidad 5t"},
-			{"key": "flow", "title": "DESCARGA", "val": "0.80 kg/s", "badge": "Compuerta"},
-			{"key": "weight", "title": "PESO", "val": "3250 kg", "badge": "Celdas Carga"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "level", "title": "NIVEL", "val": "65.0 %", "badge": "Normal"},
+			{"key": "flow", "title": "DESCARGA", "val": "0.80 kg/s", "badge": "Normal"},
+			{"key": "weight", "title": "PESO", "val": "3250 kg", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"banda_trituradora": {
-		"group": "G1", "title": "04 · Banda hacia Sinfín Trituradora (Verde)",
-		"chart_title": "Dosificación a Molienda · Velocidad & Carga [%]",
-		"unit": "%", "legend": "Vel%(Cyan) Carga(Ámbar)", "warn": 90.0, "trip": 98.0,
+		"group": "G1", "title": "04 · Banda Trituradora",
+		"chart_title": "Velocidad y carga",
+		"unit": "%", "legend": "Vel · Carga", "warn": 90.0, "trip": 98.0,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "spd", "title": "DOSIFICACIÓN", "val": "85.0 %", "badge": "Control VFD"},
-			{"key": "flow", "title": "ALIMENTACIÓN", "val": "0.80 kg/s", "badge": "A Sinfín M-1"},
-			{"key": "cur", "title": "CORRIENTE", "val": "3.8 A", "badge": "Motorreductor"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "spd", "title": "DOSIFICACIÓN", "val": "85.0 %", "badge": "VFD"},
+			{"key": "flow", "title": "CAUDAL", "val": "0.80 kg/s", "badge": "Normal"},
+			{"key": "cur", "title": "CORRIENTE", "val": "3.8 A", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"tornillo_trituradora": {
-		"group": "G2", "title": "05 · Tornillo Sin Fin Trituradora (Verde)",
-		"chart_title": "Sinfín Entrada Molino · Giro [RPM] & Ia [A]",
-		"unit": "RPM", "legend": "Giro(Cyan) Ia(Ámbar)", "warn": 9.5, "trip": 14.0,
+		"group": "G2", "title": "05 · Tornillo Trituradora",
+		"chart_title": "Giro y corriente",
+		"unit": "RPM", "legend": "RPM · Ia", "warn": 9.5, "trip": 14.0,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "rpm", "title": "VELOCIDAD", "val": "125 RPM", "badge": "Sinfín M-1"},
-			{"key": "cur", "title": "CORRIENTE", "val": "6.4 A", "badge": "Carga Molienda"},
-			{"key": "trq", "title": "TORQUE", "val": "48.0 N·m", "badge": "Eje Impulsor"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "rpm", "title": "VELOCIDAD", "val": "125 RPM", "badge": "Normal"},
+			{"key": "cur", "title": "CORRIENTE", "val": "6.4 A", "badge": "Normal"},
+			{"key": "trq", "title": "TORQUE", "val": "48.0 N·m", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"tornillo_secador": {
-		"group": "G2", "title": "07 · Tornillo Sin Fin Secador (Verde)",
-		"chart_title": "Sinfín Alimentación al Secador [RPM]",
-		"unit": "RPM", "legend": "Giro(Cyan) Caudal(Ámbar)", "warn": 8.5, "trip": 12.0,
+		"group": "G2", "title": "07 · Tornillo Secador",
+		"chart_title": "Giro y caudal",
+		"unit": "RPM", "legend": "RPM · Caudal", "warn": 8.5, "trip": 12.0,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "rpm", "title": "VELOCIDAD", "val": "95 RPM", "badge": "Alimentación"},
-			{"key": "flow", "title": "TRANSPORTE", "val": "0.78 kg/s", "badge": "Hacia Secador"},
-			{"key": "cur", "title": "CORRIENTE", "val": "4.8 A", "badge": "Motorreductor"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "rpm", "title": "VELOCIDAD", "val": "95 RPM", "badge": "Normal"},
+			{"key": "flow", "title": "CAUDAL", "val": "0.78 kg/s", "badge": "Normal"},
+			{"key": "cur", "title": "CORRIENTE", "val": "4.8 A", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"secador_rotatorio": {
-		"group": "G2", "title": "08 · Secador Rotatorio (Gris Rugoso)",
-		"chart_title": "Perfil Térmico Secador Rotatorio [°C]",
-		"unit": "°C", "legend": "Temp(Naranja) Hum%(Cyan)", "warn": 90.0, "trip": 105.0,
+		"group": "G2", "title": "08 · Secador Rotatorio",
+		"chart_title": "Temperatura y humedad",
+		"unit": "°C", "legend": "Temp · Hum", "warn": 90.0, "trip": 105.0,
 		"col_a": Color(0.96, 0.48, 0.26, 1.0), "col_b": Color(0.22, 0.74, 0.97, 0.95),
 		"kpis": [
-			{"key": "temp", "title": "TEMPERATURA", "val": "72.0 °C", "badge": "Tambor Rotativo"},
-			{"key": "hum", "title": "HUMEDAD FINAL", "val": "12.5 %", "badge": "Grano Seco OK"},
-			{"key": "rpm", "title": "GIRO TAMBOR", "val": "18.5 RPM", "badge": "Corona Dentada"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "temp", "title": "TEMPERATURA", "val": "72.0 °C", "badge": "Normal"},
+			{"key": "hum", "title": "HUMEDAD", "val": "12.5 %", "badge": "OK"},
+			{"key": "rpm", "title": "GIRO", "val": "18.5 RPM", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"ciclon_separador": {
-		"group": "G3", "title": "09 · Ciclón Separador (Gris Liso)",
-		"chart_title": "Presión Diferencial ΔP Ciclón [kPa]",
-		"unit": "kPa", "legend": "ΔP(Cyan) Efic%(Verde)", "warn": 2.6, "trip": 3.8,
+		"group": "G3", "title": "09 · Ciclón Separador",
+		"chart_title": "Presión y eficiencia",
+		"unit": "kPa", "legend": "ΔP · Efic", "warn": 2.6, "trip": 3.8,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.06, 0.73, 0.51, 0.95),
 		"kpis": [
-			{"key": "dp", "title": "PRESIÓN ΔP", "val": "1.45 kPa", "badge": "Pérdida Carga"},
-			{"key": "eff", "title": "EFICIENCIA", "val": "98.5 %", "badge": "Captura Polvo"},
-			{"key": "flow", "title": "CAUDAL AIRE", "val": "38.0 m³/m", "badge": "Vórtice Ciclónico"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "dp", "title": "PRESIÓN ΔP", "val": "1.45 kPa", "badge": "Normal"},
+			{"key": "eff", "title": "EFICIENCIA", "val": "98.5 %", "badge": "Normal"},
+			{"key": "flow", "title": "CAUDAL", "val": "38.0 m³/m", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"cyclone": {
-		"group": "G3", "title": "10 · Ciclones Clasificadores (Amarillos)",
-		"chart_title": "Monitoreo Atmósfera ATEX 22 [% LEL]",
-		"unit": "%", "legend": "LEL%(Ámbar) Presión(Cyan)", "warn": 25.0, "trip": 50.0,
+		"group": "G3", "title": "10 · Ciclones Clasificadores",
+		"chart_title": "Nivel ATEX y presión",
+		"unit": "%", "legend": "LEL · Pres", "warn": 25.0, "trip": 50.0,
 		"col_a": Color(0.96, 0.62, 0.04, 1.0), "col_b": Color(0.22, 0.74, 0.97, 0.95),
 		"kpis": [
-			{"key": "atex", "title": "RIESGO ATEX", "val": "8.5 % LEL", "badge": "Zona 22 NFPA 61"},
-			{"key": "pres", "title": "PRESIÓN CÁMARA", "val": "1.20 kPa", "badge": "Despresurizado"},
-			{"key": "flow", "title": "CLASIFICACIÓN", "val": "0.78 kg/s", "badge": "Grano Fino"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "atex", "title": "ATEX", "val": "8.5 % LEL", "badge": "Zona 22"},
+			{"key": "pres", "title": "PRESIÓN", "val": "1.20 kPa", "badge": "Normal"},
+			{"key": "flow", "title": "CAUDAL", "val": "0.78 kg/s", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"unidad_extraccion": {
-		"group": "G3", "title": "11 · Unidad de Extracción (Pared)",
-		"chart_title": "Extracción y Filtración de Aire [m³/min]",
-		"unit": "m³/m", "legend": "Caudal(Cyan) Vacío(Ámbar)", "warn": 3.2, "trip": 4.5,
+		"group": "G3", "title": "11 · Unidad de Extracción",
+		"chart_title": "Extracción y vacío",
+		"unit": "m³/m", "legend": "Caudal · Vacío", "warn": 3.2, "trip": 4.5,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "flow", "title": "EXTRACCIÓN", "val": "42.0 m³/m", "badge": "Filtro Mangas"},
-			{"key": "vac", "title": "VACÍO", "val": "2.35 kPa", "badge": "Succión Pared"},
-			{"key": "cur", "title": "CORRIENTE", "val": "7.2 A", "badge": "Ventilador Centr."},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "flow", "title": "CAUDAL", "val": "42.0 m³/m", "badge": "Normal"},
+			{"key": "vac", "title": "VACÍO", "val": "2.35 kPa", "badge": "Normal"},
+			{"key": "cur", "title": "CORRIENTE", "val": "7.2 A", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"horno": {
-		"group": "G3", "title": "12 · Horno Térmico (Ladrillos)",
-		"chart_title": "Combustión & Potencia Térmica [°C]",
-		"unit": "°C", "legend": "Temp(Rojo) Potencia(Ámbar)", "warn": 210.0, "trip": 240.0,
+		"group": "G3", "title": "12 · Horno Térmico",
+		"chart_title": "Temperatura y potencia",
+		"unit": "°C", "legend": "Temp · kW", "warn": 210.0, "trip": 240.0,
 		"col_a": Color(0.94, 0.27, 0.27, 1.0), "col_b": Color(0.96, 0.62, 0.04, 0.95),
 		"kpis": [
-			{"key": "temp", "title": "CÁMARA COMBUST.", "val": "185.0 °C", "badge": "Quemador Gas"},
-			{"key": "pwr", "title": "POTENCIA", "val": "24.0 kW", "badge": "Calorífico"},
-			{"key": "air", "title": "AIRE CALIENTE", "val": "92.0 °C", "badge": "Hacia Secador"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "temp", "title": "CÁMARA", "val": "185.0 °C", "badge": "Normal"},
+			{"key": "pwr", "title": "POTENCIA", "val": "24.0 kW", "badge": "Normal"},
+			{"key": "air", "title": "AIRE", "val": "92.0 °C", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"soplador": {
-		"group": "G4", "title": "13 · Soplador (Azul/Morado)",
-		"chart_title": "Presión Neumática & Vibración [kPa]",
-		"unit": "kPa", "legend": "Presión(Cyan) Vib(Verde)", "warn": 3.0, "trip": 4.5,
+		"group": "G4", "title": "13 · Soplador",
+		"chart_title": "Presión y vibración",
+		"unit": "kPa", "legend": "Pres · Vib", "warn": 3.0, "trip": 4.5,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.06, 0.73, 0.51, 0.95),
 		"kpis": [
-			{"key": "pres", "title": "PRESIÓN SOPLADO", "val": "6.40 kPa", "badge": "Impulso Línea"},
-			{"key": "vib", "title": "VIBRACIÓN", "val": "1.10 mm/s", "badge": "Rodete ISO 10816"},
-			{"key": "cur", "title": "CORRIENTE", "val": "8.5 A", "badge": "Motor Soplador"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "pres", "title": "PRESIÓN", "val": "6.40 kPa", "badge": "Normal"},
+			{"key": "vib", "title": "VIBRACIÓN", "val": "1.10 mm/s", "badge": "Normal"},
+			{"key": "cur", "title": "CORRIENTE", "val": "8.5 A", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"intercambiador_calor": {
-		"group": "G4", "title": "14 · Intercambiador de Calor (Caracol)",
-		"chart_title": "Gradiente Térmico Entrada/Salida [°C]",
-		"unit": "°C", "legend": "T_in(Rojo) T_out(Cyan)", "warn": 65.0, "trip": 85.0,
+		"group": "G4", "title": "14 · Intercambiador de Calor",
+		"chart_title": "Entrada y salida térmica",
+		"unit": "°C", "legend": "Entrada · Salida", "warn": 65.0, "trip": 85.0,
 		"col_a": Color(0.94, 0.27, 0.27, 1.0), "col_b": Color(0.22, 0.74, 0.97, 0.95),
 		"kpis": [
-			{"key": "tin", "title": "T° ENTRADA", "val": "85.0 °C", "badge": "Fluido Caliente"},
-			{"key": "tout", "title": "T° SALIDA", "val": "42.0 °C", "badge": "Refrigerado"},
-			{"key": "eff", "title": "EFIC. TÉRMICA", "val": "82.0 %", "badge": "Intercambio OK"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "tin", "title": "ENTRADA", "val": "85.0 °C", "badge": "Normal"},
+			{"key": "tout", "title": "SALIDA", "val": "42.0 °C", "badge": "Normal"},
+			{"key": "eff", "title": "EFICIENCIA", "val": "82.0 %", "badge": "Normal"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	},
 	"ductos_aire": {
-		"group": "G4", "title": "15 · Ductos de Aire Neumáticos",
-		"chart_title": "Presión Dinámica en Ductos Neumáticos [kPa]",
-		"unit": "kPa", "legend": "Presión(Cyan) Caudal%(Verde)", "warn": 2.8, "trip": 1.5,
+		"group": "G4", "title": "15 · Ductos de Aire",
+		"chart_title": "Presión y caudal",
+		"unit": "kPa", "legend": "Pres · Caudal", "warn": 2.8, "trip": 1.5,
 		"col_a": Color(0.22, 0.74, 0.97, 1.0), "col_b": Color(0.06, 0.73, 0.51, 0.95),
 		"kpis": [
-			{"key": "pres", "title": "PRESIÓN RED", "val": "5.80 kPa", "badge": "Transporte Granos"},
-			{"key": "vel", "title": "VEL. AIRE", "val": "22.5 m/s", "badge": "Arrastre Neumático"},
-			{"key": "leak", "title": "HERMETICIDAD", "val": "100.0 %", "badge": "Juntas Selladas"},
-			{"key": "st", "title": "ESTADO", "val": "OPERATIVO", "badge": "OK"}
+			{"key": "pres", "title": "PRESIÓN", "val": "5.80 kPa", "badge": "Normal"},
+			{"key": "vel", "title": "VELOCIDAD", "val": "22.5 m/s", "badge": "Normal"},
+			{"key": "leak", "title": "SELLADO", "val": "100 %", "badge": "OK"},
+			{"key": "st", "title": "ESTADO", "val": "OK", "badge": "Normal"}
 		]
 	}
 }
@@ -322,25 +322,22 @@ func _build_header_bar() -> void:
 	title_vb.add_theme_constant_override("separation", 1)
 	hdr.add_child(title_vb)
 
-	var main_t := TTheme.make_label("AGROMOLINOS · SCADA 10 HP", 15, Color.WHITE)
+	var main_t := TTheme.make_label("AGROMOLINOS", 15, Color.WHITE)
 	main_t.clip_text = true
-	var sub_t := TTheme.make_label("UNILLANOS · 460 V · IE3", 10, TTheme.TEXT_MUTED)
-	sub_t.clip_text = true
 	title_vb.add_child(main_t)
-	title_vb.add_child(sub_t)
 
 	_header_status_panel = PanelContainer.new()
 	_header_status_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header_status_panel.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.04, 0.25, 0.16, 0.95), TTheme.ACCENT_EMERALD))
 	hdr.add_child(_header_status_panel)
-	_header_status_lbl = TTheme.make_label("● SISTEMA NORMAL", 10, Color(0.55, 0.98, 0.78))
+	_header_status_lbl = TTheme.make_label("Normal", 10, Color(0.55, 0.98, 0.78))
 	_header_status_panel.add_child(_header_status_lbl)
 
 	var score_pill := PanelContainer.new()
 	score_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	score_pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(TTheme.BG_SUBCARD, TTheme.BORDER_SUBTLE))
 	hdr.add_child(score_pill)
-	lbl_academic_score = TTheme.make_label("RETIE: 5.0/5.0", 11, TTheme.ACCENT_EMERALD)
+	lbl_academic_score = TTheme.make_label("RETIE 5.0/5.0", 11, TTheme.ACCENT_EMERALD)
 	score_pill.add_child(lbl_academic_score)
 
 	btn_emergency_stop = Button.new()
@@ -354,7 +351,7 @@ func _build_header_bar() -> void:
 
 	btn_close = Button.new()
 	btn_close.name = "BtnClose"
-	btn_close.text = "Salir [TAB]"
+	btn_close.text = "Salir"
 	btn_close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	btn_close.add_theme_font_size_override("font_size", 11)
 	TTheme.apply_btn_colors(btn_close, Color(0.14, 0.18, 0.24), TTheme.BORDER_SUBTLE)
@@ -394,15 +391,10 @@ func _build_tab1_iot() -> Control:
 	cb_hb.add_theme_constant_override("separation", 10)
 	ctrl_bar.add_child(cb_hb)
 
-	var sim_pill := PanelContainer.new()
-	sim_pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.06, 0.16, 0.28), TTheme.ACCENT_CYAN))
-	sim_pill.add_child(TTheme.make_label("10 Hz · IE3", 10, TTheme.ACCENT_CYAN))
-	cb_hb.add_child(sim_pill)
-
-	_iot_relay_lbl = TTheme.make_label("Relé CCM: CERRADO · VFD", 11, TTheme.ACCENT_EMERALD)
+	_iot_relay_lbl = TTheme.make_label("CCM: Cerrado · VFD", 11, TTheme.ACCENT_EMERALD)
 	cb_hb.add_child(_iot_relay_lbl)
 
-	_iot_alert_lbl = TTheme.make_label("Edge AI: Nominal", 11, TTheme.TEXT_MUTED)
+	_iot_alert_lbl = TTheme.make_label("Estado normal", 11, TTheme.TEXT_MUTED)
 	_iot_alert_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_iot_alert_lbl.clip_text = true
 	_iot_alert_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -424,7 +416,7 @@ func _build_tab1_iot() -> Control:
 	_iot_btn_audio.pressed.connect(_toggle_audio_mute)
 	cb_hb.add_child(_iot_btn_audio)
 
-	# Banner prominente de Warning / Notificación en Tablet (se despliega al llegar un warning)
+	# Banner de alerta activa
 	_warning_banner_card = PanelContainer.new()
 	_warning_banner_card.name = "ActiveWarningBanner"
 	_warning_banner_card.visible = false
@@ -436,18 +428,11 @@ func _build_tab1_iot() -> Control:
 	wb_hb.add_theme_constant_override("separation", 10)
 	_warning_banner_card.add_child(wb_hb)
 
-	_warning_banner_pill = PanelContainer.new()
-	_warning_banner_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_warning_banner_pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.35, 0.20, 0.03), TTheme.ACCENT_AMBER))
-	wb_hb.add_child(_warning_banner_pill)
-	_warning_banner_pill_lbl = TTheme.make_label("▲ ALERTA", 10, Color(1.0, 0.88, 0.45))
-	_warning_banner_pill.add_child(_warning_banner_pill_lbl)
-
 	var wb_txt := VBoxContainer.new()
 	wb_txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	wb_txt.add_theme_constant_override("separation", 2)
 	wb_hb.add_child(wb_txt)
-	_warning_banner_title = TTheme.make_label("ADVERTENCIA ACTIVA", 12, Color.WHITE)
+	_warning_banner_title = TTheme.make_label("Alerta", 12, Color.WHITE)
 	_warning_banner_title.clip_text = true
 	_warning_banner_body = TTheme.make_label("", 10, Color(0.95, 0.92, 0.85))
 	_warning_banner_body.clip_text = true
@@ -470,12 +455,12 @@ func _build_tab1_iot() -> Control:
 	btn_dismiss.pressed.connect(func():
 		_warning_banner_card.visible = false
 		if _last_severity == "NORMAL":
-			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "● SISTEMA EN LÍNEA: ESTADO NORMAL", "NORMAL")
+			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "Normal", "NORMAL")
 		_sync_tablet_invariant_size()
 	)
 	wb_hb.add_child(btn_dismiss)
 
-	# Barra de Filtro de Zonas de Proceso (Todas | G1 | G2 | G3 | G4)
+	# Filtro de zonas
 	var filter_bar := PanelContainer.new()
 	filter_bar.add_theme_stylebox_override("panel", TTheme.make_panel_style(Color(0.04, 0.06, 0.10, 0.95), TTheme.BORDER_SUBTLE, 4, 8, 4, 1))
 	vb.add_child(filter_bar)
@@ -483,17 +468,13 @@ func _build_tab1_iot() -> Control:
 	fb_hb.add_theme_constant_override("separation", 6)
 	filter_bar.add_child(fb_hb)
 
-	var filter_lbl := TTheme.make_label("Filtrar:", 10, TTheme.TEXT_MUTED)
-	filter_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	fb_hb.add_child(filter_lbl)
-
 	_filter_btns.clear()
 	var filter_specs := [
-		{"id": "ALL", "txt": "Todas (16)"},
-		{"id": "G1", "txt": "G1: Recepción (01-04)"},
-		{"id": "G2", "txt": "G2: Molienda (05-08)"},
-		{"id": "G3", "txt": "G3: Ciclones (09-12)"},
-		{"id": "G4", "txt": "G4: Aire & CCM (13-15 + CCM)"}
+		{"id": "ALL", "txt": "Todas"},
+		{"id": "G1", "txt": "Recepción"},
+		{"id": "G2", "txt": "Molienda"},
+		{"id": "G3", "txt": "Ciclones"},
+		{"id": "G4", "txt": "Aire y CCM"}
 	]
 	for fs in filter_specs:
 		var fid: String = fs["id"]
@@ -534,15 +515,15 @@ func _build_tab1_iot() -> Control:
 	chart_currents = TOscChart.new()
 	chart_currents.name = "ChartCurrents"
 	chart_currents.chart_mode = "CURRENTS"
-	chart_currents.chart_title = "Oscilograma Corrientes Trifásicas Ia, Ib, Ic [A]"
+	chart_currents.chart_title = "Corrientes Ia · Ib · Ic"
 	chart_currents.custom_minimum_size = Vector2(0, 165)
 	var card_motor := _make_asset_card(
-		"06 · Trituradora + Motor 10 HP",
+		"06 · Trituradora y Motor 10 HP",
 		[
-			{"key": "currents", "title": "CORRIENTES", "val": "13.5 / 13.5 / 13.5", "badge": "IUF 0.7% · Nominal"},
-			{"key": "voltage", "title": "TENSIÓN", "val": "460.0 V · 60 Hz", "badge": "cos φ 0.85"},
-			{"key": "temp", "title": "TEMPERATURA", "val": "58.0 °C", "badge": "Clase F (<85°C)"},
-			{"key": "vib", "title": "VIBRACIÓN", "val": "1.15 mm/s", "badge": "Zona A/B OK"}
+			{"key": "currents", "title": "CORRIENTES", "val": "13.5 / 13.5 / 13.5", "badge": "IUF 0.7%"},
+			{"key": "voltage", "title": "TENSIÓN", "val": "460 V · 60 Hz", "badge": "cos φ 0.85"},
+			{"key": "temp", "title": "TEMPERATURA", "val": "58.0 °C", "badge": "Normal"},
+			{"key": "vib", "title": "VIBRACIÓN", "val": "1.15 mm/s", "badge": "OK"}
 		],
 		chart_currents
 	)
@@ -571,25 +552,25 @@ func _build_tab1_iot() -> Control:
 	chart_temperature = TOscChart.new()
 	chart_temperature.name = "ChartTemperature"
 	chart_temperature.chart_mode = "TEMPERATURE"
-	chart_temperature.chart_title = "Térmica Tw [°C]"
+	chart_temperature.chart_title = "Temperatura"
 	chart_temperature.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chart_temperature.custom_minimum_size = Vector2(0, 165)
 	chart_vibration = TOscChart.new()
 	chart_vibration.name = "ChartVibration"
 	chart_vibration.chart_mode = "VIBRATION"
-	chart_vibration.chart_title = "Vib. ISO & Armónicos"
+	chart_vibration.chart_title = "Vibración ISO"
 	chart_vibration.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chart_vibration.custom_minimum_size = Vector2(0, 165)
 	dual_charts.add_child(chart_temperature)
 	dual_charts.add_child(chart_vibration)
 
 	var card_ccm := _make_asset_card(
-		"CCM 460 V, Variador VFD & Edge AI",
+		"CCM 460 V y Variador VFD",
 		[
-			{"key": "mhi", "title": "SALUD (MHI)", "val": "98.5 %", "badge": "RUL: 24000 h"},
-			{"key": "rpm_torque", "title": "VELOCIDAD", "val": "1750 RPM", "badge": "40.7 N·m · 7.46 kW"},
+			{"key": "mhi", "title": "SALUD MHI", "val": "98.5 %", "badge": "RUL 24000 h"},
+			{"key": "rpm_torque", "title": "VELOCIDAD", "val": "1750 RPM", "badge": "40.7 N·m · 7.5 kW"},
 			{"key": "energy", "title": "ENERGÍA", "val": "7.52 kWh/t", "badge": "-28.4% vs DOL"},
-			{"key": "co2", "title": "EMISIONES", "val": "3.2 %", "badge": "0.00 kg evitado"}
+			{"key": "co2", "title": "EMISIONES", "val": "3.2 %", "badge": "0.0 kg evitado"}
 		],
 		dual_charts
 	)
@@ -597,14 +578,14 @@ func _build_tab1_iot() -> Control:
 	_machine_card_groups["breaker"] = "G4"
 	cards_vb.add_child(card_ccm)
 
-	# --- LOGÍSTICA & TELEMETRÍA RESUMEN ---
+	# Registro y producción
 	var bb_panel := PanelContainer.new()
 	bb_panel.custom_minimum_size.y = 165
 	bb_panel.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_PLOT, TTheme.BORDER_SUBTLE, 6, 8, 6))
 	var bb_vb := VBoxContainer.new()
 	bb_vb.add_theme_constant_override("separation", 3)
 	bb_panel.add_child(bb_vb)
-	bb_vb.add_child(TTheme.make_label("Blackbox Log", 10, TTheme.ACCENT_CYAN))
+	bb_vb.add_child(TTheme.make_label("Registro", 10, TTheme.ACCENT_CYAN))
 	_blackbox_lbl = RichTextLabel.new()
 	_blackbox_lbl.bbcode_enabled = true
 	_blackbox_lbl.scroll_following = true
@@ -613,12 +594,12 @@ func _build_tab1_iot() -> Control:
 	bb_vb.add_child(_blackbox_lbl)
 
 	var card_prod := _make_asset_card(
-		"Cadena Productiva & Logística",
+		"Producción y Logística",
 		[
-			{"key": "flow", "title": "FLUJO TOLVA", "val": "0.80 kg/s", "badge": "Nominal"},
+			{"key": "flow", "title": "FLUJO", "val": "0.80 kg/s", "badge": "Normal"},
 			{"key": "prod", "title": "PRODUCCIÓN", "val": "0 kg", "badge": "0 sacos"},
-			{"key": "truck", "title": "LOGÍSTICA", "val": "ESPERA", "badge": "0 pallets"},
-			{"key": "conf", "title": "CERTEZA IA", "val": "99.1 % MLP", "badge": "98.7 % SVM"}
+			{"key": "truck", "title": "LOGÍSTICA", "val": "Espera", "badge": "0 pallets"},
+			{"key": "conf", "title": "PRECISIÓN IA", "val": "99.1 %", "badge": "MLP / SVM"}
 		],
 		bb_panel
 	)
@@ -641,7 +622,7 @@ func _build_all_machines_telemetry_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 6)
 	card.add_child(vb)
-	vb.add_child(TTheme.make_label("Telemetría Tren de Proceso (15 Máquinas + CCM)", 12, TTheme.ACCENT_CYAN))
+	vb.add_child(TTheme.make_label("Resumen de Equipos", 12, TTheme.ACCENT_CYAN))
 
 	var grid := GridContainer.new()
 	grid.columns = 4
@@ -714,19 +695,9 @@ func _make_machine_card(m_key: String, spec: Dictionary) -> PanelContainer:
 	vb.add_theme_constant_override("separation", 6)
 	card.add_child(vb)
 
-	var thb := HBoxContainer.new()
-	thb.add_theme_constant_override("separation", 8)
-	vb.add_child(thb)
-
-	var group_pill := PanelContainer.new()
-	group_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	group_pill.add_theme_stylebox_override("panel", TTheme.make_pill_style(Color(0.06, 0.16, 0.28), TTheme.ACCENT_CYAN))
-	group_pill.add_child(TTheme.make_label(spec.get("group", ""), 9, TTheme.ACCENT_CYAN))
-	thb.add_child(group_pill)
-
 	var tlbl := TTheme.make_label(spec.get("title", m_key), 12, TTheme.ACCENT_CYAN)
 	tlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	thb.add_child(tlbl)
+	vb.add_child(tlbl)
 
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 10)
@@ -778,11 +749,6 @@ func _build_tab2_3d() -> Control:
 	hb.add_theme_constant_override("separation", 6)
 	top_bar.add_child(hb)
 
-	var info := TTheme.make_label("Cámaras 3D · Arrastrar: orbitar · Rueda: zoom", 11, TTheme.TEXT_MUTED)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.clip_text = true
-	hb.add_child(info)
-
 	_grp_3d_btns.clear()
 	_containers_3d.clear()
 	_cards_by_3d_group.clear()
@@ -792,6 +758,7 @@ func _build_tab2_3d() -> Control:
 		var gid := str(g["id"])
 		var btn := Button.new()
 		btn.text = str(g["txt"])
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.add_theme_font_size_override("font_size", 10)
 		btn.pressed.connect(_select_3d_group.bind(gid))
 		hb.add_child(btn)
@@ -981,13 +948,13 @@ func _sync_emergency_stop_ui(engaged: bool) -> void:
 			btn_emergency_stop.text = "Parar Máquinas"
 			TTheme.apply_btn_colors(btn_emergency_stop, Color(0.55, 0.10, 0.12), TTheme.ACCENT_RED)
 	if _iot_relay_lbl != null and engaged:
-		_iot_relay_lbl.text = "Relé CCM: ABIERTO (PARADA)"
+		_iot_relay_lbl.text = "CCM: Abierto"
 		_iot_relay_lbl.add_theme_color_override("font_color", TTheme.ACCENT_RED)
 	if _header_status_panel != null and _header_status_lbl != null:
 		if engaged:
-			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "PARADA DE EMERGENCIA", "CRITICAL")
+			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "Parada", "CRITICAL")
 		elif _last_severity == "NORMAL":
-			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "SISTEMA NORMAL", "NORMAL")
+			TTheme.set_badge_state(_header_status_panel, _header_status_lbl, "Normal", "NORMAL")
 
 func _toggle_audio_mute() -> void:
 	_audio_muted = not _audio_muted
@@ -1005,11 +972,11 @@ func _select_cctv_camera(cam_id: String) -> void:
 
 func _on_cctv_camera_changed(cam_id: String, cam_name: String) -> void:
 	if lbl_cctv_status != null:
-		lbl_cctv_status.text = "%s (%s)" % [cam_id, cam_name]
+		lbl_cctv_status.text = "%s · %s" % [cam_id, cam_name]
 
 func _on_safety_score_updated(current_score: float, history: Array) -> void:
 	if lbl_academic_score != null:
-		lbl_academic_score.text = "Nota RETIE: %.1f / 5.0" % current_score
+		lbl_academic_score.text = "RETIE %.1f/5.0" % current_score
 		var col := TTheme.ACCENT_EMERALD if current_score >= 4.0 else (TTheme.ACCENT_AMBER if current_score >= 3.0 else TTheme.ACCENT_RED)
 		lbl_academic_score.add_theme_color_override("font_color", col)
 	if not _cctv_handles.is_empty():
@@ -1020,11 +987,11 @@ func _on_safety_score_updated(current_score: float, history: Array) -> void:
 		for ch in hvb.get_children():
 			ch.queue_free()
 		if history.is_empty():
-			hvb.add_child(TTheme.make_label("Sin infracciones registradas. Cumplimiento RETIE óptimo.", 10, TTheme.ACCENT_EMERALD))
+			hvb.add_child(TTheme.make_label("Sin infracciones registradas.", 10, TTheme.ACCENT_EMERALD))
 		else:
 			for entry in history.slice(maxi(0, history.size() - 6), history.size()):
 				var is_v := str(entry.get("type", "")) == "VIOLATION"
-				var msg := "[%+.1f] %s" % [float(entry.get("delta", 0.0)), str(entry.get("description", ""))]
+				var msg := "%+.1f · %s" % [float(entry.get("delta", 0.0)), str(entry.get("description", ""))]
 				var l := TTheme.make_label(msg, 10, TTheme.ACCENT_RED if is_v else TTheme.ACCENT_EMERALD)
 				l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				hvb.add_child(l)
@@ -1043,7 +1010,7 @@ func _on_epp_state_changed(all_eq: bool, items: Dictionary) -> void:
 			if bool(items[k]):
 				eq_cnt += 1
 		var lbl: Label = _retie_handles["epp_live_lbl"]
-		lbl.text = "Estado EPP en campo: %d / 6 (%s)" % [eq_cnt, "COMPLETO RETIE" if all_eq else "INCOMPLETO"]
+		lbl.text = "EPP: %d / 6 · %s" % [eq_cnt, "Completo" if all_eq else "Pendiente"]
 		lbl.add_theme_color_override("font_color", TTheme.ACCENT_EMERALD if all_eq else TTheme.ACCENT_AMBER)
 
 func _on_golden_step(step_idx: int, rule_name: String) -> void:
@@ -1088,10 +1055,10 @@ func _on_telemetry_vector_updated(t: Dictionary) -> void:
 		var sm_tel = get_node_or_null("/root/SimulationManager")
 		var e_stopped: bool = sm_tel != null and sm_tel.has_method("is_emergency_stop_engaged") and sm_tel.is_emergency_stop_engaged()
 		if e_stopped:
-			_iot_relay_lbl.text = "Relé CCM: ABIERTO (PARADA)"
+			_iot_relay_lbl.text = "CCM: Abierto"
 			_iot_relay_lbl.add_theme_color_override("font_color", TTheme.ACCENT_RED)
 		else:
-			_iot_relay_lbl.text = "Relé CCM: CERRADO · %s (%.0f Hz)" % [d_mode, freq]
+			_iot_relay_lbl.text = "CCM: Cerrado · %s %.0f Hz" % [d_mode, freq]
 			_iot_relay_lbl.add_theme_color_override("font_color", TTheme.ACCENT_EMERALD)
 	if not energy.is_empty():
 		var kwh_t := float(energy.get("specific_kwh_ton", 7.52))
@@ -1129,6 +1096,7 @@ func _update_all_machine_charts_and_kpis(t: Dictionary) -> void:
 		var sev := str(st.get("sev", "NORMAL"))
 		var is_fault := (sev == "CRITICAL")
 		var is_warn := (sev == "WARNING")
+		var st_sub := "Falla" if is_fault else ("Alerta" if is_warn else "En línea")
 
 		match m_key:
 			"banda_descarga":
@@ -1136,139 +1104,139 @@ func _update_all_machine_charts_and_kpis(t: Dictionary) -> void:
 				var q := flow * (spd / 100.0)
 				var ia := 4.5 * (spd / 100.0) * (1.8 if is_warn else 1.0)
 				osc.push_generic(q, spd)
-				_set_m_tile(tiles, "spd", "%.0f %%" % spd, "Nominal" if spd > 20 else "Detenido", sev)
-				_set_m_tile(tiles, "flow", "%.2f kg/s" % q, "Tolva", sev)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motorreductor", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Banda Descarga", sev)
+				_set_m_tile(tiles, "spd", "%.0f %%" % spd, "Normal" if spd > 20 else "Detenido", sev)
+				_set_m_tile(tiles, "flow", "%.2f kg/s" % q, "Caudal", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motor", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"banda_inclinada_tolva":
 				var spd := 100.0 * rpm_ratio * (0.0 if is_fault else 1.0)
 				var q := flow * (spd / 100.0)
 				var ia := 5.2 * (spd / 100.0) * (2.1 if is_fault else (1.5 if is_warn else 1.0))
 				osc.push_generic(ia, q)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Sobrecarga" if is_warn else "Nominal", sev)
-				_set_m_tile(tiles, "flow", "%.2f kg/s" % q, "Caudal Elevado", sev)
-				_set_m_tile(tiles, "spd", "%.0f %%" % spd, "Cinta Verde", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Elevador", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Sobrecarga" if is_warn else "Normal", sev)
+				_set_m_tile(tiles, "flow", "%.2f kg/s" % q, "Caudal", sev)
+				_set_m_tile(tiles, "spd", "%.0f %%" % spd, "Velocidad", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"hopper":
 				var lvl := clampf(35.0 + flow * 35.0, 5.0, 98.0) * (1.15 if is_warn else 1.0)
 				var w_kg := (lvl / 100.0) * 5000.0
 				osc.push_generic(lvl, flow)
-				_set_m_tile(tiles, "level", "%.1f %%" % lvl, "Capacidad 5t", sev)
+				_set_m_tile(tiles, "level", "%.1f %%" % lvl, "Nivel", sev)
 				_set_m_tile(tiles, "flow", "%.2f kg/s" % flow, "Compuerta", sev)
-				_set_m_tile(tiles, "weight", "%.0f kg" % w_kg, "Celdas Carga", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Tolva T-301", sev)
+				_set_m_tile(tiles, "weight", "%.0f kg" % w_kg, "Carga", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"banda_trituradora":
 				var spd := 85.0 * rpm_ratio * (0.0 if is_fault else 1.0)
 				var load := clampf(flow * 105.0, 10.0, 99.0)
 				var ia := 3.8 * (spd / 85.0)
 				osc.push_generic(spd, load)
-				_set_m_tile(tiles, "spd", "%.0f %%" % spd, "Control VFD", sev)
-				_set_m_tile(tiles, "flow", "%.2f kg/s" % flow, "A Sinfín M-1", sev)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motorreductor", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Dosificación", sev)
+				_set_m_tile(tiles, "spd", "%.0f %%" % spd, "VFD", sev)
+				_set_m_tile(tiles, "flow", "%.2f kg/s" % flow, "Caudal", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motor", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"tornillo_trituradora":
 				var s_rpm := 125.0 * rpm_ratio * (0.0 if is_fault else 1.0)
 				var ia := 6.4 * (s_rpm / 125.0) * (2.2 if is_fault else (1.4 if is_warn else 1.0))
 				var trq := 48.0 * (ia / 6.4)
 				osc.push_generic(s_rpm, ia)
-				_set_m_tile(tiles, "rpm", "%.0f RPM" % s_rpm, "Sinfín M-1", sev)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Carga Molienda", sev)
-				_set_m_tile(tiles, "trq", "%.1f N·m" % trq, "Eje Impulsor", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Sinfín Entrada", sev)
+				_set_m_tile(tiles, "rpm", "%.0f RPM" % s_rpm, "Giro", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Carga", sev)
+				_set_m_tile(tiles, "trq", "%.1f N·m" % trq, "Par", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"tornillo_secador":
 				var s_rpm := 95.0 * rpm_ratio * (0.0 if is_fault else 1.0)
 				var q := flow * 0.95 * (s_rpm / 95.0)
 				var ia := 4.8 * (s_rpm / 95.0)
 				osc.push_generic(s_rpm, q)
-				_set_m_tile(tiles, "rpm", "%.0f RPM" % s_rpm, "Alimentación", sev)
-				_set_m_tile(tiles, "flow", "%.2f kg/s" % q, "Hacia Secador", sev)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motorreductor", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Sinfín Secador", sev)
+				_set_m_tile(tiles, "rpm", "%.0f RPM" % s_rpm, "Giro", sev)
+				_set_m_tile(tiles, "flow", "%.2f kg/s" % q, "Caudal", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motor", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"secador_rotatorio":
 				var dry_t := temp_c + 14.0 + (32.0 if is_fault else 0.0)
 				var hum := clampf(18.5 - (dry_t / 8.5), 9.0, 24.0)
 				var drum_rpm := 18.5 * rpm_ratio
 				osc.push_generic(dry_t, hum)
-				_set_m_tile(tiles, "temp", "%.1f °C" % dry_t, "Tambor Rotativo", sev)
-				_set_m_tile(tiles, "hum", "%.1f %%" % hum, "Grano Seco OK" if hum < 14.0 else "Humedad Alta", sev)
-				_set_m_tile(tiles, "rpm", "%.1f RPM" % drum_rpm, "Corona Dentada", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Secador Tambor", sev)
+				_set_m_tile(tiles, "temp", "%.1f °C" % dry_t, "Tambor", sev)
+				_set_m_tile(tiles, "hum", "%.1f %%" % hum, "Seco" if hum < 14.0 else "Húmedo", sev)
+				_set_m_tile(tiles, "rpm", "%.1f RPM" % drum_rpm, "Giro", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"ciclon_separador":
 				var dp := 1.45 * rpm_ratio * (2.6 if is_fault else 1.0)
 				var eff := clampf(98.5 - (dp - 1.45) * 8.0, 60.0, 99.5)
 				var q_air := 38.0 * rpm_ratio
 				osc.push_generic(dp, eff)
-				_set_m_tile(tiles, "dp", "%.2f kPa" % dp, "Pérdida Carga", sev)
-				_set_m_tile(tiles, "eff", "%.1f %%" % eff, "Captura Polvo", sev)
-				_set_m_tile(tiles, "flow", "%.1f m³/m" % q_air, "Vórtice Ciclónico", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Ciclón Liso", sev)
+				_set_m_tile(tiles, "dp", "%.2f kPa" % dp, "Presión", sev)
+				_set_m_tile(tiles, "eff", "%.1f %%" % eff, "Captura", sev)
+				_set_m_tile(tiles, "flow", "%.1f m³/m" % q_air, "Aire", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"cyclone":
 				var lel := 8.5 * (3.8 if is_fault else (1.8 if is_warn else 1.0))
 				var pres := 1.20 * rpm_ratio
 				var flow_f := flow * 0.98
 				osc.push_generic(lel, pres)
-				_set_m_tile(tiles, "atex", "%.1f %% LEL" % lel, "Zona 22 NFPA 61", sev)
-				_set_m_tile(tiles, "pres", "%.2f kPa" % pres, "Despresurizado", sev)
-				_set_m_tile(tiles, "flow", "%.2f kg/s" % flow_f, "Grano Fino", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "ATEX 22", sev)
+				_set_m_tile(tiles, "atex", "%.1f %% LEL" % lel, "ATEX 22", sev)
+				_set_m_tile(tiles, "pres", "%.2f kPa" % pres, "Presión", sev)
+				_set_m_tile(tiles, "flow", "%.2f kg/s" % flow_f, "Caudal", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"unidad_extraccion":
 				var q_ext := 42.0 * rpm_ratio * (0.25 if is_fault else 1.0)
 				var vac := 2.35 * rpm_ratio * (0.3 if is_fault else 1.0)
 				var ia := 7.2 * rpm_ratio * (1.7 if is_fault else 1.0)
 				osc.push_generic(q_ext, vac)
-				_set_m_tile(tiles, "flow", "%.1f m³/m" % q_ext, "Filtro Mangas", sev)
-				_set_m_tile(tiles, "vac", "%.2f kPa" % vac, "Succión Pared", sev)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Ventilador Centr.", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Extracción Aire", sev)
+				_set_m_tile(tiles, "flow", "%.1f m³/m" % q_ext, "Caudal", sev)
+				_set_m_tile(tiles, "vac", "%.2f kPa" % vac, "Succión", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motor", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"horno":
 				var h_temp := 185.0 + (temp_c - 58.0) * 0.5 + (45.0 if is_fault else 0.0)
 				var pwr := 24.0 * (h_temp / 185.0)
 				var t_air := 92.0 + (h_temp - 185.0) * 0.35
 				osc.push_generic(h_temp, pwr)
-				_set_m_tile(tiles, "temp", "%.1f °C" % h_temp, "Cámara Combust.", sev)
-				_set_m_tile(tiles, "pwr", "%.1f kW" % pwr, "Calorífico", sev)
-				_set_m_tile(tiles, "air", "%.1f °C" % t_air, "Hacia Secador", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Horno Ladrillos", sev)
+				_set_m_tile(tiles, "temp", "%.1f °C" % h_temp, "Cámara", sev)
+				_set_m_tile(tiles, "pwr", "%.1f kW" % pwr, "Potencia", sev)
+				_set_m_tile(tiles, "air", "%.1f °C" % t_air, "Salida", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"soplador":
 				var pres := 6.40 * rpm_ratio * (0.15 if is_fault else 1.0)
 				var v_s := vib * (2.8 if is_fault else 1.0)
 				var ia := 8.5 * rpm_ratio * (1.9 if is_fault else 1.0)
 				osc.push_generic(pres, v_s)
-				_set_m_tile(tiles, "pres", "%.2f kPa" % pres, "Impulso Línea", sev)
-				_set_m_tile(tiles, "vib", "%.2f mm/s" % v_s, "Rodete ISO 10816", sev)
-				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motor Soplador", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Soplador Morado", sev)
+				_set_m_tile(tiles, "pres", "%.2f kPa" % pres, "Presión", sev)
+				_set_m_tile(tiles, "vib", "%.2f mm/s" % v_s, "Vibración", sev)
+				_set_m_tile(tiles, "cur", "%.1f A" % ia, "Motor", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"intercambiador_calor":
 				var t_in := 85.0 + (temp_c - 58.0) * 0.4
 				var t_out := 42.0 + (temp_c - 58.0) * 0.2 + (28.0 if is_fault else 0.0)
 				var eff := clampf(82.0 - (t_out - 42.0) * 1.5, 45.0, 95.0)
 				osc.push_generic(t_in, t_out)
-				_set_m_tile(tiles, "tin", "%.1f °C" % t_in, "Fluido Caliente", sev)
-				_set_m_tile(tiles, "tout", "%.1f °C" % t_out, "Refrigerado", sev)
-				_set_m_tile(tiles, "eff", "%.1f %%" % eff, "Intercambio Térmico", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Intercambiador", sev)
+				_set_m_tile(tiles, "tin", "%.1f °C" % t_in, "Entrada", sev)
+				_set_m_tile(tiles, "tout", "%.1f °C" % t_out, "Salida", sev)
+				_set_m_tile(tiles, "eff", "%.1f %%" % eff, "Eficiencia", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 			"ductos_aire":
 				var pres := 5.80 * rpm_ratio * (0.25 if is_fault else 1.0)
 				var vel := 22.5 * rpm_ratio
 				var leak := 100.0 if not is_fault else 45.0
 				osc.push_generic(pres, vel)
-				_set_m_tile(tiles, "pres", "%.2f kPa" % pres, "Transporte Granos", sev)
-				_set_m_tile(tiles, "vel", "%.1f m/s" % vel, "Arrastre Neumático", sev)
-				_set_m_tile(tiles, "leak", "%.0f %%" % leak, "Juntas Selladas" if leak > 80 else "Fuga Ducto", sev)
-				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), "Red Ductos", sev)
+				_set_m_tile(tiles, "pres", "%.2f kPa" % pres, "Presión", sev)
+				_set_m_tile(tiles, "vel", "%.1f m/s" % vel, "Flujo", sev)
+				_set_m_tile(tiles, "leak", "%.0f %%" % leak, "Sellado" if leak > 80 else "Fuga", sev)
+				_set_m_tile(tiles, "st", str(st.get("badge", "OK")), st_sub, sev)
 
 func _set_m_tile(tiles: Dictionary, k: String, val_txt: String, badge_txt: String, sev: String) -> void:
 	if not tiles.has(k):
@@ -1282,7 +1250,7 @@ func _on_ai_alert_received(alert_data: Dictionary) -> void:
 		return
 	_last_alert = alert_data
 	var severity := str(alert_data.get("severity", "NORMAL"))
-	var title_txt := str(alert_data.get("title", "SISTEMA OPERATIVO CONFORME"))
+	var title_txt := str(alert_data.get("title", "Operación normal"))
 	if (severity == "CRITICAL" or severity == "WARNING") and severity != _last_severity:
 		var detail_str := "%s | %s" % [str(alert_data.get("root_cause", "")), str(alert_data.get("prescription", ""))]
 		_push_tablet_warning(title_txt, detail_str, severity)
@@ -1300,29 +1268,29 @@ func _on_ai_alert_received(alert_data: Dictionary) -> void:
 			var col := TTheme.ACCENT_RED if severity == "CRITICAL" else (TTheme.ACCENT_AMBER if severity == "WARNING" else TTheme.ACCENT_EMERALD)
 			_iot_alert_lbl.add_theme_color_override("font_color", col)
 
-		var st_txt := "● SISTEMA EN LÍNEA: ESTADO NORMAL"
+		var st_txt := "Normal"
 		if severity == "WARNING":
-			st_txt = "▲ ALERTA PREDICTIVA EDGE AI"
+			st_txt = "Alerta"
 		elif severity == "CRITICAL":
-			st_txt = "■ FALLA CRÍTICA DETECTADA"
+			st_txt = "Falla crítica"
 		TTheme.set_badge_state(_header_status_panel, _header_status_lbl, st_txt, severity)
 
 	var mlp_c := float(alert_data.get("mlp_confidence", alert_data.get("confidence", 99.1)))
 	var svm_c := float(alert_data.get("svm_confidence", 98.7))
-	_set_tile("conf", "%.1f %% MLP" % mlp_c, "%.1f %% SVM RBF" % svm_c, severity)
+	_set_tile("conf", "%.1f %%" % mlp_c, "SVM %.1f%%" % svm_c, severity)
 
 	var mhi := float(alert_data.get("mhi", 95.0))
 	var rul_h := float(alert_data.get("rul_hours", 24000.0))
-	_set_tile("mhi", "%.1f %%" % mhi, "RUL: %.0f h" % rul_h, "CRITICAL" if mhi < 60.0 else ("WARNING" if mhi < 85.0 else "NORMAL"))
+	_set_tile("mhi", "%.1f %%" % mhi, "RUL %.0f h" % rul_h, "CRITICAL" if mhi < 60.0 else ("WARNING" if mhi < 85.0 else "NORMAL"))
 
 	if not _hw_ai_handles.is_empty():
-		(_hw_ai_handles["lbl_conf"] as Label).text = "Certeza: %.1f%% MLP | %.1f%% SVM" % [mlp_c, svm_c]
-		lbl_root_cause.text = "Causa Raíz: " + _clamp_str(str(alert_data.get("root_cause", "")), 140)
+		(_hw_ai_handles["lbl_conf"] as Label).text = "MLP %.1f%% · SVM %.1f%%" % [mlp_c, svm_c]
+		lbl_root_cause.text = "Causa: " + _clamp_str(str(alert_data.get("root_cause", "")), 140)
 		lbl_prognosis.text = "Pronóstico: " + _clamp_str(str(alert_data.get("prognosis", "")), 140)
-		lbl_prescription.text = "Prescripción RCM: " + _clamp_str(str(alert_data.get("prescription", "")), 140)
+		lbl_prescription.text = "Acción: " + _clamp_str(str(alert_data.get("prescription", "")), 140)
 		mhi_progress_bar.value = mhi
-		lbl_mhi_value.text = "MHI (Motor Health Index): %.1f %%" % mhi
-		lbl_rul_value.text = "RUL: %.0f horas" % rul_h
+		lbl_mhi_value.text = "MHI: %.1f %%" % mhi
+		lbl_rul_value.text = "RUL: %.0f h" % rul_h
 
 	if checklist_container != null:
 		for c in checklist_container.get_children():
@@ -1356,7 +1324,7 @@ func _sync_live_plant_context() -> void:
 		var epp_ok: bool = bool(tour.get("epp_completed")) if tour != null else false
 		var sc_val: float = float(scorecard.get("score")) if scorecard != null else 5.0
 		var tool_name: String = str(player.get("current_tool_name")) if (player != null and player.get("current_tool_name") != null) else "Manos / Herramienta"
-		p_lbl.text = "Operario Activo (Jugador): Estación %d/%d | EPP RETIE: %s | Herramienta: %s | Nota: %.1f/5.0" % [st_idx, st_total, "COMPLETO" if epp_ok else "PENDIENTE", tool_name, sc_val]
+		p_lbl.text = "Estación %d/%d · EPP %s · Nota %.1f" % [st_idx, st_total, "OK" if epp_ok else "Pendiente", sc_val]
 
 		var w_cards: Dictionary = _workers_handles["worker_cards"]
 		for spec in TCatalog.PLANT_WORKERS_SPEC:
@@ -1364,11 +1332,7 @@ func _sync_live_plant_context() -> void:
 			var wn := r.find_child(wid, true, false) as Node3D
 			var lbl := w_cards.get(wid) as Label
 			if lbl != null:
-				if wn != null:
-					var anim := str(wn.get("current_anim"))
-					lbl.text = "%s | Pos: (%.1f, %.1f) m | Anim: %s" % [spec["station"], wn.global_position.x, wn.global_position.z, anim if anim != "" else "idle"]
-				else:
-					lbl.text = "%s | Modelo 3D listo (%s)" % [spec["station"], spec["model_path"].get_file()]
+				lbl.text = str(spec["station"])
 
 	# Sincronizar 5 Reglas de Oro en Tab 3
 	if not _retie_handles.is_empty():
@@ -1378,7 +1342,7 @@ func _sync_live_plant_context() -> void:
 			var badges: Array = _retie_handles["rule_badges"]
 			for i in range(mini(st_arr.size(), badges.size())):
 				var done := bool(st_arr[i].get("done", false))
-				TTheme.set_badge_state(badges[i]["panel"], badges[i]["label"], "✔ COMPLETADA" if done else "PENDIENTE", "NORMAL" if done else "WARNING")
+				TTheme.set_badge_state(badges[i]["panel"], badges[i]["label"], "Lista" if done else "Pendiente", "NORMAL" if done else "WARNING")
 
 	# Sincronizar estaciones del recorrido en Tab 8
 	if not _cctv_handles.is_empty():
@@ -1392,13 +1356,13 @@ func _sync_live_plant_context() -> void:
 				var sid := i + 1
 				var l: Label = sls[i]
 				if visited.has(sid):
-					l.text = "E%d · ✔ Completada" % sid
+					l.text = "E%d · OK" % sid
 					l.add_theme_color_override("font_color", TTheme.ACCENT_EMERALD)
 				elif sid == curr_id:
-					l.text = "E%d · ▶ Objetivo Actual" % sid
+					l.text = "E%d · Actual" % sid
 					l.add_theme_color_override("font_color", TTheme.ACCENT_CYAN)
 				else:
-					l.text = "E%d · Pendiente" % sid
+					l.text = "E%d" % sid
 					l.add_theme_color_override("font_color", TTheme.TEXT_MUTED)
 	_sync_machine_telemetry_tiles()
 	_sync_3d_card_huds()
@@ -1430,51 +1394,51 @@ func _evaluate_equipment_status(glow_grp: String, card_id: String, glow_n: Node)
 			st_str = str(glow_n.get_group_state(glow_grp))
 
 	var sev := "CRITICAL" if (fault_active or st_str == "RED" or st_str == "RED_HOVER") else ("WARNING" if st_str == "YELLOW" else "NORMAL")
-	var badge := "FALLA" if sev == "CRITICAL" else ("ALERTA" if sev == "WARNING" else "NOMINAL")
+	var badge := "Falla" if sev == "CRITICAL" else ("Alerta" if sev == "WARNING" else "Normal")
 
 	match glow_grp:
 		"motor":
 			var m_sev := sev if sev != "NORMAL" else global_sev
-			var m_badge := "DETENIDO" if rpm < 15.0 else ("FALLA" if m_sev == "CRITICAL" else ("ALERTA" if m_sev == "WARNING" else "NOMINAL"))
+			var m_badge := "Detenido" if rpm < 15.0 else ("Falla" if m_sev == "CRITICAL" else ("Alerta" if m_sev == "WARNING" else "Normal"))
 			return {"val": "%.0f RPM · %.1f °C" % [rpm, temp], "badge": m_badge, "sev": m_sev,
-				"hud": PackedStringArray(["Eje: %.0f RPM | Ia: %.1f A" % [rpm, ia], "T°: %.1f °C · Vib: %.2f mm/s" % [temp, vib], "Estado: %s" % m_badge])}
+				"hud": PackedStringArray(["%.0f RPM · %.1f A" % [rpm, ia], "%.1f °C · %.2f mm/s" % [temp, vib], m_badge])}
 		"breaker":
 			var b_crit := fault_active or volt < 400.0
 			var b_sev := "CRITICAL" if b_crit else ("WARNING" if volt < 438.0 else "NORMAL")
-			var b_badge := "BAJÓN 340V" if b_crit else ("WARN" if b_sev == "WARNING" else "NOMINAL")
+			var b_badge := "Bajón" if b_crit else ("Alerta" if b_sev == "WARNING" else "Normal")
 			return {"val": "%.0f V · %.0f Hz" % [volt, freq], "badge": b_badge, "sev": b_sev,
-				"hud": PackedStringArray(["V_LL: %.1f V | %.1f Hz" % [volt, freq], "Breakers L1-L3: %s" % ("FALLA" if b_crit else "CERRADOS"), "Zona 2 · Junto a Máquinas"])}
+				"hud": PackedStringArray(["%.1f V · %.1f Hz" % [volt, freq], "Breakers: %s" % ("Falla" if b_crit else "Cerrados"), "CCM 460 V"])}
 		"hopper":
 			var h_crit := fault_active or flow > 3.0
 			var h_sev := "CRITICAL" if h_crit else ("WARNING" if (flow > 1.15 or sev == "WARNING") else "NORMAL")
-			var h_badge := "ATASCO" if h_crit else ("ALTO" if h_sev == "WARNING" else "NOMINAL")
+			var h_badge := "Atasco" if h_crit else ("Alto" if h_sev == "WARNING" else "Normal")
 			return {"val": "%.2f kg/s" % flow, "badge": h_badge, "sev": h_sev,
-				"hud": PackedStringArray(["Flujo Tolva: %.2f kg/s" % flow, "Línea activa: %.0f %%" % eff, "Estado: %s" % h_badge])}
+				"hud": PackedStringArray(["Flujo: %.2f kg/s" % flow, "Línea: %.0f %%" % eff, h_badge])}
 		"cyclone", "ciclon_separador", "unidad_extraccion":
-			var a_badge := "ATEX FALLA" if sev == "CRITICAL" else ("WARN ATEX" if sev == "WARNING" else "ATEX OK")
-			return {"val": "Polvo %s" % ("CRÍTICO" if sev == "CRITICAL" else "CONTROL"), "badge": a_badge, "sev": sev,
-				"hud": PackedStringArray(["Equipo: %s" % glow_grp, "ATEX 22 (NFPA 61)", "Estado: %s" % a_badge])}
+			var a_badge := "Falla" if sev == "CRITICAL" else ("Alerta" if sev == "WARNING" else "OK")
+			return {"val": "Polvo %s" % ("crítico" if sev == "CRITICAL" else "normal"), "badge": a_badge, "sev": sev,
+				"hud": PackedStringArray(["ATEX 22", a_badge])}
 		"horno", "secador_rotatorio", "intercambiador_calor":
 			var t_val := temp + (26.0 if fault_active else 0.0)
 			return {"val": "%.1f °C · %.0f%%" % [t_val, eff], "badge": badge, "sev": sev,
-				"hud": PackedStringArray(["Térmica: %.1f °C" % t_val, "Flujo línea: %.0f %%" % eff, "Estado: %s" % badge])}
+				"hud": PackedStringArray(["%.1f °C" % t_val, "Flujo: %.0f %%" % eff, badge])}
 		"soplador", "ductos_aire":
 			var s_vib := vib + (2.4 if fault_active else 0.0)
 			return {"val": "%.2f mm/s · %.0f%%" % [s_vib, eff], "badge": badge, "sev": sev,
-				"hud": PackedStringArray(["Presión/Caudal: %.0f %%" % eff, "Vib.: %.2f mm/s" % s_vib, "Estado: %s" % badge])}
+				"hud": PackedStringArray(["Caudal: %.0f %%" % eff, "%.2f mm/s" % s_vib, badge])}
 		"banda_descarga", "banda_inclinada_tolva", "banda_trituradora", "tornillo_trituradora", "tornillo_secador":
 			var belt_spd := (rpm / 1750.0) * 100.0 * (0.0 if fault_active else 1.0)
-			return {"val": "%.0f%% vel · %.2f kg/s" % [belt_spd, flow], "badge": badge, "sev": sev,
-				"hud": PackedStringArray(["Transporte: %.0f%% vel" % belt_spd, "Caudal: %.2f kg/s" % flow, "Estado: %s" % badge])}
+			return {"val": "%.0f%% · %.2f kg/s" % [belt_spd, flow], "badge": badge, "sev": sev,
+				"hud": PackedStringArray(["Velocidad: %.0f%%" % belt_spd, "Caudal: %.2f kg/s" % flow, badge])}
 		"truck":
-			return {"val": "%s · %d u" % [str(_last_prod.get("truck_cycle_phase", "ESPERA")), bags], "badge": "ACTIVO", "sev": "NORMAL",
-				"hud": PackedStringArray(["Fase: %s" % str(_last_prod.get("truck_cycle_phase", "ESPERA")), "Molido: %.0f kg" % kg, "Sacos: %d u" % bags])}
+			return {"val": "%s · %d u" % [str(_last_prod.get("truck_cycle_phase", "Espera")), bags], "badge": "Activo", "sev": "NORMAL",
+				"hud": PackedStringArray(["Fase: %s" % str(_last_prod.get("truck_cycle_phase", "Espera")), "Molido: %.0f kg" % kg, "Sacos: %d" % bags])}
 		"bag":
-			return {"val": "%d sacos" % bags, "badge": "NOMINAL", "sev": "NORMAL",
-				"hud": PackedStringArray(["Pallets: %d" % int(_last_prod.get("pallets_completed", 0)), "Sacos: %d × 50 kg" % bags, "Estiba OSHA OK"])}
+			return {"val": "%d sacos" % bags, "badge": "Normal", "sev": "NORMAL",
+				"hud": PackedStringArray(["Pallets: %d" % int(_last_prod.get("pallets_completed", 0)), "Sacos: %d" % bags])}
 		_:
-			return {"val": "%.0f%% línea" % eff, "badge": "EN VIVO", "sev": global_sev,
-				"hud": PackedStringArray(["Vista %s" % card_id, "Línea: %.0f%% · %.0f kg" % [eff, kg], "Estado Planta: %s" % global_sev])}
+			return {"val": "%.0f%% línea" % eff, "badge": "En vivo", "sev": global_sev,
+				"hud": PackedStringArray(["Línea: %.0f%% · %.0f kg" % [eff, kg], global_sev])}
 
 func _sync_machine_telemetry_tiles() -> void:
 	if _machine_tiles.is_empty():
@@ -1500,9 +1464,9 @@ func _sync_3d_card_huds() -> void:
 	for c in _cards_3d_workers:
 		var wn := root_n.find_child(c.card_id, true, false) as Node3D if root_n != null else null
 		if wn != null:
-			c.set_hud_status(PackedStringArray(["X=%.1f  Z=%.1f m" % [wn.global_position.x, wn.global_position.z], "Anim: %s" % str(wn.get("current_anim")), "EPP: COMPLETO"]), "ACTIVO", "NORMAL")
+			c.set_hud_status(PackedStringArray(["X %.1f · Z %.1f" % [wn.global_position.x, wn.global_position.z], "EPP completo"]), "Activo", "NORMAL")
 		else:
-			c.set_hud_status(PackedStringArray(["Modelo GLB 3D", "EPP RETIE OK"]), "ACTIVO", "NORMAL")
+			c.set_hud_status(PackedStringArray(["EPP completo"]), "Activo", "NORMAL")
 
 func _on_register_worker(n: String, l: String, age: String, rh: String, role: String) -> void:
 	if n.strip_edges().is_empty() or _workers_handles.is_empty():
@@ -1521,10 +1485,10 @@ func _refresh_custom_workers_ui() -> void:
 	for ch in cl.get_children():
 		ch.queue_free()
 	if _custom_workers.is_empty():
-		cl.add_child(TTheme.make_label("Sin registros manuales adicionales en este turno.", 10, TTheme.TEXT_MUTED))
+		cl.add_child(TTheme.make_label("Sin registros adicionales.", 10, TTheme.TEXT_MUTED))
 		return
 	for w in _custom_workers:
-		cl.add_child(TTheme.make_label("• %s (%s años · %s) — %s" % [w["name"], w["age"], w["rh"], w["role"]], 10, TTheme.ACCENT_EMERALD))
+		cl.add_child(TTheme.make_label("%s · %s años · %s · %s" % [w["name"], w["age"], w["rh"], w["role"]], 10, TTheme.ACCENT_EMERALD))
 
 func _set_tile(key: String, val_txt: String, badge_txt: String, severity: String) -> void:
 	if not _tiles.has(key):
@@ -1560,8 +1524,8 @@ func _on_bus_notification_posted(title: String, message: String, severity: Strin
 	var norm_sev := "CRITICAL" if (sev_low == "error" or sev_low == "critical") else "WARNING"
 	_push_tablet_warning(title, message, norm_sev)
 
-func _on_safety_violation_warning(code: String, description: String, penalty: float) -> void:
-	var title_txt := "INFRACCIÓN RETIE (%s · -%.1f pt)" % [code, absf(penalty)]
+func _on_safety_violation_warning(_code: String, description: String, penalty: float) -> void:
+	var title_txt := "Infracción RETIE · -%.1f" % absf(penalty)
 	_push_tablet_warning(title_txt, description, "CRITICAL")
 
 func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: String) -> void:
@@ -1572,8 +1536,7 @@ func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: 
 	_last_warning_key = wkey
 	_last_warning_ms = now_ms
 
-	var sev_label := "CRÍTICO" if severity_norm == "CRITICAL" else "WARNING"
-	_append_blackbox(severity_norm, "%s — %s" % [title_txt, _clamp_str(detail_txt, 110)])
+	_append_blackbox(severity_norm, "%s · %s" % [title_txt, _clamp_str(detail_txt, 110)])
 
 	if not _audio_muted and audio_alert != null:
 		if audio_alert.stream == null:
@@ -1589,8 +1552,6 @@ func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: 
 
 	if _warning_banner_card != null:
 		_warning_banner_card.add_theme_stylebox_override("panel", TTheme.make_left_stripe_card(accent, bg))
-		var badge_txt := "■ %s ACTIVO" % sev_label if visible else "▲ %s NUEVO" % sev_label
-		TTheme.set_badge_state(_warning_banner_pill, _warning_banner_pill_lbl, badge_txt, severity_norm)
 		if _warning_banner_title != null:
 			_warning_banner_title.text = _clamp_str(title_txt, 82)
 			_warning_banner_title.tooltip_text = title_txt
@@ -1603,7 +1564,7 @@ func _push_tablet_warning(title_txt: String, detail_txt: String, severity_norm: 
 		_iot_alert_lbl.text = _clamp_str(title_txt, 68)
 		_iot_alert_lbl.add_theme_color_override("font_color", accent)
 
-	var st_pill := "■ FALLA CRÍTICA ACTIVA" if is_crit else "▲ WARNING ACTIVO EN TABLET"
+	var st_pill := "Falla crítica" if is_crit else "Alerta"
 	TTheme.set_badge_state(_header_status_panel, _header_status_lbl, st_pill, severity_norm)
 
 	_active_warning_data = {

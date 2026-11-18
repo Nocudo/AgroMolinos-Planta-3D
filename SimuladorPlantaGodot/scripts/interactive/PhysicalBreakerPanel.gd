@@ -80,10 +80,10 @@ func interact(tool_id: int) -> String:
 	if tool_id in [2, 3]:
 		toggle_breaker_l3()
 		if not l3_active:
-			return "Has falseado/abierto la palanca del breaker L3. ¡Bajón de tensión a 340 V inducido!"
+			return "Breaker L3 abierto. Bajón de tensión a 340 V."
 		else:
-			return "Has rearmado el breaker L3 a posición ON. Tensión nominal 460 V restablecida."
-	return "Tablero energizado 460 V. Equipa [2] Alicates o [3] Llave 3/4\" para manipular L3, [4] Multímetro o [5] Kit LOTO."
+			return "Breaker L3 rearmado. Tensión nominal 460 V."
+	return "Tablero energizado. Usa Alicates, Llave 3/4\", Multímetro o Kit LOTO."
 
 func toggle_door() -> void:
 	is_door_open = not is_door_open
@@ -106,16 +106,16 @@ func toggle_breaker_l3() -> void:
 		bus.breaker_changed.emit("Breaker_L3", l3_active)
 		if not l3_active:
 			bus.notification_posted.emit(
-				"BAJÓN DE TENSIÓN EN GABINETE CCM",
-				"Breaker L3 falseado/abierto. Tensión cae a 340 V con pérdida cuadrática de par (45.4%).",
+				"Bajón de tensión en CCM",
+				"Breaker L3 abierto. Tensión cae a 340 V.",
 				"error"
 			)
 		else:
 			if bus.has_signal("fault_resolved"):
 				bus.fault_resolved.emit("BAJON_TENSION_CCM")
 			bus.notification_posted.emit(
-				"BREAKER CCM REARMADO",
-				"Barraje trifásico restablecido a 460 V nominales.",
+				"Breaker CCM rearmado",
+				"Tensión restablecida a 460 V.",
 				"info"
 			)
 
@@ -155,7 +155,7 @@ func _measure_with_multimeter() -> String:
 func _advance_loto_procedure() -> String:
 	var tutorial = get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
 	if tutorial == null or tutorial.loto_controller == null:
-		return "Kit LOTO [5]: Abre y bloquea el seccionador principal."
+		return "Abre y bloquea el seccionador principal."
 
 	var step: int = tutorial.loto_controller.get_current_step()
 	var next_rule: int = step + 1
@@ -167,7 +167,7 @@ func _advance_loto_procedure() -> String:
 		var res2: Dictionary = tutorial.execute_loto_rule(2)
 		return str(res2.get("message", "Regla 2 ejecutada."))
 	elif next_rule == 3:
-		return "Regla 3 pendiente: Selecciona el Multímetro CAT III (tecla 4) para verificar 0.0 V AC en el CCM."
+		return "Usa el multímetro para verificar 0 V en el CCM."
 	elif next_rule == 4 or next_rule == 5:
 		var resn: Dictionary = tutorial.execute_loto_rule(next_rule)
 		return str(resn.get("message", "Regla ejecutada."))

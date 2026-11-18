@@ -204,13 +204,13 @@ func _build_ui() -> void:
 	col_settings.add_child(grid_keys)
 
 	var key_items: Array[Dictionary] = [
-		{"k": "[WASD]", "d": "Moverse"},
-		{"k": "[SHIFT]", "d": "Correr"},
-		{"k": "[ESPACIO]", "d": "Saltar"},
-		{"k": "[E]", "d": "Interactuar / Reparar"},
-		{"k": "[TAB]", "d": "Tablet Industrial"},
-		{"k": "[1 - 5]", "d": "Herramientas"},
-		{"k": "[F11]", "d": "Pantalla Completa"}
+		{"k": "WASD", "d": "Moverse"},
+		{"k": "Shift", "d": "Correr"},
+		{"k": "Espacio", "d": "Saltar"},
+		{"k": "E", "d": "Interactuar"},
+		{"k": "TAB", "d": "Tablet"},
+		{"k": "1 - 5", "d": "Herramientas"},
+		{"k": "F11", "d": "Pantalla completa"}
 	]
 
 	for item in key_items:
