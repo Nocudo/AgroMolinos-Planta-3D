@@ -893,26 +893,156 @@ func _start_plant_machines_after_tour() -> void:
 		sm.start_plant_machines()
 
 func load_previous_checkpoint() -> Dictionary:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		if is_inside_tree():
-			_player_ref = get_tree().root.find_child("PlayerOperator", true, false) as Node3D
+	var r_root := get_tree().root if is_inside_tree() else null
+	if (_player_ref == null or not is_instance_valid(_player_ref)) and r_root != null:
+		_player_ref = r_root.find_child("PlayerOperator", true, false) as Node3D
+	if (_guide_worker == null or not is_instance_valid(_guide_worker)) and r_root != null:
+		_guide_worker = r_root.find_child("WorkerSafetyAuditor", true, false)
+	var hud = r_root.find_child("HUDController", true, false) if r_root != null else null
+	var locker = r_root.find_child("LockerEPPStation", true, false) if r_root != null else null
 
+	# 1. Limpiar inmediatamente cualquier narración, cola de diálogos, botones de opciones o modales activos
+	_stop_exterior_narration()
+	_conv_asked_topics.clear()
+	_set_course_desk_active(false)
+	_epp_reminder_cooldown = 0.0
+	if hud != null and hud.has_method("reset_dialogue_ui"):
+		hud.reset_dialogue_ui()
+
+	# 2. Determinar el punto anterior exacto según la etapa actual
 	var prev_id := 1
-	if target_station_id > 1:
+	if sst_course_active or porteria_story_active or not briefing_completed:
+		prev_id = 1
+	elif target_station_id > 1:
 		prev_id = target_station_id - 1
 	elif current_station_idx > 1:
 		prev_id = current_station_idx - 1
 
-	var prev_st: Dictionary = STATIONS[clampi(prev_id - 1, 0, STATIONS.size() - 1)]
+	prev_id = clampi(prev_id, 1, STATIONS.size())
+	var prev_st: Dictionary = STATIONS[prev_id - 1]
 	var prev_pos: Vector3 = prev_st["pos"]
 
-	if _player_ref != null and is_instance_valid(_player_ref):
-		_player_ref.global_position = Vector3(prev_pos.x, prev_pos.y + 0.15, prev_pos.z)
-		if "velocity" in _player_ref:
-			_player_ref.velocity = Vector3.ZERO
+	# 3. Restaurar estado coherente del recorrido, estaciones visitadas, EPP, guía SST y diálogo limpio
+	is_briefing_active = false
+	tutorial_skipped = false
+	induction_certified = false
+	sst_course_active = false
+	_course_modal_auto_opened = false
 
-	target_station_id = prev_id
-	_prompted_station_id = -1
+	if prev_id == 1:
+		visited_stations.clear()
+		visited_stations[1] = true
+		current_station_idx = 1
+		target_station_id = 2
+		briefing_completed = false
+		porteria_story_active = false
+		porteria_story_completed = false
+		sst_course_chosen = false
+		sst_course_completed = false
+		_prompted_station_id = -1
+
+		if _player_ref != null and is_instance_valid(_player_ref):
+			_player_ref.global_position = Vector3(52.0, 0.10, 34.0)
+			if "velocity" in _player_ref:
+				_player_ref.velocity = Vector3.ZERO
+		if _guide_worker != null and is_instance_valid(_guide_worker):
+			if _guide_worker.has_method("snap_guide_to_position"):
+				_guide_worker.snap_guide_to_position(Vector3(48.8, 0.04, 34.0))
+			else:
+				_guide_worker.global_position = Vector3(48.8, 0.04, 34.0)
+				_guide_worker.set("guide_has_target", false)
+				_guide_worker.set("is_explaining", false)
+				_guide_worker.set("has_arrived_and_explained", true)
+
+		if hud != null and hud.has_method("show_npc_dialogue"):
+			hud.show_npc_dialogue(
+				SST_SPEAKER_HEADER,
+				"Volvimos a Portería. Acércate y habla conmigo para comenzar.",
+				8.0
+			)
+	elif prev_id == 2:
+		visited_stations.clear()
+		visited_stations[1] = true
+		current_station_idx = 1
+		target_station_id = 2
+		briefing_completed = true
+		porteria_story_active = false
+		porteria_story_completed = true
+		_prompted_station_id = -1
+
+		# Desequipar EPP para permitir rehacer la estación de Vestidores sin salto automático a Estación 3
+		epp_completed = false
+		if locker != null and locker.has_method("set_epp_equipped"):
+			locker.set_epp_equipped(false)
+
+		if _player_ref != null and is_instance_valid(_player_ref):
+			_player_ref.global_position = Vector3(prev_pos.x, prev_pos.y + 0.12, prev_pos.z)
+			if "velocity" in _player_ref:
+				_player_ref.velocity = Vector3.ZERO
+		var vest_guide_pos := Vector3(-14.6, 0.81, 47.58)
+		if _guide_worker != null and is_instance_valid(_guide_worker):
+			if _guide_worker.has_method("snap_guide_to_position"):
+				_guide_worker.snap_guide_to_position(vest_guide_pos)
+			else:
+				_guide_worker.global_position = vest_guide_pos
+				_guide_worker.set("guide_has_target", false)
+				_guide_worker.set("is_explaining", false)
+				_guide_worker.set("has_arrived_and_explained", true)
+
+		if hud != null and hud.has_method("show_npc_dialogue"):
+			hud.show_npc_dialogue(
+				SST_SPEAKER_HEADER,
+				"Volvimos a los vestidores. Tu equipo de protección está en los lockers verdes; acércate y presiona E para ponértelo.",
+				9.0
+			)
+	else:
+		# Garantizar EPP antes de fijar target_station_id (set_epp_equipped emite señal que reinicia a estación 3)
+		if not epp_completed:
+			if locker != null and locker.has_method("set_epp_equipped"):
+				locker.set_epp_equipped(true)
+			epp_completed = true
+			if hud != null and hud.has_method("reset_dialogue_ui"):
+				hud.reset_dialogue_ui()
+
+		# Retroceder visited_stations: conservar 1..prev_id-1 y desmarcar prev_id..19
+		visited_stations.clear()
+		for sid in range(1, prev_id):
+			visited_stations[sid] = true
+		current_station_idx = prev_id - 1
+		target_station_id = prev_id
+		briefing_completed = true
+		porteria_story_active = false
+		porteria_story_completed = true
+		_prompted_station_id = prev_id
+
+		if _player_ref != null and is_instance_valid(_player_ref):
+			_player_ref.global_position = Vector3(prev_pos.x, prev_pos.y + 0.12, prev_pos.z)
+			if "velocity" in _player_ref:
+				_player_ref.velocity = Vector3.ZERO
+
+		var guide_pos := prev_pos
+		var r_idx: int = int(STATION_TO_ROUTE_IDX.get(prev_id, -1))
+		if r_idx > 0 and r_idx < TOUR_ROUTE_POINTS.size():
+			var pt_cur: Vector3 = TOUR_ROUTE_POINTS[r_idx]
+			var pt_prev: Vector3 = TOUR_ROUTE_POINTS[r_idx - 1]
+			var seg := Vector3(pt_prev.x - pt_cur.x, 0.0, pt_prev.z - pt_cur.z)
+			if seg.length() > 0.25:
+				var step_d := minf(1.15, seg.length() * 0.65)
+				var d_norm := seg.normalized()
+				guide_pos = Vector3(pt_cur.x + d_norm.x * step_d, prev_pos.y + 0.02, pt_cur.z + d_norm.z * step_d)
+		if _guide_worker != null and is_instance_valid(_guide_worker):
+			if _guide_worker.has_method("snap_guide_to_position"):
+				_guide_worker.snap_guide_to_position(guide_pos)
+			else:
+				_guide_worker.global_position = guide_pos
+				_guide_worker.set("guide_has_target", false)
+				_guide_worker.set("is_explaining", false)
+				_guide_worker.set("has_arrived_and_explained", true)
+
+		if hud != null and hud.has_method("show_npc_dialogue"):
+			var action_hint := "Cuando quieras, presiona E para seguir." if prev_id < STATIONS.size() else "Presiona E para cerrar el recorrido."
+			hud.show_npc_dialogue(SST_SPEAKER_HEADER, "%s %s" % [get_station_natural_speech(prev_id), action_hint], 10.0)
+
 	_rebuild_floor_guide_line()
 	_notify_glow_controller()
 

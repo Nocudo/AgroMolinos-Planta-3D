@@ -607,6 +607,18 @@ func clear_dialogue_choices() -> void:
 	if _dialogue_panel != null:
 		_dialogue_panel.visible = false
 
+func reset_dialogue_ui() -> void:
+	clear_dialogue_choices()
+	_dialogue_timer = 0.0
+	if _dialogue_speaker != null:
+		_dialogue_speaker.text = ""
+	if _dialogue_body != null:
+		_dialogue_body.text = ""
+	if briefing_overlay != null and briefing_overlay.visible:
+		briefing_overlay.visible = false
+	if _course_modal != null and is_instance_valid(_course_modal) and _course_modal.visible:
+		_course_modal.visible = false
+
 func _setup_dialogue_panel() -> void:
 	_dialogue_panel = PanelContainer.new()
 	_dialogue_panel.name = "DialoguePanel"

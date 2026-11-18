@@ -392,6 +392,20 @@ func set_guide_route(waypoints: Array[Vector3], final_target: Vector3) -> void:
 func set_guide_target(pos: Vector3) -> void:
 	set_guide_route([pos], pos)
 
+func snap_guide_to_position(pos: Vector3) -> void:
+	global_position = pos
+	velocity = Vector3.ZERO
+	guide_waypoints.clear()
+	guide_target_pos = pos
+	guide_has_target = false
+	is_explaining = false
+	has_arrived_and_explained = true
+	_explain_timer = 0.0
+	_interact_anim_timer = 0.0
+	_guide_stuck_timer = 0.0
+	_stuck_anchor_xz = Vector2(pos.x, pos.z)
+	_play_locomotion_anim(primary_animation, 0.15)
+
 func can_interact() -> bool:
 	if not is_tour_guide:
 		return true

@@ -1716,6 +1716,66 @@ func _qa_10_main_scene_integration() -> void:
 							"Parada de máquinas debe operarse desde BtnEmergencyStop en la Tablet (sin tecla e_stop, sin [ESC] y título QUIZ limpio)"
 						) and ok
 
+		# Regresión: Cargar punto anterior (load_previous_checkpoint) limpia diálogos/opciones, resincroniza guía y desmarca visited_stations sin trabar el avance
+		if tut_node != null and hud_ctrl != null and guide != null and player != null:
+			# Caso 1: Retroceder desde estación 5 -> estación 4 debe desmarcar visited_stations[4], acercar al guía y permitir avanzar con E
+			tut_node.set("briefing_completed", true)
+			tut_node.set("porteria_story_active", false)
+			tut_node.set("porteria_story_completed", true)
+			tut_node.set("sst_course_active", false)
+			tut_node.set("epp_completed", true)
+			tut_node.visited_stations = {1: true, 2: true, 3: true, 4: true}
+			tut_node.set("current_station_idx", 4)
+			tut_node.set("target_station_id", 5)
+			tut_node.load_previous_checkpoint()
+			var dist_g4 := Vector2(guide.global_position.x - player.global_position.x, guide.global_position.z - player.global_position.z).length()
+			ok = _assert_true(
+				int(tut_node.target_station_id) == 4
+				and not bool(tut_node.visited_stations.get(4, false))
+				and not bool(guide.guide_has_target)
+				and guide.can_interact()
+				and dist_g4 <= 2.5
+				and bool(tut_node.is_ready_for_interact_advance())
+				and not bool(hud_ctrl.get("_dialogue_keep_open")),
+				"Retroceder a Estación 4 debe desmarcar visited_stations[4], resincronizar guía y habilitar avance con E (target=%d, dist=%.2f, ready=%s)" % [int(tut_node.target_station_id), dist_g4, str(tut_node.is_ready_for_interact_advance())]
+			) and ok
+			guide.interact(1)
+			ok = _assert_true(
+				int(tut_node.target_station_id) == 5 and bool(tut_node.visited_stations.get(4, false)),
+				"Tras retroceder a Estación 4, hablar con el Supervisor SST debe avanzar limpiamente a Estación 5 (target=%d)" % int(tut_node.target_station_id)
+			) and ok
+
+			# Caso 2: Retroceder desde Estación 3 -> Estación 2 (Vestidores) y luego -> Estación 1 (Portería) limpia opciones y permite reiniciar bienvenida
+			tut_node.set("target_station_id", 3)
+			tut_node.load_previous_checkpoint()
+			ok = _assert_true(
+				int(tut_node.target_station_id) == 2 and not bool(tut_node.epp_completed) and not bool(tut_node.visited_stations.get(2, false)) and guide.can_interact(),
+				"Retroceder a Vestidores (Estación 2) debe limpiar EPP/visited_stations[2] y dejar al guía listo"
+			) and ok
+			tut_node.load_previous_checkpoint()
+			ok = _assert_true(
+				int(tut_node.target_station_id) == 2
+				and not bool(tut_node.briefing_completed)
+				and not bool(tut_node.porteria_story_active)
+				and not bool(tut_node.sst_course_active)
+				and not bool(hud_ctrl.get("_dialogue_keep_open"))
+				and player.global_position.x > 45.0
+				and guide.global_position.x > 45.0
+				and guide.can_interact(),
+				"Retroceder a Portería (Estación 1) debe reiniciar diálogos, opciones y posición de jugador/guía sin quedar bugueado"
+			) and ok
+			guide.interact(1)
+			ok = _assert_true(
+				bool(tut_node.is_briefing_active) and hud_ctrl.is_briefing_visible(),
+				"Tras volver a Portería, hablar con el Supervisor SST debe abrir normalmente el menú de bienvenida"
+			) and ok
+			hud_ctrl.close_briefing_panel()
+			tut_node.load_previous_checkpoint()
+			ok = _assert_true(
+				not bool(tut_node.porteria_story_active) and not bool(hud_ctrl.get("_dialogue_keep_open")) and not bool(tut_node.briefing_completed),
+				"Retroceder durante la historia de Portería debe limpiar botones de opciones de diálogo y reiniciar Portería limpiamente"
+			) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()
