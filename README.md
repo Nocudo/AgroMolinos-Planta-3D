@@ -1,6 +1,7 @@
 # 🏭 AgroMolinos del Valle S.A. — Simulador 3D de Planta Industrial & Diagnóstico Inteligente de Máquinas Eléctricas
 
-🔗 **Repositorio Oficial en GitHub:** [https://github.com/Nocudo/AgroMolinos-Planta-3D](https://github.com/Nocudo/AgroMolinos-Planta-3D)
+🔗 **Repositorio Oficial en GitHub:** [https://github.com/Nocudo/AgroMolinos-Planta-3D](https://github.com/Nocudo/AgroMolinos-Planta-3D)  
+📘 **Relación con la Guía y Explicación Completa del Simulador:** [`GUIA_Y_ARQUITECTURA_SIMULACION.md`](GUIA_Y_ARQUITECTURA_SIMULACION.md)
 
 **Universidad de los Llanos — Facultad de Ciencias Básicas e Ingeniería**  
 **Programa:** Ingeniería Electrónica  
@@ -122,6 +123,7 @@ Todas las averías se inducen y reparan mediante acciones físicas directas sobr
 ├── INSTALAR_DEPENDENCIAS.bat           # Instalador 1-clic (Godot 4.7, Git, Python, requirements.txt y caché Godot)
 ├── INICIAR_SIMULADOR_GODOT.bat         # Lanzador 1-clic del simulador interactivo
 ├── ABRIR_EDITOR_GODOT.bat              # Lanzador 1-clic del editor de Godot 4.7
+├── GUIA_Y_ARQUITECTURA_SIMULACION.md   # Relación completa con la guía oficial y explicación integral del simulador
 ├── PLAN_EJECUCION_ARGON.md             # Plan maestro en 8 bloques y estado de certificación QA 10/10
 ├── PROYECTO FINAL_MAQUINAS 20262.pdf   # Guía oficial y rúbrica de evaluación de la asignatura
 └── README.md                           # Documentación general del proyecto
