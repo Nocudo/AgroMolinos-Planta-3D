@@ -853,6 +853,9 @@ func _qa_10_main_scene_integration() -> void:
 				var cur_idx: int = int(TutorialInductionManagerScript.STATION_TO_ROUTE_IDX.get(sid, -1))
 				ok = _assert_true(cur_idx > prev_idx, "STATION_TO_ROUTE_IDX[%d]=%d debe avanzar secuencialmente tras %d" % [sid, cur_idx, prev_idx]) and ok
 				prev_idx = cur_idx
+			var st15_pos: Vector3 = TutorialInductionManagerScript.STATIONS[14]["pos"]
+			ok = _assert_true(st15_pos.x <= -43.0 and st15_pos.z >= 30.0,
+				"Estación 15 (Intercambiador de Calor) debe ubicarse en el frente abierto Oeste sin muro bloqueando la vista (%s)" % str(st15_pos)) and ok
 			var saved_g_pos: Vector3 = guide.global_position
 			var route_pts: Array = TutorialInductionManagerScript.TOUR_ROUTE_POINTS
 			var vest_idx: int = int(TutorialInductionManagerScript.STATION_TO_ROUTE_IDX.get(2, 19))

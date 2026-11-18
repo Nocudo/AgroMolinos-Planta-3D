@@ -27,7 +27,7 @@ const STATIONS: Array[Dictionary] = [
 	{"id": 12, "title": "Estación 12: Ciclón Separador", "pos": Vector3(-18.69, 0.79, 33.4), "desc": "Ciclón 09 separador neumático de sólidos."},
 	{"id": 13, "title": "Estación 13: Ciclones Clasificadores", "pos": Vector3(-18.69, 0.79, 29.4), "desc": "Ciclones clasificadores y control de polvo ATEX 22."},
 	{"id": 14, "title": "Estación 14: Almacén de Sacos 50 kg", "pos": Vector3(-18.69, 0.79, 26.5), "desc": "Empaque, estiba en pallets y despacho."},
-	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-33.5, 0.02, 22.2), "desc": "Equipo 14 exterior de transferencia térmica."},
+	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-45.5, 0.06, 32.0), "desc": "Equipo 14 exterior de transferencia térmica."},
 	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-45.7, 0.04, 34.3), "desc": "Horno 12 exterior de aire caliente."},
 	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-45.6, 0.04, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
 	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-45.2, 0.06, 38.8), "desc": "Soplador 13 de impulsión neumática."},
@@ -78,11 +78,11 @@ const TOUR_ROUTE_POINTS: Array[Vector3] = [
 	Vector3(-18.69, 0.83, 22.2),  # 38: Salida Portón Sur hacia Rampa Sur
 	Vector3(-20.3, 0.83, 22.2),   # 39: Cima Rampa Sur
 	Vector3(-28.5, 0.04, 22.2),   # 40: Pie Rampa Sur de concreto
-	Vector3(-33.5, 0.04, 22.2),   # 41: Estación 15 - 14 Intercambiador de Calor (sobre andén concreto)
+	Vector3(-33.5, 0.04, 22.2),   # 41: Borde Sur exterior sobre andén concreto (tránsito hacia frente Oeste)
 	Vector3(-41.8, 0.06, 22.4),   # 42: Cruce limpio libre de esquina de losa hacia acera curva Oeste
 	Vector3(-43.4, 0.10, 25.0),   # 43: Inicio acera peatonal curva Oeste (sobre andén físico Geom3D_775)
 	Vector3(-44.6, 0.14, 28.4),   # 44: Acera peatonal curva Oeste (fuera de Zone9 y fuera de calle)
-	Vector3(-45.5, 0.06, 32.0),   # 45: Acera peatonal curva Oeste tramo medio
+	Vector3(-45.5, 0.06, 32.0),   # 45: Estación 15 - 14 Intercambiador de Calor (frente Oeste despejado sin muro)
 	Vector3(-45.7, 0.06, 34.3),   # 46: Estación 16 - 12 Horno Térmico (sobre acera Oeste)
 	Vector3(-45.6, 0.06, 36.4),   # 47: Estación 17 - 11 Unidad de Extracción (sobre acera Oeste)
 	Vector3(-45.2, 0.08, 38.8),   # 48: Estación 18 - 13 Soplador (sobre acera Oeste)
@@ -161,7 +161,7 @@ const STATION_NATURAL_SPEECH: Dictionary = {
 	12: "Este es el ciclón separador principal. Aprovecha la fuerza centrífuga para separar el producto más grueso de las partículas finas.",
 	13: "Estos dos ciclones amarillos clasifican el polvo fino de cereal. Como el polvo es combustible en zona ATEX, mantenemos siempre una buena ventilación.",
 	14: "Aquí en el almacén vamos empacando el grano ya procesado en sacos de 50 kilos, listos para estibar y despachar.",
-	15: "Ya salimos por la rampa sur al patio exterior, bien lejos de los camiones y fuera de la zona amarilla. Enfrente ves el intercambiador de calor que recupera energía térmica.",
+	15: "Ya salimos por la rampa sur al frente exterior oeste, bien lejos de los camiones y fuera de la zona amarilla. Enfrente y despejado ves el intercambiador de calor que recupera energía térmica.",
 	16: "A continuación está el horno térmico de ladrillos, que genera el flujo de aire caliente necesario para todo el proceso de secado.",
 	17: "Esta es la unidad de extracción adosada a la pared, encargada de mantener la succión constante y evacuar el polvo fino hacia el exterior.",
 	18: "Aquí tienes el soplador industrial. Impulsa el caudal de aire a presión que conecta el horno, el intercambiador y el secador.",
@@ -200,7 +200,7 @@ const PORTERIA_CONTINUE_CHOICE: Dictionary = {
 
 const STATION_TO_ROUTE_IDX: Dictionary = {
 	1: 0, 2: 19, 3: 24, 4: 25, 5: 28, 6: 29, 7: 30, 8: 31, 9: 32, 10: 33,
-	11: 34, 12: 35, 13: 36, 14: 37, 15: 41, 16: 46, 17: 47, 18: 48, 19: 49, 20: 60
+	11: 34, 12: 35, 13: 36, 14: 37, 15: 45, 16: 46, 17: 47, 18: 48, 19: 49, 20: 60
 }
 
 # Equipos destacados en cada estación durante la presentación del tutorial (una máquina por estación en glow azul parpadeante)
