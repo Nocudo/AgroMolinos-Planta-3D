@@ -521,7 +521,7 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 	if all_equipped:
 		show_npc_dialogue(
 			"Carlos Mendoza (Supervisor SST):",
-			"Perfecto, ya quedaste bien equipado con tu protección. Ahora sí podemos pasar hacia la esclusa norte.",
+			"Perfecto, ya quedaste bien equipado con tu protección. Ahora vamos a la zona de carga para empezar el recorrido máquina por máquina.",
 			5.0
 		)
 	elif _dialogue_panel != null and not _dialogue_keep_open:

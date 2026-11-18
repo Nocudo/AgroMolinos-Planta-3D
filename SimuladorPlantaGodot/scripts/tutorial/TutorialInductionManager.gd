@@ -10,72 +10,77 @@ const LotoControllerScript = preload("res://scripts/tutorial/LotoGoldenRulesCont
 
 const SoundSynth = preload("res://scripts/core/IndustrialSoundSynthesizer.gd")
 
+const CCM_STATION_ID: int = 10
+
 const STATIONS: Array[Dictionary] = [
-	{"id": 1, "title": "Estación 1: Portería", "pos": Vector3(52.0, 0.02, 34.0), "desc": "Inspector SST. Abre Tablet con [TAB] y avanza a Vestidores."},
+	{"id": 1, "title": "Estación 1: Portería", "pos": Vector3(52.0, 0.02, 34.0), "desc": "Inicio del recorrido en Portería."},
 	{"id": 2, "title": "Estación 2: Vestidores EPP", "pos": Vector3(-15.9, 0.79, 47.88), "desc": "Ropa EPP en lockers. Presiona [E] para vestirte."},
-	{"id": 3, "title": "Estación 3: Esclusa Norte", "pos": Vector3(-18.69, 0.79, 42.5), "desc": "Acceso al pasillo central."},
-	{"id": 4, "title": "Estación 4: CCM 460 V", "pos": Vector3(-18.69, 0.79, 38.5), "desc": "5 Reglas LOTO y barraje 460 V."},
-	{"id": 5, "title": "Estación 5: Motor 10 HP", "pos": Vector3(-21.0, 0.79, 42.2), "desc": "Motor 10 HP, 460 V e ISO 10816."},
-	{"id": 6, "title": "Estación 6: Tolva y Secador", "pos": Vector3(-21.2, 0.79, 46.2), "desc": "Tolva T-301, bandas y secador."},
-	{"id": 7, "title": "Estación 7: Ciclón y ATEX", "pos": Vector3(-18.69, 0.79, 33.5), "desc": "Extracción y polvo combustible."},
-	{"id": 8, "title": "Estación 8: Almacén Sacos", "pos": Vector3(-18.69, 0.79, 26.8), "desc": "Estiba y logística interna."},
-	{"id": 9, "title": "Estación 9: Pasillo Central", "pos": Vector3(-18.69, 0.79, 35.5), "desc": "Circulación peatonal principal."},
-	{"id": 10, "title": "Estación 10: Rampa Sur", "pos": Vector3(-18.69, 0.79, 22.2), "desc": "Rampa y portón Sur."},
-	{"id": 11, "title": "Estación 11: Bahía Despacho", "pos": Vector3(-35.5, 0.02, 53.5), "desc": "Bahía de carga exterior."},
-	{"id": 12, "title": "Estación 12: SCADA y Cierre", "pos": Vector3(-18.69, 0.79, 40.5), "desc": "Supervisión [TAB] y certificación final."}
+	{"id": 3, "title": "Estación 3: Zona de Carga y Banda de Descarga", "pos": Vector3(-25.6, 0.59, 51.2), "desc": "Recepción de camión y Banda 01 de descarga."},
+	{"id": 4, "title": "Estación 4: Banda Inclinada hacia Tolva", "pos": Vector3(-24.6, 0.59, 50.2), "desc": "Banda 02 elevadora hacia la tolva receptora."},
+	{"id": 5, "title": "Estación 5: Tolva de Recepción T-301", "pos": Vector3(-18.69, 0.79, 46.6), "desc": "Tolva 03 dosificadora de grano crudo."},
+	{"id": 6, "title": "Estación 6: Banda hacia Sinfín Trituradora", "pos": Vector3(-18.69, 0.79, 44.8), "desc": "Banda 04 transportadora desde la tolva."},
+	{"id": 7, "title": "Estación 7: Tornillo Sin Fin Trituradora", "pos": Vector3(-18.69, 0.79, 43.1), "desc": "Tornillo 05 alimentador helicoidal de la trituradora."},
+	{"id": 8, "title": "Estación 8: Trituradora y Motor 10 HP", "pos": Vector3(-18.69, 0.79, 41.8), "desc": "Motor 06 de inducción trifásico 10 HP, 460 V."},
+	{"id": 9, "title": "Estación 9: Tornillo Sin Fin al Secador", "pos": Vector3(-18.69, 0.79, 40.3), "desc": "Tornillo 07 de transferencia al secador rotatorio."},
+	{"id": 10, "title": "Estación 10: Tablero CCM 460 V", "pos": Vector3(-18.69, 0.79, 38.5), "desc": "Centro de Control de Motores, VFD y 5 Reglas LOTO."},
+	{"id": 11, "title": "Estación 11: Secador Rotatorio", "pos": Vector3(-18.69, 0.79, 36.6), "desc": "Secador 08 térmico para control de humedad."},
+	{"id": 12, "title": "Estación 12: Ciclón Separador", "pos": Vector3(-18.69, 0.79, 33.4), "desc": "Ciclón 09 separador neumático de sólidos."},
+	{"id": 13, "title": "Estación 13: Ciclones Clasificadores (ATEX)", "pos": Vector3(-18.69, 0.79, 29.4), "desc": "Ciclones 10 clasificadores y control de polvo ATEX 22."},
+	{"id": 14, "title": "Estación 14: Almacén de Sacos 50 kg", "pos": Vector3(-18.69, 0.79, 26.5), "desc": "Empaque, estiba en pallets y despacho."},
+	{"id": 15, "title": "Estación 15: Intercambiador de Calor", "pos": Vector3(-36.5, 0.02, 22.2), "desc": "Equipo 14 exterior de transferencia térmica."},
+	{"id": 16, "title": "Estación 16: Horno Térmico", "pos": Vector3(-44.2, 0.02, 34.3), "desc": "Horno 12 exterior de aire caliente."},
+	{"id": 17, "title": "Estación 17: Unidad de Extracción", "pos": Vector3(-44.2, 0.02, 36.4), "desc": "Unidad 11 exterior de succión y ventilación."},
+	{"id": 18, "title": "Estación 18: Soplador", "pos": Vector3(-44.2, 0.02, 38.8), "desc": "Soplador 13 de impulsión neumática."},
+	{"id": 19, "title": "Estación 19: Ductos de Aire y Cierre", "pos": Vector3(-43.2, 0.02, 40.8), "desc": "Red 15 de ductos de aire y cierre exterior del recorrido."}
 ]
 
-# Ruta exterior Portería -> Vestidores por acera peatonal del bloque administrativo (sin cruzar calzada de camiones)
+# Ruta segura verificada: 0 muros, 0 cruces de líneas de seguridad (Zone1/2/6/8/9), 0 choques con camiones
 const TOUR_ROUTE_POINTS: Array[Vector3] = [
-	Vector3(52.0, 0.04, 34.0),   # 0: Estación 1 - Portería
-	Vector3(48.0, 0.04, 34.0),   # 1: Salida garita Portería por sendero peatonal
-	Vector3(44.8, 0.22, 39.2),   # 2: Incorporación exterior a acera bloque administrativo
-	Vector3(37.2, 0.22, 43.2),   # 3: Acera concreto Este edificio administrativo (Y=0.20)
-	Vector3(34.5, 0.22, 48.5),   # 4: Acera exterior esquina Noreste edificio administrativo
-	Vector3(32.0, 0.22, 52.0),   # 5: Inicio acera Norte edificio administrativo (Y=0.20)
-	Vector3(24.0, 0.22, 52.25),  # 6: Acera Norte frente Sala de Reuniones (tras franja verde, lejos de Z=58.3)
-	Vector3(14.0, 0.22, 52.5),   # 7: Acera Norte frente oficinas administrativas
-	Vector3(2.0, 0.04, 53.4),    # 8: Sendero Oeste hacia plataforma exterior Bahía Norte (separado de vía camiones)
-	Vector3(-11.4, 0.04, 53.75), # 9: Pie exterior Este de rampa Bahía Norte
-	Vector3(-14.0, 0.34, 53.75), # 10: Ascenso rampa exterior Norte (tramo medio exterior)
-	Vector3(-16.6, 0.63, 53.55), # 11: Cima de rampa exterior por encima de bordillo Bahía Norte
-	Vector3(-15.5, 0.63, 50.6),  # 12: Plataforma exterior Bahía Norte hacia Vestidores
-	Vector3(-13.9, 0.63, 49.85), # 13: Frente exterior centrado a Puerta Norte Vestidores (X=-13.91)
-	Vector3(-13.9, 0.83, 49.45), # 14: Umbral losa acceso Vestidores (Y=0.79)
-	Vector3(-13.9, 0.83, 47.55), # 15: Centro exacto del vano puerta Vestidores (Z=47.25..47.75)
-	Vector3(-14.85, 0.83, 47.58), # 16: Estación 2 - Guía SST junto a los lockers EPP (acceso 100% exterior)
-	Vector3(-13.9, 0.83, 47.55), # 17: Salida de Vestidores por centro de vano
-	Vector3(-13.9, 0.83, 49.45), # 18: Umbral losa salida Vestidores (Y=0.79)
-	Vector3(-13.9, 0.63, 49.85), # 19: Exterior Puerta Norte Vestidores
-	Vector3(-18.69, 0.63, 49.85), # 20: Paso centrado frente a Puerta Doble Norte
-	Vector3(-18.69, 0.83, 49.45), # 21: Umbral ingreso centrado Puerta Doble Norte
-	Vector3(-18.69, 0.83, 42.5),  # 22: Estación 3 - Pasillo Central / Esclusa Norte Nave
-	Vector3(-18.69, 0.83, 38.5),  # 23: Estación 4 - Tablero CCM 460V (junto a máquinas)
-	Vector3(-21.0, 0.83, 42.2),   # 24: Estación 5 - Trituradora + Motor 10 HP
-	Vector3(-21.0, 0.83, 44.5),   # 25: Paso lateral por banda verde hacia Tolva
-	Vector3(-21.2, 0.83, 46.2),   # 26: Estación 6 - Tolva T-301 y Bandas
-	Vector3(-18.69, 0.83, 41.0),  # 27: Incorporación al pasillo central
-	Vector3(-18.69, 0.83, 33.5),  # 28: Estación 7 - Zona ATEX / Ciclón
-	Vector3(-18.69, 0.83, 26.8),  # 29: Estación 8 - Almacén Super Sacos
-	Vector3(-18.69, 0.83, 31.0),  # 30: Tránsito pasillo central desde Estación 8
-	Vector3(-18.69, 0.83, 35.5),  # 31: Estación 9 - Pasillo Peatonal Central Nave
-	Vector3(-18.69, 0.83, 26.8),  # 32: Descenso por pasillo central hacia Rampa Sur
-	Vector3(-18.69, 0.83, 22.2),  # 33: Estación 10 - Rampa Sur y Acceso Nave
-	Vector3(-20.3, 0.83, 22.2),   # 34: Borde superior Rampa descenso
-	Vector3(-28.5, 0.04, 22.2),   # 35: Borde inferior Rampa descenso
-	Vector3(-30.5, 0.04, 22.2),   # 36: Pie Oeste de Rampa
-	Vector3(-30.5, 0.04, 18.0),   # 37: Paseo exterior Oeste
-	Vector3(-46.0, 0.04, 18.0),   # 38: Esquina exterior Suroeste despejada
-	Vector3(-46.0, 0.04, 53.5),   # 39: Avenida Oeste rodeando camión de despacho
-	Vector3(-35.5, 0.04, 53.5),   # 40: Estación 11 - Bahía Exterior Camión Despacho
-	Vector3(-46.0, 0.04, 53.5),   # 41: Retorno por Avenida Oeste exterior
-	Vector3(-46.0, 0.04, 18.0),   # 42: Esquina exterior Suroeste despejada
-	Vector3(-30.5, 0.04, 18.0),   # 43: Paseo exterior Sur
-	Vector3(-30.5, 0.04, 22.2),   # 44: Pie Oeste de Rampa Sur
-	Vector3(-28.5, 0.04, 22.2),   # 45: Acceso suave Rampa Sur
-	Vector3(-20.3, 0.83, 22.2),   # 46: Cima de Rampa Sur hacia nave
-	Vector3(-18.69, 0.83, 22.2),  # 47: Troncal central acceso Sur
-	Vector3(-18.69, 0.83, 40.5)   # 48: Estación 12 - Centro SCADA y Certificación
+	Vector3(52.0, 0.04, 34.0),    # 0: Estación 1 - Portería
+	Vector3(48.0, 0.04, 34.0),    # 1: Salida garita Portería por sendero peatonal
+	Vector3(44.8, 0.22, 39.2),    # 2: Incorporación exterior a acera bloque administrativo
+	Vector3(37.2, 0.22, 43.2),    # 3: Acera concreto Este edificio administrativo (Y=0.20)
+	Vector3(34.5, 0.22, 48.5),    # 4: Acera exterior esquina Noreste edificio administrativo
+	Vector3(32.0, 0.22, 52.0),    # 5: Inicio acera Norte edificio administrativo (Y=0.20)
+	Vector3(24.0, 0.22, 52.25),   # 6: Acera Norte frente Sala de Reuniones (lejos de vía camiones Z=58.3)
+	Vector3(14.0, 0.22, 52.5),    # 7: Acera Norte frente oficinas administrativas
+	Vector3(2.0, 0.04, 53.4),     # 8: Sendero Oeste hacia plataforma exterior Bahía Norte
+	Vector3(-11.4, 0.04, 53.75),  # 9: Pie exterior Este de rampa Bahía Norte
+	Vector3(-14.0, 0.34, 53.75),  # 10: Ascenso rampa exterior Norte
+	Vector3(-16.6, 0.63, 53.55),  # 11: Cima de rampa exterior Bahía Norte
+	Vector3(-15.5, 0.63, 50.6),   # 12: Plataforma exterior Bahía Norte hacia Vestidores
+	Vector3(-13.9, 0.63, 49.85),  # 13: Frente exterior centrado a Puerta Norte Vestidores
+	Vector3(-13.9, 0.83, 49.45),  # 14: Umbral losa acceso Vestidores (Y=0.79)
+	Vector3(-13.9, 0.83, 47.55),  # 15: Centro exacto del vano puerta Vestidores
+	Vector3(-14.85, 0.83, 47.58), # 16: Estación 2 - Vestidores EPP (lockers)
+	Vector3(-13.9, 0.83, 47.55),  # 17: Salida de Vestidores por centro de vano
+	Vector3(-13.9, 0.83, 49.45),  # 18: Umbral losa salida Vestidores
+	Vector3(-13.9, 0.63, 49.85),  # 19: Plataforma exterior Norte
+	Vector3(-18.69, 0.63, 50.5),  # 20: Paso seguro hacia Zona de Carga (Y=0.59, fuera de Zone8)
+	Vector3(-25.6, 0.63, 51.2),   # 21: Estación 3 - Zona de Carga: 01 Banda de Descarga y Camión
+	Vector3(-24.6, 0.63, 50.2),   # 22: Estación 4 - Zona de Carga: 02 Banda Inclinada hacia Tolva
+	Vector3(-18.69, 0.63, 49.85), # 23: Regreso por plataforma segura frente a Puerta Doble Norte
+	Vector3(-18.69, 0.83, 49.45), # 24: Umbral Puerta Doble Norte hacia pasillo peatonal verde
+	Vector3(-18.69, 0.83, 46.6),  # 25: Estación 5 - 03 Tolva de Recepción T-301
+	Vector3(-18.69, 0.83, 44.8),  # 26: Estación 6 - 04 Banda hacia Sinfín Trituradora
+	Vector3(-18.69, 0.83, 43.1),  # 27: Estación 7 - 05 Tornillo Sin Fin Trituradora
+	Vector3(-18.69, 0.83, 41.8),  # 28: Estación 8 - 06 Trituradora y Motor 10 HP
+	Vector3(-18.69, 0.83, 40.3),  # 29: Estación 9 - 07 Tornillo Sin Fin al Secador
+	Vector3(-18.69, 0.83, 38.5),  # 30: Estación 10 - CCM Tablero Eléctrico 460 V
+	Vector3(-18.69, 0.83, 36.6),  # 31: Estación 11 - 08 Secador Rotatorio
+	Vector3(-18.69, 0.83, 33.4),  # 32: Estación 12 - 09 Ciclón Separador
+	Vector3(-18.69, 0.83, 29.4),  # 33: Estación 13 - 10 Ciclones Clasificadores (ATEX)
+	Vector3(-18.69, 0.83, 26.5),  # 34: Estación 14 - Almacén de Sacos 50 kg
+	Vector3(-18.69, 0.83, 22.2),  # 35: Salida Portón Sur hacia Rampa Sur
+	Vector3(-20.3, 0.83, 22.2),   # 36: Cima Rampa Sur
+	Vector3(-28.5, 0.04, 22.2),   # 37: Pie Rampa Sur
+	Vector3(-36.5, 0.04, 22.2),   # 38: Estación 15 - 14 Intercambiador de Calor (vista abierta Sur)
+	Vector3(-42.2, 0.04, 22.2),   # 39: Esquina exterior Sur-Oeste segura (fuera de Zone9 y lejos de camiones)
+	Vector3(-44.2, 0.04, 28.0),   # 40: Corredor exterior Oeste con vista despejada sobre murete
+	Vector3(-44.2, 0.04, 34.3),   # 41: Estación 16 - 12 Horno Térmico
+	Vector3(-44.2, 0.04, 36.4),   # 42: Estación 17 - 11 Unidad de Extracción
+	Vector3(-44.2, 0.04, 38.8),   # 43: Estación 18 - 13 Soplador
+	Vector3(-43.2, 0.04, 40.8)    # 44: Estación 19 - 15 Ductos de Aire y Cierre Exterior
 ]
 
 # Conversación natural con el Supervisor SST durante el recorrido (solo subtítulos, sin voz)
@@ -127,16 +132,23 @@ const SST_SPEAKER_HEADER: String = "Carlos Mendoza (Supervisor SST):"
 const STATION_NATURAL_SPEECH: Dictionary = {
 	1: "Bienvenido a la portería. Cuando estés listo vamos avanzando hacia la planta.",
 	2: "Ya estamos en los vestidores. Tu ropa y el equipo de protección están en los lockers verdes de enfrente.",
-	3: "Esta es la esclusa norte de ingreso. Desde aquí entramos al pasillo peatonal de la nave de producción.",
-	4: "Aquí está el tablero eléctrico de 460 voltios. Antes de tocarlo siempre aplicamos las cinco reglas de oro y bloqueo LOTO.",
-	5: "Este es nuestro motor principal de 10 caballos que mueve la trituradora. Siempre vigilamos su corriente, temperatura y vibración.",
-	6: "Por aquí entra el grano desde la tolva hacia las bandas y el secador rotatorio para dejarlo seco antes de moler.",
-	7: "En esta zona trabajan los ciclones separando el polvo fino. Como hay polvo combustible, cuidamos mucho la ventilación.",
-	8: "Aquí vamos empacando el grano ya molido en sacos de 50 kilos, listos para salir a despacho.",
-	9: "Este pasillo verde es el camino seguro para circular por la nave sin acercarte de más a las máquinas.",
-	10: "Por esta rampa salimos hacia el patio exterior para revisar la zona de carga y la llegada de camiones.",
-	11: "Aquí afuera cargamos y despachamos los camiones. Siempre mantén buena distancia cuando estén maniobrando.",
-	12: "Con esto terminamos el recorrido por la planta. Ya puedes abrir la tablet cuando quieras para ver los datos o probar fallas."
+	3: "Empezamos aquí en la zona de carga. Los camiones descargan el grano sobre esta banda roja de entrada sin que crucemos la línea amarilla.",
+	4: "Justo al lado está la banda verde inclinada. Ella sube todo el grano recibido hacia el interior de la nave rumbo a la tolva.",
+	5: "Ya adentro, siempre por el pasillo peatonal verde, te muestro la tolva de recepción. Aquí se acumula y se dosifica el grano antes de moler.",
+	6: "Esta banda transportadora verde toma el grano de la tolva y lo lleva de forma pareja hacia la entrada de la trituradora.",
+	7: "Aquí tenemos el tornillo sin fin de alimentación, encargado de empujar el cereal de manera continua hacia la cámara de molienda.",
+	8: "Este es el corazón de la planta: la trituradora con su motor trifásico de 10 caballos a 460 voltios. Siempre vigilamos su corriente, temperatura y vibración.",
+	9: "Al salir molido, este segundo tornillo sin fin traslada el producto directamente hacia la entrada del secador rotatorio.",
+	10: "Frente a ti está el tablero eléctrico CCM de 460 voltios y el variador de frecuencia. Recuerda nunca cruzar la línea roja ni tocarlo sin aplicar las cinco reglas de oro y LOTO.",
+	11: "Aquí opera el secador rotatorio. Hace girar el grano con aire caliente para bajar la humedad y dejarlo en el punto exacto.",
+	12: "Este es el ciclón separador principal. Aprovecha la fuerza centrífuga para separar el producto más grueso de las partículas finas.",
+	13: "Estos dos ciclones amarillos clasifican el polvo fino de cereal. Como el polvo es combustible en zona ATEX, mantenemos siempre una buena ventilación.",
+	14: "Aquí en el almacén vamos empacando el grano ya procesado en sacos de 50 kilos, listos para estibar y despachar.",
+	15: "Ya salimos por la rampa sur al patio exterior, bien lejos de los camiones y fuera de la zona amarilla. Enfrente ves el intercambiador de calor que recupera energía térmica.",
+	16: "A continuación está el horno térmico de ladrillos, que genera el flujo de aire caliente necesario para todo el proceso de secado.",
+	17: "Esta es la unidad de extracción adosada a la pared, encargada de mantener la succión constante y evacuar el polvo fino hacia el exterior.",
+	18: "Aquí tienes el soplador industrial. Impulsa el caudal de aire a presión que conecta el horno, el intercambiador y el secador.",
+	19: "Por último, arriba ves la red de ductos de aire que enlaza todo el sistema térmico con la nave. Con esto terminamos el recorrido y ya puedes explorar o usar la tablet."
 }
 
 # Líneas de apertura y transición de la conversación exterior (solo subtítulos)
@@ -150,24 +162,31 @@ const EXTERIOR_NARRATION_SEGMENTS: Array[Dictionary] = [
 ]
 
 const STATION_TO_ROUTE_IDX: Dictionary = {
-	1: 0, 2: 16, 3: 22, 4: 23, 5: 24, 6: 26,
-	7: 28, 8: 29, 9: 31, 10: 33, 11: 40, 12: 48
+	1: 0, 2: 16, 3: 21, 4: 22, 5: 25, 6: 26, 7: 27, 8: 28, 9: 29, 10: 30,
+	11: 31, 12: 32, 13: 33, 14: 34, 15: 38, 16: 41, 17: 42, 18: 43, 19: 44
 }
 
-# Equipos destacados en cada estación durante la presentación del tutorial
+# Equipos destacados en cada estación durante la presentación del tutorial (una máquina por estación en glow azul parpadeante)
 const STATION_GLOW_GROUPS: Dictionary = {
 	1: [],
 	2: ["locker"],
-	3: [],
-	4: ["breaker"],
-	5: ["motor"],
-	6: ["hopper", "banda_descarga", "banda_inclinada_tolva", "banda_trituradora", "tornillo_trituradora", "tornillo_secador", "secador_rotatorio"],
-	7: ["ciclon_separador", "cyclone", "unidad_extraccion", "horno", "soplador", "intercambiador_calor", "ductos_aire"],
-	8: ["bag"],
-	9: [],
-	10: [],
-	11: ["truck"],
-	12: []
+	3: ["banda_descarga", "truck"],
+	4: ["banda_inclinada_tolva"],
+	5: ["hopper"],
+	6: ["banda_trituradora"],
+	7: ["tornillo_trituradora"],
+	8: ["motor"],
+	9: ["tornillo_secador"],
+	10: ["breaker"],
+	11: ["secador_rotatorio"],
+	12: ["ciclon_separador"],
+	13: ["cyclone"],
+	14: ["bag"],
+	15: ["intercambiador_calor"],
+	16: ["horno"],
+	17: ["unidad_extraccion"],
+	18: ["soplador"],
+	19: ["ductos_aire"]
 }
 const ALL_EQUIPMENT_GLOW_GROUPS: Array[String] = [
 	"banda_descarga", "banda_inclinada_tolva", "hopper", "banda_trituradora",
@@ -507,8 +526,8 @@ func get_interact_advance_prompt() -> String:
 	if not is_ready_for_interact_advance():
 		return ""
 	if target_station_id < STATIONS.size():
-		return "[E] Estación %d/12" % (target_station_id + 1)
-	return "[E] Certificar Recorrido (12/12)"
+		return "[E] Estación %d/%d" % [target_station_id + 1, STATIONS.size()]
+	return "[E] Finalizar Recorrido (%d/%d)" % [STATIONS.size(), STATIONS.size()]
 
 func try_advance_station_by_interact() -> String:
 	if is_ready_for_meeting_course():
@@ -543,7 +562,7 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 
 func _on_golden_rules_completed() -> void:
 	if epp_completed:
-		visit_station(4)
+		visit_station(CCM_STATION_ID)
 
 func can_advance_past_lockers() -> bool:
 	return epp_completed
@@ -931,11 +950,11 @@ func skip_tutorial_to_final_station() -> Dictionary:
 	var final_st: Dictionary = STATIONS[STATIONS.size() - 1]
 	var final_pos: Vector3 = TOUR_ROUTE_POINTS[TOUR_ROUTE_POINTS.size() - 1]
 	if _player_ref != null and is_instance_valid(_player_ref):
-		_player_ref.global_position = Vector3(final_pos.x, 0.85, final_pos.z)
+		_player_ref.global_position = Vector3(final_pos.x, final_pos.y + 0.05, final_pos.z)
 		if "velocity" in _player_ref:
 			_player_ref.velocity = Vector3.ZERO
 	if _guide_worker != null and is_instance_valid(_guide_worker):
-		_guide_worker.global_position = Vector3(final_pos.x, 0.83, final_pos.z - 1.5)
+		_guide_worker.global_position = Vector3(final_pos.x, final_pos.y + 0.02, final_pos.z - 1.5)
 		_guide_worker.set("guide_has_target", false)
 		_guide_worker.set("is_explaining", false)
 		_guide_worker.set("has_arrived_and_explained", true)
@@ -972,7 +991,7 @@ func skip_tutorial_to_final_station() -> Dictionary:
 			bus.tutorial_station_reached.emit(STATIONS.size(), final_st["title"])
 		if bus.has_signal("notification_posted"):
 			bus.notification_posted.emit(
-				"ESTACIÓN 12/12",
+				"ESTACIÓN %d/%d" % [STATIONS.size(), STATIONS.size()],
 				"EPP equipado. Sistemas en línea.",
 				"success"
 			)

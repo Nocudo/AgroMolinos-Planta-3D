@@ -675,22 +675,22 @@ static func build_cctv_rubric_tab(_on_cam_cb: Callable) -> Dictionary:
 	svb.add_theme_constant_override("separation", 8)
 	st_card.add_child(svb)
 
-	svb.add_child(TTheme.make_label("Avance de Estaciones de Planta (1 – 12)", 13, TTheme.ACCENT_CYAN))
+	svb.add_child(TTheme.make_label("Avance de Estaciones de Planta (1 – 19)", 13, TTheme.ACCENT_CYAN))
 	var st_grid := GridContainer.new()
-	st_grid.columns = 2
+	st_grid.columns = 3
 	st_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	st_grid.add_theme_constant_override("h_separation", 8)
-	st_grid.add_theme_constant_override("v_separation", 6)
+	st_grid.add_theme_constant_override("h_separation", 6)
+	st_grid.add_theme_constant_override("v_separation", 4)
 	svb.add_child(st_grid)
 
 	var station_labels: Array[Label] = []
-	for i in range(1, 13):
+	for i in range(1, 20):
 		var st_p := PanelContainer.new()
 		st_p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		st_p.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		st_p.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_SUBCARD, TTheme.BORDER_SUBTLE, 5, 10, 6))
+		st_p.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_SUBCARD, TTheme.BORDER_SUBTLE, 5, 8, 4))
 		st_grid.add_child(st_p)
-		var sl := TTheme.make_label("E%d · Pendiente" % i, 11, TTheme.TEXT_MUTED)
+		var sl := TTheme.make_label("E%d · Pendiente" % i, 10, TTheme.TEXT_MUTED)
 		sl.clip_text = true
 		st_p.add_child(sl)
 		station_labels.append(sl)

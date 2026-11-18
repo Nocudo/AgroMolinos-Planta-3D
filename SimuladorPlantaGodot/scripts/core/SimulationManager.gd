@@ -69,7 +69,9 @@ func stop_plant_machines() -> void:
 		_plant_started = false
 
 func _on_tutorial_station_reached(station_index: int, _station_title: String) -> void:
-	if station_index >= 12:
+	var tut = _get_tutorial_manager()
+	var total_sts: int = tut.STATIONS.size() if (tut != null and "STATIONS" in tut) else 19
+	if station_index >= total_sts:
 		start_plant_machines()
 
 func _on_tutorial_completed() -> void:

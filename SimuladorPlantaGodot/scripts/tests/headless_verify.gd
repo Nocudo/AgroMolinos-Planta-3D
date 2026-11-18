@@ -175,14 +175,14 @@ func _qa_3_tutorial_epp_loto_stations() -> void:
 			ok = false
 	ok = _assert_true(tut.is_loto_complete(), "LOTO debe quedar completo tras Reglas 1..5") and ok
 
-	for sid in range(1, 13):
+	for sid in range(1, tut.STATIONS.size() + 1):
 		tut.visit_station(sid)
 	ok = _assert_true(is_equal_approx(tut.get_progress_pct(), 100.0) and tut.induction_certified,
-		"Tutorial debe certificar 12/12 estaciones (%.1f%%, epp=%s, loto=%s)" % [tut.get_progress_pct(), str(tut.epp_completed), str(tut.is_loto_complete())]) and ok
+		"Tutorial debe certificar %d/%d estaciones (%.1f%%, epp=%s, loto=%s)" % [tut.STATIONS.size(), tut.STATIONS.size(), tut.get_progress_pct(), str(tut.epp_completed), str(tut.is_loto_complete())]) and ok
 
 	tut.free()
 	entrance.free()
-	_report_qa(3, "Tutorial RETIE: Portería, Guía, Ropa EPP (6/6), LOTO 5 Reglas, Guía Suelo y 12 Estaciones", ok)
+	_report_qa(3, "Tutorial RETIE: Portería, Guía, Ropa EPP (6/6), LOTO 5 Reglas, Guía Suelo y %d Estaciones" % TutorialInductionManagerScript.STATIONS.size(), ok)
 
 func _qa_4_animated_production_logistics() -> void:
 	var prod_scene := ResourceLoader.load("res://scenes/production/ProductionChainFlow.tscn") as PackedScene
@@ -760,7 +760,7 @@ func _qa_10_main_scene_integration() -> void:
 			ok = _assert_true(float(guide.max_step_height) <= 0.35,
 				"WorkerSafetyAuditor max_step_height debe ser <= 0.35 para no trepar muros (actual=%.2f)" % float(guide.max_step_height)) and ok
 			var prev_idx: int = -1
-			for sid in range(1, 13):
+			for sid in range(1, TutorialInductionManagerScript.STATIONS.size() + 1):
 				var cur_idx: int = int(TutorialInductionManagerScript.STATION_TO_ROUTE_IDX.get(sid, -1))
 				ok = _assert_true(cur_idx > prev_idx, "STATION_TO_ROUTE_IDX[%d]=%d debe avanzar secuencialmente tras %d" % [sid, cur_idx, prev_idx]) and ok
 				prev_idx = cur_idx
@@ -1161,7 +1161,31 @@ func _qa_10_main_scene_integration() -> void:
 				if rp.x >= -31.5 and rp.x <= -17.2 and rp.z >= 22.0 and rp.z <= 48.8:
 					enters_nave = true
 			ok = _assert_true(not enters_nave, "Ruta hacia Vestidores (0..15) no debe cruzar la Nave de Producción") and ok
-			# Verificar botón Saltar Tutorial + teletransporte a Estación 12
+			# Verificar que la ruta completa del recorrido (TOUR_ROUTE_POINTS) nunca cruza líneas de seguridad (Zone1/2/6/8/9)
+			var tour_hazard_hits := 0
+			var hz_rects: Array[Rect2] = []
+			for hzn in ["Zone1_Milling_OSHA", "Zone2_CCM460V_RETIE", "Zone6_DispatchBay", "Zone8_IntakeConveyor_OSHA", "Zone9_AirThermal_OSHA"]:
+				var hzn_node := inst.find_child(hzn, true, false) as Node3D
+				if hzn_node != null:
+					var hcol := hzn_node.find_child("CollisionShape3D", true, false) as CollisionShape3D
+					if hcol != null and hcol.shape is BoxShape3D:
+						var hsz: Vector3 = (hcol.shape as BoxShape3D).size
+						hz_rects.append(Rect2(hzn_node.global_position.x - hsz.x * 0.5, hzn_node.global_position.z - hsz.z * 0.5, hsz.x, hsz.z))
+			for seg_i in range(r_ext.size() - 1):
+				var sp0: Vector3 = r_ext[seg_i]
+				var sp1: Vector3 = r_ext[seg_i + 1]
+				var n_sub := maxi(1, int(ceil(sp0.distance_to(sp1) / 0.25)))
+				for sub_k in range(n_sub + 1):
+					var smp := sp0.lerp(sp1, float(sub_k) / float(n_sub))
+					var pt_xz := Vector2(smp.x, smp.z)
+					for hr in hz_rects:
+						if hr.has_point(pt_xz):
+							tour_hazard_hits += 1
+							break
+			ok = _assert_true(tour_hazard_hits == 0,
+				"La ruta guiada TOUR_ROUTE_POINTS no debe cruzar ninguna zona de seguridad OSHA/RETIE (cruces=%d)" % tour_hazard_hits) and ok
+
+			# Verificar botón Saltar Tutorial + teletransporte a la estación final (Estación 19 exterior)
 			var btn_skip := hud_ctrl.find_child("BtnSkipTutorial", true, false) as Button
 			var btn_skip_hud := hud_ctrl.find_child("BtnSkipTutorialHUD", true, false) as Button
 			ok = _assert_true(btn_skip != null and btn_skip_hud != null, "Deben existir botones visibles Saltar Tutorial en Briefing y HUD") and ok
@@ -1172,14 +1196,16 @@ func _qa_10_main_scene_integration() -> void:
 			tut_node._start_exterior_narration()
 			ok = _assert_true(bool(tut_node.get("_narration_active")) == true, "Locución exterior sincronizada debe activarse rumbo a Vestidores") and ok
 			tut_node.skip_tutorial_to_final_station()
-			ok = _assert_true(bool(tut_node.get("tutorial_skipped")) and int(tut_node.target_station_id) == 12 and bool(tut_node.epp_completed) and tut_node.visited_stations.size() >= 11,
-				"Saltar Tutorial debe inicializar estado en Estación 12 con EPP completo (%s)" % str(tut_node.get_state_summary())) and ok
-			ok = _assert_true(Vector2(player.global_position.x + 18.8, player.global_position.z - 40.5).length() <= 1.0,
-				"Saltar Tutorial debe teletransportar a Estación 12 (-18.8, 40.5), actual: %s" % str(player.global_position)) and ok
+			var total_st_n: int = tut_node.STATIONS.size()
+			var final_st_pos: Vector3 = tut_node.TOUR_ROUTE_POINTS[tut_node.TOUR_ROUTE_POINTS.size() - 1]
+			ok = _assert_true(bool(tut_node.get("tutorial_skipped")) and int(tut_node.target_station_id) == total_st_n and bool(tut_node.epp_completed) and tut_node.visited_stations.size() >= total_st_n - 1,
+				"Saltar Tutorial debe inicializar estado en Estación %d con EPP completo (%s)" % [total_st_n, str(tut_node.get_state_summary())]) and ok
+			ok = _assert_true(Vector2(player.global_position.x - final_st_pos.x, player.global_position.z - final_st_pos.z).length() <= 1.0,
+				"Saltar Tutorial debe teletransportar a Estación %d (%s), actual: %s" % [total_st_n, str(final_st_pos), str(player.global_position)]) and ok
 			var gl_after := tut_node.find_child("TourFloorGuideLine", true, false) as MeshInstance3D
 			ok = _assert_true(gl_after == null or not gl_after.visible, "Sin línea azul ni guía residual tras saltar tutorial") and ok
 
-			# Regresión: Glow progresivo por zona -> Blanco post-tutorial + Amarillo warning + Rojo detenida + X-Ray tras paredes
+			# Regresión: Glow progresivo máquina por máquina (Zona de Carga -> Interior -> Exterior) en BLUE_PULSE no seleccionable -> Blanco post-tutorial + X-Ray
 			if glow_ctrl != null:
 				tut_node.tutorial_skipped = false
 				tut_node.induction_certified = false
@@ -1187,7 +1213,20 @@ func _qa_10_main_scene_integration() -> void:
 				tut_node.is_briefing_active = false
 				tut_node.briefing_completed = true
 				tut_node.sst_course_active = false
-				tut_node.target_station_id = 4
+
+				# Estación 3: Zona de Carga (Banda de Descarga 01)
+				tut_node.target_station_id = 3
+				glow_ctrl.refresh_highlights(true)
+				glow_ctrl.set_hovered_machine_group("banda_descarga")
+				ok = _assert_true(
+					glow_ctrl.get_group_state("banda_descarga") == "BLUE_PULSE"
+					and glow_ctrl.get_group_state("motor") == "HIDDEN"
+					and not glow_ctrl.has_active_green_selection(),
+					"En Estación 3 (Zona de Carga) Banda 01 debe tener glow BLUE_PULSE no seleccionable"
+				) and ok
+
+				# Estación 10: Tablero CCM 460 V
+				tut_node.target_station_id = 10
 				glow_ctrl.refresh_highlights(true)
 				var gs_s4: Dictionary = glow_ctrl.get_glow_summary()
 				glow_ctrl.set_hovered_machine_group("breaker")
@@ -1197,20 +1236,34 @@ func _qa_10_main_scene_integration() -> void:
 					and glow_ctrl.get_group_state("motor") == "HIDDEN"
 					and not glow_ctrl.has_active_green_selection()
 					and glow_ctrl.get_hover_selection_prompt(2) == "",
-					"En Estación 4 del tutorial solo Tablero CCM debe tener glow azul parpadeante (BLUE_PULSE) no seleccionable (%s)" % str(gs_s4.get("group_states"))
+					"En Estación 10 del tutorial solo Tablero CCM debe tener glow azul parpadeante (BLUE_PULSE) no seleccionable (%s)" % str(gs_s4.get("group_states"))
 				) and ok
 
-				tut_node.target_station_id = 5
+				# Estación 8: Motor 10 HP
+				tut_node.target_station_id = 8
 				glow_ctrl.refresh_highlights(true)
 				glow_ctrl.set_hovered_machine_group("motor")
 				ok = _assert_true(
 					glow_ctrl.get_group_state("motor") == "BLUE_PULSE"
 					and glow_ctrl.get_group_state("breaker") == "HIDDEN"
 					and not glow_ctrl.has_active_green_selection(),
-					"En Estación 5 del tutorial solo Motor/Molinos deben tener glow BLUE_PULSE sin volverse verde al apuntar"
+					"En Estación 8 del tutorial solo Motor 10 HP debe tener glow BLUE_PULSE sin volverse verde al apuntar"
+				) and ok
+
+				# Estación 19: Ductos de Aire (Exterior)
+				tut_node.target_station_id = 19
+				glow_ctrl.refresh_highlights(true)
+				glow_ctrl.set_hovered_machine_group("ductos_aire")
+				ok = _assert_true(
+					glow_ctrl.get_group_state("ductos_aire") == "BLUE_PULSE"
+					and glow_ctrl.get_group_state("motor") == "HIDDEN"
+					and not glow_ctrl.has_active_green_selection(),
+					"En Estación 19 (Exterior) solo Ductos de Aire debe tener glow BLUE_PULSE no seleccionable"
 				) and ok
 
 				tut_node.skip_tutorial_to_final_station()
+				# Posicionar jugador en pasillo central para auditar visibilidad cercana de los 5 grupos de shells WHITE
+				player.global_position = Vector3(-18.69, 0.85, 40.5)
 				glow_ctrl.refresh_highlights(true)
 				var gs_post: Dictionary = glow_ctrl.get_glow_summary()
 				ok = _assert_true(bool(gs_post.get("post_tutorial", false)) and bool(gs_post.get("xray_enabled", false)),

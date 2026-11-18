@@ -1352,10 +1352,11 @@ func _sync_live_plant_context() -> void:
 		var scorecard := r.find_child("SafetyEvaluationScorecard", true, false)
 		var p_lbl: Label = _workers_handles["player_lbl"]
 		var st_idx: int = int(tour.get("current_station_idx")) if tour != null else 1
+		var st_total: int = tour.STATIONS.size() if (tour != null and "STATIONS" in tour) else 19
 		var epp_ok: bool = bool(tour.get("epp_completed")) if tour != null else false
 		var sc_val: float = float(scorecard.get("score")) if scorecard != null else 5.0
 		var tool_name: String = str(player.get("current_tool_name")) if (player != null and player.get("current_tool_name") != null) else "Manos / Herramienta"
-		p_lbl.text = "Operario Activo (Jugador): Estación %d/12 | EPP RETIE: %s | Herramienta: %s | Nota: %.1f/5.0" % [st_idx, "COMPLETO" if epp_ok else "PENDIENTE", tool_name, sc_val]
+		p_lbl.text = "Operario Activo (Jugador): Estación %d/%d | EPP RETIE: %s | Herramienta: %s | Nota: %.1f/5.0" % [st_idx, st_total, "COMPLETO" if epp_ok else "PENDIENTE", tool_name, sc_val]
 
 		var w_cards: Dictionary = _workers_handles["worker_cards"]
 		for spec in TCatalog.PLANT_WORKERS_SPEC:
@@ -1379,14 +1380,15 @@ func _sync_live_plant_context() -> void:
 				var done := bool(st_arr[i].get("done", false))
 				TTheme.set_badge_state(badges[i]["panel"], badges[i]["label"], "✔ COMPLETADA" if done else "PENDIENTE", "NORMAL" if done else "WARNING")
 
-	# Sincronizar 12 estaciones en Tab 8
+	# Sincronizar estaciones del recorrido en Tab 8
 	if not _cctv_handles.is_empty():
 		var tour := r.find_child("TutorialInductionManager", true, false)
 		if tour != null:
 			var visited: Dictionary = tour.get("visited_stations") if tour.get("visited_stations") != null else {}
 			var curr_id: int = int(tour.get("target_station_id")) if tour.get("target_station_id") != null else 2
 			var sls: Array = _cctv_handles["station_labels"]
-			for i in range(mini(12, sls.size())):
+			var st_tot: int = tour.STATIONS.size() if "STATIONS" in tour else sls.size()
+			for i in range(mini(st_tot, sls.size())):
 				var sid := i + 1
 				var l: Label = sls[i]
 				if visited.has(sid):
