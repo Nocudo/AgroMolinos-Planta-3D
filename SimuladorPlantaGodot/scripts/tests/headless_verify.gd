@@ -1556,6 +1556,17 @@ func _qa_10_main_scene_integration() -> void:
 							tut_node._stop_exterior_narration()
 							tut_node.tutorial_skipped = saved_skip
 							tut_node.epp_completed = saved_epp
+						# Regresión: Indicador superior centrado de ubicación en tiempo real (solo ubicación)
+						var loc_banner := hud_ctrl.find_child("LocationTopBanner", true, false) as Control
+						ok = _assert_true(
+							loc_banner != null and loc_banner.visible
+							and hud_ctrl.resolve_plant_location(Vector3(52.0, 0.1, 34.0)) == "Portería"
+							and hud_ctrl.resolve_plant_location(Vector3(27.0, 0.4, 33.0)) == "Sala de Reuniones"
+							and hud_ctrl.resolve_plant_location(Vector3(-15.5, 0.8, 47.6)) == "Vestidores EPP"
+							and hud_ctrl.resolve_plant_location(Vector3(-25.5, 0.8, 41.0)) == "Zona de Molienda 10 HP"
+							and hud_ctrl.resolve_plant_location(Vector3(-36.0, 0.8, 35.0)) == "Zona de Aire y Térmica",
+							"LocationTopBanner centrado arriba debe resolver ubicaciones en tiempo real de toda la planta"
+						) and ok
 
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:

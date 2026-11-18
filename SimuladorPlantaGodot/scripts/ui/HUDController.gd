@@ -58,6 +58,11 @@ var _hotbar_avatar = null
 var _controls_tips_card: PanelContainer = null
 var _notification_stack: VBoxContainer = null
 var _notification_entries: Array[Dictionary] = []
+var _location_banner: PanelContainer = null
+var _location_label: Label = null
+var _location_poll_timer: float = 0.0
+var _location_player_ref: Node3D = null
+var _last_location_name: String = ""
 
 const MAX_STACKED_NOTIFICATIONS: int = 5
 const NOTIFICATION_DURATION_S: float = 4.2
@@ -73,6 +78,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_mouse_filter_recursive(self)
 	_setup_hotbar_and_avatar()
+	_setup_location_top_banner()
 	_setup_controls_tips_card()
 	_setup_notification_stack()
 	_setup_dialogue_panel()
@@ -167,6 +173,7 @@ func _process(delta: float) -> void:
 		if toast_timer <= 0.0 and toast_panel != null:
 			toast_panel.visible = false
 	_update_notification_stack(delta)
+	_update_realtime_location(delta)
 	if _dialogue_timer > 0.0:
 		_dialogue_timer -= delta
 		if _dialogue_timer <= 0.0 and _dialogue_panel != null and not _dialogue_keep_open:
@@ -179,6 +186,101 @@ func _process(delta: float) -> void:
 		_safety_line_pulse_t += delta * 7.5
 		var s_alpha := 0.80 + 0.20 * sin(_safety_line_pulse_t)
 		_safety_line_banner.modulate = Color(1.0, 1.0, 1.0, s_alpha)
+
+func _setup_location_top_banner() -> void:
+	_location_banner = PanelContainer.new()
+	_location_banner.name = "LocationTopBanner"
+	_location_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_location_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_location_banner.anchor_left = 0.5
+	_location_banner.anchor_right = 0.5
+	_location_banner.anchor_top = 0.0
+	_location_banner.anchor_bottom = 0.0
+	_location_banner.offset_left = -140.0
+	_location_banner.offset_right = 140.0
+	_location_banner.offset_top = 10.0
+	_location_banner.offset_bottom = 40.0
+	_location_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.05, 0.09, 0.15, 0.88)
+	st.border_color = Color(1.0, 0.80, 0.22, 0.88)
+	st.set_border_width_all(1)
+	st.set_corner_radius_all(8)
+	st.content_margin_left = 18.0
+	st.content_margin_right = 18.0
+	st.content_margin_top = 5.0
+	st.content_margin_bottom = 5.0
+	_location_banner.add_theme_stylebox_override("panel", st)
+	add_child(_location_banner)
+
+	_location_label = Label.new()
+	_location_label.name = "LocationBannerLabel"
+	_location_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_location_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_location_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_location_label.add_theme_font_size_override("font_size", 13)
+	_location_label.add_theme_color_override("font_color", Color(1.0, 0.86, 0.34, 1.0))
+	_location_label.text = "Portería"
+	_location_banner.add_child(_location_label)
+	_last_location_name = "Portería"
+
+func resolve_plant_location(p: Vector3) -> String:
+	if p.x >= 45.0 and p.z >= 25.0 and p.z <= 46.0:
+		return "Portería"
+	if p.x >= 21.5 and p.x <= 30.8 and p.z >= 29.0 and p.z <= 38.5:
+		return "Sala de Reuniones"
+	if p.x >= 11.5 and p.x <= 44.5 and p.z >= 20.5 and p.z <= 51.5:
+		return "Oficinas Administrativas"
+	if p.x >= -18.0 and p.x <= -12.6 and p.z >= 44.6 and p.z <= 50.2:
+		return "Vestidores EPP"
+	if p.x >= -21.8 and p.x <= -19.2 and p.z >= 37.0 and p.z <= 40.0:
+		return "Tablero CCM 460 V"
+	if p.x >= -22.2 and p.x <= -19.4 and p.z >= 41.2 and p.z <= 44.0:
+		return "Esclusa Norte"
+	if p.x >= -19.65 and p.x <= -17.70 and p.z >= 23.5 and p.z <= 49.4:
+		return "Pasillo Peatonal"
+	if p.x >= -29.2 and p.x <= -22.5 and p.z >= 44.6 and p.z <= 49.4:
+		return "Tolva de Recepción"
+	if p.x >= -30.8 and p.x <= -20.5 and p.z >= 35.2 and p.z <= 44.6:
+		return "Zona de Molienda 10 HP"
+	if p.x >= -30.8 and p.x <= -20.5 and p.z >= 29.2 and p.z <= 35.2:
+		return "Ciclones y Secado ATEX"
+	if p.x >= -30.8 and p.x <= -20.5 and p.z >= 23.5 and p.z <= 29.2:
+		return "Almacén de Sacos"
+	if p.x >= -31.2 and p.x <= -18.0 and p.z >= 20.5 and p.z <= 23.5:
+		return "Rampa Sur"
+	if p.x >= -31.2 and p.x <= -18.0 and p.z >= 23.5 and p.z <= 49.5:
+		return "Nave de Producción"
+	if p.x >= -41.2 and p.x <= -31.2 and p.z >= 27.5 and p.z <= 40.5:
+		return "Zona de Aire y Térmica"
+	if p.x >= -33.0 and p.x <= -26.8 and p.z >= 49.2 and p.z <= 54.0:
+		return "Bandas de Descarga"
+	if p.x >= -42.5 and p.x <= -33.0 and p.z >= 49.5 and p.z <= 56.5:
+		return "Bahía de Despacho"
+	if p.x >= -26.8 and p.x <= -11.0 and p.z >= 49.5 and p.z <= 55.2:
+		return "Bahía Norte"
+	if p.z >= 52.0:
+		return "Patio Norte"
+	return "Patio Exterior"
+
+func _update_realtime_location(delta: float) -> void:
+	_location_poll_timer += delta
+	if _location_poll_timer < 0.18:
+		return
+	_location_poll_timer = 0.0
+	if not is_inside_tree() or _location_label == null:
+		return
+	if _location_player_ref == null or not is_instance_valid(_location_player_ref):
+		_location_player_ref = get_tree().root.find_child("PlayerOperator", true, false) as Node3D
+	if _location_player_ref == null:
+		return
+	var loc := resolve_plant_location(_location_player_ref.global_position)
+	if loc != _last_location_name:
+		_last_location_name = loc
+		_location_label.text = loc
+
+func get_current_location_label() -> String:
+	return _location_label.text if _location_label != null else ""
 
 func _setup_controls_tips_card() -> void:
 	_controls_tips_card = PanelContainer.new()
@@ -432,8 +534,14 @@ func show_npc_dialogue(speaker: String, dialogue_text: String, duration: float =
 		_dialogue_speaker.text = _sanitize_plain_text(speaker)
 	if _dialogue_body != null:
 		_dialogue_body.text = _sanitize_plain_text(dialogue_text)
-	_dialogue_panel.visible = true
-	_dialogue_timer = duration
+	# El panel inferior solo se muestra durante la conversación interactiva de subtítulos con el SST;
+	# la ubicación actual en tiempo real siempre se muestra arriba al centro en LocationTopBanner.
+	if _dialogue_keep_open:
+		_dialogue_panel.visible = true
+		_dialogue_timer = duration
+	else:
+		_dialogue_panel.visible = false
+		_dialogue_timer = 0.0
 
 func set_dialogue_choices(options: Array, active_id: String, asked_ids: Array, callback: Callable) -> void:
 	if _dialogue_choices_row == null:
@@ -497,6 +605,8 @@ func clear_dialogue_choices() -> void:
 		for ch in _dialogue_choices_row.get_children():
 			_dialogue_choices_row.remove_child(ch)
 			ch.queue_free()
+	if _dialogue_panel != null:
+		_dialogue_panel.visible = false
 
 func _setup_dialogue_panel() -> void:
 	_dialogue_panel = PanelContainer.new()
@@ -564,8 +674,8 @@ func _setup_tablet_notify_legend() -> void:
 	_tablet_notify_legend.anchor_bottom = 0.0
 	_tablet_notify_legend.offset_left = -200.0
 	_tablet_notify_legend.offset_right = 200.0
-	_tablet_notify_legend.offset_top = 12.0
-	_tablet_notify_legend.offset_bottom = 56.0
+	_tablet_notify_legend.offset_top = 48.0
+	_tablet_notify_legend.offset_bottom = 92.0
 	_tablet_notify_legend.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_tablet_notify_legend)
 
@@ -669,8 +779,8 @@ func _setup_safety_line_banner() -> void:
 	_safety_line_banner.anchor_bottom = 0.0
 	_safety_line_banner.offset_left = -210.0
 	_safety_line_banner.offset_right = 210.0
-	_safety_line_banner.offset_top = 62.0
-	_safety_line_banner.offset_bottom = 102.0
+	_safety_line_banner.offset_top = 98.0
+	_safety_line_banner.offset_bottom = 138.0
 	_safety_line_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_safety_line_banner.grow_vertical = Control.GROW_DIRECTION_END
 	var st := StyleBoxFlat.new()
