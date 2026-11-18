@@ -28,6 +28,10 @@ var toast_timer: float = 0.0
 var _dialogue_panel: PanelContainer = null
 var _dialogue_speaker: Label = null
 var _dialogue_body: Label = null
+var _dialogue_choices_row: HBoxContainer = null
+var _dialogue_choice_entries: Array[Dictionary] = []
+var _dialogue_choice_cb: Callable = Callable()
+var _dialogue_keep_open: bool = false
 var _dialogue_timer: float = 0.0
 var briefing_overlay: ColorRect = null
 var _briefing_title: Label = null
@@ -116,6 +120,22 @@ func _input(event: InputEvent) -> void:
 			if get_viewport() != null:
 				get_viewport().set_input_as_handled()
 			return
+		# Selección rápida de preguntas en conversación con el Supervisor SST durante el recorrido (teclas 6, 7, 8, 9)
+		if _dialogue_choices_row != null and _dialogue_choices_row.visible and not _dialogue_choice_entries.is_empty():
+			var tablet_n := get_tree().root.find_child("TabletRoot", true, false) if is_inside_tree() else null
+			var modal_open := (briefing_overlay != null and briefing_overlay.visible) or (tablet_n != null and bool(tablet_n.visible)) or (_course_modal != null and bool(_course_modal.visible))
+			if not modal_open and not get_tree().paused:
+				var kc := (event as InputEventKey).keycode
+				var key_map := {KEY_6: 6, KEY_KP_6: 6, KEY_7: 7, KEY_KP_7: 7, KEY_8: 8, KEY_KP_8: 8, KEY_9: 9, KEY_KP_9: 9}
+				if key_map.has(kc):
+					var chosen_num: int = int(key_map[kc])
+					for ce in _dialogue_choice_entries:
+						if int(ce.get("key_num", -1)) == chosen_num:
+							if _dialogue_choice_cb.is_valid():
+								_dialogue_choice_cb.call(str(ce.get("id", "")))
+							if get_viewport() != null:
+								get_viewport().set_input_as_handled()
+							return
 	if briefing_overlay == null or not briefing_overlay.visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -146,7 +166,7 @@ func _process(delta: float) -> void:
 	_update_notification_stack(delta)
 	if _dialogue_timer > 0.0:
 		_dialogue_timer -= delta
-		if _dialogue_timer <= 0.0 and _dialogue_panel != null:
+		if _dialogue_timer <= 0.0 and _dialogue_panel != null and not _dialogue_keep_open:
 			_dialogue_panel.visible = false
 	if _tablet_notify_legend != null and _tablet_notify_legend.visible:
 		_tablet_notify_pulse_t += delta * 5.0
@@ -406,11 +426,74 @@ func show_npc_dialogue(speaker: String, dialogue_text: String, duration: float =
 	if _dialogue_panel == null:
 		return
 	if _dialogue_speaker != null:
-		_dialogue_speaker.text = speaker
+		_dialogue_speaker.text = _sanitize_plain_text(speaker)
 	if _dialogue_body != null:
-		_dialogue_body.text = dialogue_text
+		_dialogue_body.text = _sanitize_plain_text(dialogue_text)
 	_dialogue_panel.visible = true
 	_dialogue_timer = duration
+
+func set_dialogue_choices(options: Array, active_id: String, asked_ids: Array, callback: Callable) -> void:
+	if _dialogue_choices_row == null:
+		return
+	_dialogue_choice_entries.clear()
+	_dialogue_choice_cb = callback
+	for ch in _dialogue_choices_row.get_children():
+		_dialogue_choices_row.remove_child(ch)
+		ch.queue_free()
+	if options.is_empty():
+		_dialogue_choices_row.visible = false
+		_dialogue_keep_open = false
+		return
+	_dialogue_keep_open = true
+	_dialogue_choices_row.visible = true
+	for opt_v in options:
+		var opt: Dictionary = opt_v
+		var tid: String = str(opt.get("id", ""))
+		var knum: int = int(opt.get("key_num", 0))
+		var lbl_txt: String = str(opt.get("label", tid))
+		var is_active: bool = (tid == active_id)
+		var is_asked: bool = asked_ids.has(tid)
+		_dialogue_choice_entries.append({"id": tid, "key_num": knum})
+
+		var btn := Button.new()
+		btn.name = "Choice_" + tid
+		btn.text = "%d  %s" % [knum, lbl_txt]
+		btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.add_theme_font_size_override("font_size", 11)
+		var bg := Color(0.08, 0.34, 0.44, 0.94) if is_active else (Color(0.07, 0.11, 0.16, 0.72) if is_asked else Color(0.08, 0.14, 0.22, 0.90))
+		var bd := Color(0.32, 0.90, 1.0, 0.98) if is_active else (Color(0.32, 0.42, 0.52, 0.55) if is_asked else Color(0.45, 0.78, 0.95, 0.78))
+		var fg := Color(1.0, 1.0, 1.0, 1.0) if is_active else (Color(0.62, 0.70, 0.78, 0.85) if is_asked else Color(0.92, 0.96, 1.0, 0.96))
+		var st := StyleBoxFlat.new()
+		st.bg_color = bg
+		st.border_color = bd
+		st.set_border_width_all(1)
+		st.set_corner_radius_all(5)
+		st.content_margin_left = 10.0
+		st.content_margin_right = 10.0
+		st.content_margin_top = 3.0
+		st.content_margin_bottom = 3.0
+		btn.add_theme_stylebox_override("normal", st)
+		btn.add_theme_stylebox_override("hover", st)
+		btn.add_theme_color_override("font_color", fg)
+		btn.add_theme_color_override("font_hover_color", Color.WHITE)
+		btn.pressed.connect(func():
+			if _dialogue_choice_cb.is_valid():
+				_dialogue_choice_cb.call(tid)
+		)
+		_dialogue_choices_row.add_child(btn)
+	if _dialogue_panel != null:
+		_dialogue_panel.visible = true
+
+func clear_dialogue_choices() -> void:
+	_dialogue_keep_open = false
+	_dialogue_choice_entries.clear()
+	_dialogue_choice_cb = Callable()
+	if _dialogue_choices_row != null:
+		_dialogue_choices_row.visible = false
+		for ch in _dialogue_choices_row.get_children():
+			_dialogue_choices_row.remove_child(ch)
+			ch.queue_free()
 
 func _setup_dialogue_panel() -> void:
 	_dialogue_panel = PanelContainer.new()
@@ -423,7 +506,7 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_panel.offset_left = 316.0
 	_dialogue_panel.offset_right = -316.0
 	_dialogue_panel.offset_bottom = -154.0
-	_dialogue_panel.offset_top = -222.0
+	_dialogue_panel.offset_top = -238.0
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color(0.05, 0.09, 0.15, 0.90)
 	st.border_color = Color(1.0, 0.80, 0.22, 0.92)
@@ -436,7 +519,7 @@ func _setup_dialogue_panel() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.add_theme_constant_override("separation", 6)
 	_dialogue_panel.add_child(vbox)
 
 	_dialogue_speaker = Label.new()
@@ -454,9 +537,17 @@ func _setup_dialogue_panel() -> void:
 	_dialogue_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dialogue_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dialogue_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_dialogue_body.add_theme_font_size_override("font_size", 15)
+	_dialogue_body.add_theme_font_size_override("font_size", 14)
 	_dialogue_body.add_theme_color_override("font_color", Color(0.95, 0.97, 1.0, 1.0))
 	vbox.add_child(_dialogue_body)
+
+	_dialogue_choices_row = HBoxContainer.new()
+	_dialogue_choices_row.name = "DialogueChoicesRow"
+	_dialogue_choices_row.visible = false
+	_dialogue_choices_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dialogue_choices_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_dialogue_choices_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(_dialogue_choices_row)
 
 func _setup_tablet_notify_legend() -> void:
 	_tablet_notify_legend = PanelContainer.new()

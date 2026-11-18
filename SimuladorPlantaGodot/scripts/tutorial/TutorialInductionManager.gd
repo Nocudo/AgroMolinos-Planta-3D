@@ -78,37 +78,57 @@ const TOUR_ROUTE_POINTS: Array[Vector3] = [
 	Vector3(-18.69, 0.83, 40.5)   # 48: Estación 12 - Centro SCADA y Certificación
 ]
 
-# Locución institucional exterior hacia Vestidores
+# Conversación natural con el Supervisor SST durante el recorrido (solo subtítulos, sin voz)
+const SST_COMPANY_TOPICS: Array[Dictionary] = [
+	{
+		"id": "historia",
+		"key_num": 6,
+		"label": "Historia",
+		"question": "¿Cómo empezó la historia de Agromolinos del Valle?",
+		"beats": [
+			"Nacimos hace más de quince años como un pequeño molino familiar fundado por productores locales de grano.",
+			"Con el tiempo fuimos modernizando la planta con automatización, variadores de frecuencia y monitoreo predictivo, sin perder la cercanía con el campo."
+		]
+	},
+	{
+		"id": "actividad",
+		"key_num": 7,
+		"label": "Qué hacen",
+		"question": "¿Qué hacen exactamente aquí en la planta?",
+		"beats": [
+			"Recibimos grano de fincas de la región, lo limpiamos, secamos y molemos en nuestra línea de 10 HP para obtener harinas y concentrados.",
+			"Después clasificamos el material en los ciclones, lo empacamos en sacos de 50 kilos y lo despachamos directo a distribuidores."
+		]
+	},
+	{
+		"id": "mision",
+		"key_num": 8,
+		"label": "Misión",
+		"question": "¿Cuál es la misión de la empresa?",
+		"beats": [
+			"Nuestra misión es transformar el grano regional en productos confiables mediante procesos seguros, eficientes y sostenibles.",
+			"Buscamos generar valor para los agricultores y clientes, cuidando siempre la integridad de cada persona que trabaja aquí."
+		]
+	},
+	{
+		"id": "vision",
+		"key_num": 9,
+		"label": "Visión",
+		"question": "¿Cuál es la visión de Agromolinos del Valle?",
+		"beats": [
+			"Queremos consolidarnos como la planta molinera referente en eficiencia energética e industria 4.0 de toda la región.",
+			"La meta es seguir reduciendo el consumo eléctrico por tonelada y llevar nuestra operación inteligente a nuevos mercados."
+		]
+	}
+]
+
+# Líneas de apertura y transición de la conversación exterior (solo subtítulos)
 const EXTERIOR_NARRATION_SEGMENTS: Array[Dictionary] = [
 	{
 		"min_progress": 0.0,
 		"min_elapsed": 0.0,
-		"speaker": "AGROMOLINOS · (1/5)",
-		"text": "Planta AgroMolinos: molienda de grano y ensacado."
-	},
-	{
-		"min_progress": 0.18,
-		"min_elapsed": 6.5,
-		"speaker": "AGROMOLINOS · (2/5)",
-		"text": "Motor M-101: 10 HP, 460 V, 1750 RPM IE3."
-	},
-	{
-		"min_progress": 0.40,
-		"min_elapsed": 13.5,
-		"speaker": "AGROMOLINOS · (3/5)",
-		"text": "Control DTC y monitoreo de temperatura y vibración."
-	},
-	{
-		"min_progress": 0.64,
-		"min_elapsed": 20.5,
-		"speaker": "AGROMOLINOS · (4/5)",
-		"text": "Mantenimiento predictivo IA en tablet [TAB]."
-	},
-	{
-		"min_progress": 0.84,
-		"min_elapsed": 27.5,
-		"speaker": "AGROMOLINOS · (5/5)",
-		"text": "VFD: -28% kWh/ton. Equipa EPP en lockers."
+		"speaker": "Supervisor SST",
+		"text": "Acompáñame por el sendero. Mientras caminamos, elige un tema abajo si quieres preguntarme sobre Agromolinos del Valle."
 	}
 ]
 
@@ -183,6 +203,10 @@ var _narration_idx: int = -1
 var _narration_elapsed: float = 0.0
 var _narration_chime_player: AudioStreamPlayer = null
 var _tts_voice_id: String = ""
+var _conv_active_topic_id: String = ""
+var _conv_beat_queue: Array[Dictionary] = []
+var _conv_beat_timer: float = 0.0
+var _conv_asked_topics: Array[String] = []
 var _tour_machines_started: bool = false
 
 func _ready() -> void:
@@ -292,6 +316,7 @@ func _start_sst_course_walk() -> void:
 		for p in MEETING_COURSE_ROUTE:
 			wps.append(p)
 		_guide_worker.set_guide_route(wps, MEETING_ROOM_POS)
+	_start_exterior_narration()
 	_rebuild_floor_guide_line()
 
 func _on_sst_course_completed_event(passed: bool, score: int, total: int) -> void:
@@ -940,20 +965,98 @@ func _start_exterior_narration() -> void:
 	_narration_active = true
 	_narration_idx = -1
 	_narration_elapsed = 0.0
+	_conv_active_topic_id = ""
+	_conv_beat_queue.clear()
+	_conv_beat_timer = 0.0
 	_select_spanish_tts_voice()
 	_play_narration_segment(0)
+	_sync_conversation_choices_ui()
 
 func _stop_exterior_narration() -> void:
 	_narration_active = false
+	_conv_active_topic_id = ""
+	_conv_beat_queue.clear()
+	_conv_beat_timer = 0.0
+	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+	if hud != null and hud.has_method("clear_dialogue_choices"):
+		hud.clear_dialogue_choices()
 
 func _select_spanish_tts_voice() -> void:
-	_tts_voice_id = "" # Desactivado: evita bloqueos/deadlocks de Windows SAPI COM al llegar a Vestidores
+	# Voz hablada desactivada: únicamente subtítulos en pantalla
+	_tts_voice_id = ""
+
+func _sync_conversation_choices_ui() -> void:
+	if not is_inside_tree():
+		return
+	var hud = get_tree().root.find_child("HUDController", true, false)
+	if hud == null or not hud.has_method("set_dialogue_choices"):
+		return
+	if not _narration_active or tutorial_skipped or epp_completed:
+		if hud.has_method("clear_dialogue_choices"):
+			hud.clear_dialogue_choices()
+		return
+	hud.set_dialogue_choices(
+		SST_COMPANY_TOPICS,
+		_conv_active_topic_id,
+		_conv_asked_topics,
+		Callable(self, "select_company_topic")
+	)
+
+func select_company_topic(topic_id: String) -> bool:
+	if not _narration_active or tutorial_skipped or epp_completed:
+		return false
+	var chosen: Dictionary = {}
+	for t in SST_COMPANY_TOPICS:
+		if str(t.get("id", "")) == topic_id:
+			chosen = t
+			break
+	if chosen.is_empty():
+		return false
+
+	_conv_active_topic_id = topic_id
+	if not _conv_asked_topics.has(topic_id):
+		_conv_asked_topics.append(topic_id)
+
+	_conv_beat_queue.clear()
+	_conv_beat_queue.append({
+		"speaker": "Tú",
+		"text": str(chosen.get("question", "")),
+		"dur": 2.4
+	})
+	var beats: Array = chosen.get("beats", [])
+	for b_txt in beats:
+		_conv_beat_queue.append({
+			"speaker": "Supervisor SST",
+			"text": str(b_txt),
+			"dur": 5.8
+		})
+	if _conv_asked_topics.size() >= SST_COMPANY_TOPICS.size():
+		_conv_beat_queue.append({
+			"speaker": "Supervisor SST",
+			"text": "Ya conoces bien quiénes somos en Agromolinos del Valle. Sigamos adelante con el recorrido.",
+			"dur": 5.0
+		})
+	_advance_conversation_beat()
+	_sync_conversation_choices_ui()
+	return true
+
+func _advance_conversation_beat() -> void:
+	if _conv_beat_queue.is_empty():
+		_conv_active_topic_id = ""
+		_conv_beat_timer = 0.0
+		_sync_conversation_choices_ui()
+		return
+	var beat: Dictionary = _conv_beat_queue.pop_front()
+	var dur: float = float(beat.get("dur", 5.5))
+	_conv_beat_timer = dur
+	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
+	if hud != null and hud.has_method("show_npc_dialogue"):
+		hud.show_npc_dialogue(str(beat.get("speaker", "Supervisor SST")), str(beat.get("text", "")), dur + 1.0)
 
 func _compute_exterior_walk_progress() -> float:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return 0.0
 	var p: Vector3 = _player_ref.global_position
-	# Progreso monótono aproximado del recorrido exterior Noreste -> Norte -> Rampa Vestidores
 	if p.z < 46.0 and p.x > 30.0:
 		return clampf((p.z - 34.0) / 20.0 * 0.25, 0.0, 0.25)
 	if p.z >= 46.0:
@@ -963,18 +1066,17 @@ func _compute_exterior_walk_progress() -> float:
 func _update_exterior_narration(delta: float) -> void:
 	if not _narration_active:
 		return
-	if tutorial_skipped or epp_completed or sst_course_active or target_station_id != 2:
+	if tutorial_skipped or epp_completed or (not sst_course_active and target_station_id != 2):
+		_stop_exterior_narration()
+		return
+	if sst_course_active and _course_modal_auto_opened:
 		_stop_exterior_narration()
 		return
 	_narration_elapsed += delta
-	var prog := _compute_exterior_walk_progress()
-	var desired := _narration_idx
-	for i in range(EXTERIOR_NARRATION_SEGMENTS.size()):
-		var seg: Dictionary = EXTERIOR_NARRATION_SEGMENTS[i]
-		if prog >= float(seg["min_progress"]) or _narration_elapsed >= float(seg["min_elapsed"]):
-			desired = maxi(desired, i)
-	if desired > _narration_idx:
-		_play_narration_segment(desired)
+	if _conv_beat_timer > 0.0:
+		_conv_beat_timer -= delta
+		if _conv_beat_timer <= 0.0:
+			_advance_conversation_beat()
 
 func _play_narration_segment(idx: int) -> void:
 	if idx < 0 or idx >= EXTERIOR_NARRATION_SEGMENTS.size():
@@ -985,15 +1087,7 @@ func _play_narration_segment(idx: int) -> void:
 	var text: String = str(seg["text"])
 	var hud = get_tree().root.find_child("HUDController", true, false) if is_inside_tree() else null
 	if hud != null and hud.has_method("show_npc_dialogue"):
-		hud.show_npc_dialogue(speaker, text, 9.5)
-	if _narration_chime_player == null and is_inside_tree():
-		_narration_chime_player = AudioStreamPlayer.new()
-		_narration_chime_player.name = "ExteriorNarrationChime"
-		_narration_chime_player.volume_db = -10.0
-		_narration_chime_player.stream = SoundSynth.create_station_chime_sound()
-		add_child(_narration_chime_player)
-	if _narration_chime_player != null and is_instance_valid(_narration_chime_player):
-		_narration_chime_player.play()
+		hud.show_npc_dialogue(speaker, text, 14.0)
 
 func _exit_tree() -> void:
 	if _narration_chime_player != null and is_instance_valid(_narration_chime_player):

@@ -1533,6 +1533,29 @@ func _qa_10_main_scene_integration() -> void:
 								tips_card != null and n_cnt >= 2 and last_lbl != null and last_lbl.text == "Prueba B",
 								"Pila de notificaciones debe apilar sin emojis dejando la más actual abajo (cnt=%d, last=%s)" % [n_cnt, last_lbl.text if last_lbl != null else ""]
 							) and ok
+						# Regresión: Conversación interactiva con SST (Historia, Qué hacen, Misión, Visión) solo subtítulos sin voz
+						if tut_node != null:
+							var saved_skip := bool(tut_node.tutorial_skipped)
+							var saved_epp := bool(tut_node.epp_completed)
+							tut_node.tutorial_skipped = false
+							tut_node.epp_completed = false
+							tut_node.target_station_id = 2
+							tut_node._start_exterior_narration()
+							var choices_row := hud_ctrl.find_child("DialogueChoicesRow", true, false) as HBoxContainer
+							ok = _assert_true(
+								choices_row != null and choices_row.visible and choices_row.get_child_count() == 4 and str(tut_node.get("_tts_voice_id")) == "",
+								"Conversación SST debe mostrar 4 opciones de empresa (Historia/Qué hacen/Misión/Visión) solo subtítulos sin voz"
+							) and ok
+							var asked_ok := bool(tut_node.select_company_topic("mision"))
+							tut_node._advance_conversation_beat()
+							var dlg_b := hud_ctrl.find_child("DialogueBody", true, false) as Label
+							ok = _assert_true(
+								asked_ok and dlg_b != null and dlg_b.text.to_lower().contains("misión"),
+								"Elegir tema Misión debe mostrar respuesta conversacional en subtítulos (%s)" % (dlg_b.text if dlg_b != null else "")
+							) and ok
+							tut_node._stop_exterior_narration()
+							tut_node.tutorial_skipped = saved_skip
+							tut_node.epp_completed = saved_epp
 
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
