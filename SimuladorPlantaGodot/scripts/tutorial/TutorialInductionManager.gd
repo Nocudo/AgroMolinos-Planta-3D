@@ -694,8 +694,10 @@ func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 	if all_equipped:
 		if _no_epp_intrusion_active:
 			_clear_no_epp_interception(true)
-		visit_station(2)
-		_advance_tour_target(3)
+		# Nunca reiniciar el recorrido si el tour ya finalizó, fue saltado o ya superó Vestidores
+		if not is_tour_completed() and target_station_id <= 2 and current_station_idx <= 2:
+			visit_station(2)
+			_advance_tour_target(3)
 	_notify_glow_controller()
 
 func is_player_wearing_epp() -> bool:

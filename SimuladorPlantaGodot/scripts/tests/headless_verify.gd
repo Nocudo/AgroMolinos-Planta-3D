@@ -2235,6 +2235,26 @@ func _qa_10_main_scene_integration() -> void:
 				if sim_mgr.has_method("set_emergency_stop"):
 					sim_mgr.set_emergency_stop(false, "QA_MGR_TEST")
 
+			# Regresión: Re-equiparse el traje EPP después de terminar el tour NO debe reiniciar el recorrido ni mover al guía
+			var lk_post := inst.find_child("LockerEPPStation", true, false)
+			if tut_node != null and lk_post != null and guide != null and hud_ctrl != null:
+				if not tut_node.is_tour_completed():
+					tut_node.skip_tutorial_to_final_station()
+				var st_total: int = tut_node.STATIONS.size()
+				var dlg_body_post := hud_ctrl.find_child("DialogueBody", true, false) as Label
+				if dlg_body_post != null:
+					dlg_body_post.text = ""
+				lk_post.set_epp_equipped(false)
+				lk_post.set_epp_equipped(true)
+				var g_line_post := inst.find_child("TourFloorGuideLine", true, false) as Node3D
+				var restarted_dlg: bool = (dlg_body_post != null and dlg_body_post.text.contains("empezar el recorrido"))
+				ok = _assert_true(
+					tut_node.is_tour_completed() and int(tut_node.target_station_id) == st_total and not bool(guide.guide_has_target) and (g_line_post == null or not g_line_post.visible) and not restarted_dlg,
+					"Re-equipar traje EPP tras completar el tour NO debe reiniciar el recorrido (target=%d, guide_moving=%s, dlg=%s)" % [
+						int(tut_node.target_station_id), str(guide.guide_has_target), dlg_body_post.text if dlg_body_post else ""
+					]
+				) and ok
+
 		for ap in inst.find_children("*", "AudioStreamPlayer", true, false):
 			if ap is AudioStreamPlayer:
 				(ap as AudioStreamPlayer).stop()

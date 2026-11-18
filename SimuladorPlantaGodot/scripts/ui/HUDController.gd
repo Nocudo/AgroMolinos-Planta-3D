@@ -610,12 +610,16 @@ func _sync_hotbar_initial_state() -> void:
 func _on_epp_state_changed(all_equipped: bool, _items: Dictionary) -> void:
 	if _hotbar_avatar != null and _hotbar_avatar.has_method("set_epp_equipped"):
 		_hotbar_avatar.set_epp_equipped(all_equipped, true)
+	var tut := get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	var tour_done: bool = (tut != null and tut.has_method("is_tour_completed") and bool(tut.is_tour_completed()))
+	var past_vestidores: bool = (tut != null and int(tut.get("current_station_idx")) > 2)
 	if all_equipped:
-		show_npc_dialogue(
-			"Carlos Mendoza (Supervisor SST):",
-			"Perfecto, ya quedaste bien equipado con tu protección. Ahora vamos a la zona de carga para empezar el recorrido máquina por máquina.",
-			5.0
-		)
+		if not tour_done and not past_vestidores:
+			show_npc_dialogue(
+				"Carlos Mendoza (Supervisor SST):",
+				"Perfecto, ya quedaste bien equipado con tu protección. Ahora vamos a la zona de carga para empezar el recorrido máquina por máquina.",
+				5.0
+			)
 	elif _dialogue_panel != null and not _dialogue_keep_open:
 		_dialogue_panel.visible = false
 
