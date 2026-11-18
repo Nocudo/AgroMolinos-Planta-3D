@@ -76,54 +76,136 @@ class HardwareArchitectureCanvas extends Control:
 	func _draw() -> void:
 		var w := size.x
 		var h := size.y
-		if w < 100.0 or h < 60.0:
+		if w < 120.0 or h < 90.0:
 			return
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.035, 0.055, 0.095, 1.0), true)
 
 		var font := ThemeDB.fallback_font
-		var mid := w * 0.50
-		var box_left := Rect2(8.0, 6.0, mid - 14.0, h - 12.0)
-		var box_right := Rect2(mid + 6.0, 6.0, mid - 14.0, h - 12.0)
-		draw_rect(box_left, Color(0.05, 0.09, 0.16, 0.85), true)
-		draw_rect(box_left, Color(0.14, 0.42, 0.72, 0.8), false, 1.2)
-		draw_rect(box_right, Color(0.09, 0.05, 0.08, 0.75), true)
-		draw_rect(box_right, Color(0.68, 0.22, 0.26, 0.8), false, 1.2)
+		var pad_x := 8.0
+		var gap_mid := 18.0
+		var panel_w := (w - pad_x * 2.0 - gap_mid) * 0.5
+		var box_left := Rect2(pad_x, 6.0, panel_w, h - 12.0)
+		var box_right := Rect2(pad_x + panel_w + gap_mid, 6.0, panel_w, h - 12.0)
 
+		draw_rect(box_left, Color(0.05, 0.09, 0.16, 0.88), true)
+		draw_rect(box_left, Color(0.14, 0.42, 0.72, 0.85), false, 1.4)
+		draw_rect(box_right, Color(0.09, 0.05, 0.08, 0.82), true)
+		draw_rect(box_right, Color(0.68, 0.22, 0.26, 0.85), false, 1.4)
+
+		# Encabezados con separación amplia del área de bloques (nunca cruzados por líneas)
+		var header_h := 28.0
+		draw_line(
+			Vector2(box_left.position.x + 8.0, box_left.position.y + header_h),
+			Vector2(box_left.end.x - 8.0, box_left.position.y + header_h),
+			Color(0.14, 0.42, 0.72, 0.35), 1.0
+		)
+		draw_line(
+			Vector2(box_right.position.x + 8.0, box_right.position.y + header_h),
+			Vector2(box_right.end.x - 8.0, box_right.position.y + header_h),
+			Color(0.68, 0.22, 0.26, 0.35), 1.0
+		)
 		if font != null:
-			draw_string(font, Vector2(box_left.position.x + 10, 22), "ETAPA CONTROL & EDGE AI (3.3 V / 5 V DC · CloudIoTBridge)", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.22, 0.74, 0.97))
-			draw_string(font, Vector2(box_right.position.x + 10, 22), "ETAPA POTENCIA TRIFÁSICA (460 V AC · MOLINO M-101 10 HP)", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.95, 0.42, 0.42))
+			draw_string(font, Vector2(box_left.position.x + 12.0, box_left.position.y + 19.0), "ETAPA CONTROL & EDGE AI (3.3 V / 5 V DC · CloudIoTBridge)", HORIZONTAL_ALIGNMENT_LEFT, panel_w - 20.0, 11, Color(0.28, 0.78, 1.0))
+			draw_string(font, Vector2(box_right.position.x + 12.0, box_right.position.y + 19.0), "ETAPA POTENCIA TRIFÁSICA (460 V AC · MOLINO M-101 10 HP)", HORIZONTAL_ALIGNMENT_LEFT, panel_w - 20.0, 11, Color(0.98, 0.44, 0.44))
 
-		var sx: float = clampf(box_left.size.x / 540.0, 0.72, 1.15)
-		# Cajas izquierda: Sensores -> Nodo IoT/ESP32 -> Actuador/IA
-		_draw_block(box_left.position.x + 12 * sx, 34, 152 * sx, 32, Color(0.96, 0.62, 0.04), "Pinza Hall I_A/B/C · V_LL", font)
-		_draw_block(box_left.position.x + 12 * sx, 72, 152 * sx, 32, Color(0.94, 0.35, 0.35), "Termocupla PT100 Tw/Tc", font)
-		_draw_block(box_left.position.x + 12 * sx, 110, 152 * sx, 32, Color(0.22, 0.74, 0.97), "Vib. Triaxial + RPM", font)
-		_draw_block(box_left.position.x + 196 * sx, 42, 152 * sx, 92, Color(0.22, 0.74, 0.97), "ESP32 / Edge AI\nMLP 8-16-8-4 + SVM\nBridge 10Hz / 2Hz", font)
-		_draw_block(box_left.position.x + 380 * sx, 42, 142 * sx, 42, Color(0.06, 0.73, 0.51), "Relé Disparo / VFD", font)
-		_draw_block(box_left.position.x + 380 * sx, 92, 142 * sx, 42, Color(0.94, 0.27, 0.27), "E-STOP Cat 0 + LOTO", font)
+		# Área útil interior verticalmente proporcional
+		var top_y := box_left.position.y + header_h + 14.0
+		var bot_y := box_left.end.y - 14.0
+		var avail_h := maxf(110.0, bot_y - top_y)
+		var inner_pad := 14.0
+		var col_gap := 24.0
+		var inner_w := panel_w - inner_pad * 2.0
+		var col_w := (inner_w - col_gap * 2.0) / 3.0
 
-		for y_c in [50.0, 88.0, 126.0]:
-			draw_line(Vector2(box_left.position.x + 164 * sx, y_c), Vector2(box_left.position.x + 196 * sx, y_c), Color(0.55, 0.75, 0.95), 1.5)
-		draw_line(Vector2(box_left.position.x + 348 * sx, 63), Vector2(box_left.position.x + 380 * sx, 63), Color(0.06, 0.73, 0.51), 1.5)
-		draw_line(Vector2(box_left.position.x + 348 * sx, 113), Vector2(box_left.position.x + 380 * sx, 113), Color(0.94, 0.27, 0.27), 1.5)
+		# ---------------- PANEL IZQUIERDO: SENSORES -> ESP32/IA -> ACTUADORES ----------------
+		var lx1 := box_left.position.x + inner_pad
+		var lx2 := lx1 + col_w + col_gap
+		var lx3 := lx2 + col_w + col_gap
 
-		# Cajas derecha: Red 460V -> CCM Breakers -> VFD/DOL -> Motor 10HP -> PE < 10 Ohm
-		_draw_block(box_right.position.x + 14 * sx, 40, 136 * sx, 38, Color(0.96, 0.62, 0.04), "Red 460 V · 60 Hz", font)
-		_draw_block(box_right.position.x + 178 * sx, 40, 142 * sx, 38, Color(0.58, 0.64, 0.72), "CCM Breakers L1-L3", font)
-		_draw_block(box_right.position.x + 348 * sx, 40, 174 * sx, 38, Color(0.06, 0.73, 0.51), "Variador VFD / DOL", font)
-		draw_line(Vector2(box_right.position.x + 150 * sx, 59), Vector2(box_right.position.x + 178 * sx, 59), Color(0.94, 0.35, 0.35), 2.0)
-		draw_line(Vector2(box_right.position.x + 320 * sx, 59), Vector2(box_right.position.x + 348 * sx, 59), Color(0.94, 0.35, 0.35), 2.0)
+		var sensor_gap := 12.0
+		var sensor_h := (avail_h - sensor_gap * 2.0) / 3.0
+		var sy0 := top_y
+		var sy1 := sy0 + sensor_h + sensor_gap
+		var sy2 := sy1 + sensor_h + sensor_gap
 
-		_draw_block(box_right.position.x + 185 * sx, 100, 195 * sx, 44, Color(0.22, 0.74, 0.97), "MOTOR IE3 10 HP · M-101\n1750 RPM · Tierra PE < 10 Ω", font)
-		draw_line(Vector2(box_right.position.x + 435 * sx, 78), Vector2(box_right.position.x + 435 * sx, 122), Color(0.94, 0.35, 0.35), 2.0)
-		draw_line(Vector2(box_right.position.x + 435 * sx, 122), Vector2(box_right.position.x + 380 * sx, 122), Color(0.94, 0.35, 0.35), 2.0)
+		_draw_block(lx1, sy0, col_w, sensor_h, Color(0.96, 0.62, 0.04), "Pinza Hall\nI_A/B/C · V_LL", font)
+		_draw_block(lx1, sy1, col_w, sensor_h, Color(0.94, 0.35, 0.35), "Termocupla PT100\nTw / Tc", font)
+		_draw_block(lx1, sy2, col_w, sensor_h, Color(0.22, 0.74, 0.97), "Vib. Triaxial\n+ Tacómetro RPM", font)
+
+		var core_h := avail_h * 0.78
+		var core_y := top_y + (avail_h - core_h) * 0.5
+		_draw_block(lx2, core_y, col_w, core_h, Color(0.22, 0.74, 0.97), "ESP32 / Edge AI\nMLP 8-16-8-4\nSVM RBF\nBridge 10Hz / 2Hz", font)
+
+		var act_gap := 16.0
+		var act_h := (avail_h - act_gap) * 0.44
+		var ay0 := top_y + (avail_h - (act_h * 2.0 + act_gap)) * 0.5
+		var ay1 := ay0 + act_h + act_gap
+		_draw_block(lx3, ay0, col_w, act_h, Color(0.06, 0.73, 0.51), "Relé Disparo\nControl VFD", font)
+		_draw_block(lx3, ay1, col_w, act_h, Color(0.94, 0.27, 0.27), "E-STOP Cat 0\n+ Bloqueo LOTO", font)
+
+		# Conexiones limpias Sensores -> ESP32 -> Actuadores
+		for s_mid_y in [sy0 + sensor_h * 0.5, sy1 + sensor_h * 0.5, sy2 + sensor_h * 0.5]:
+			_draw_arrow(Vector2(lx1 + col_w, s_mid_y), Vector2(lx2, clampf(s_mid_y, core_y + 10.0, core_y + core_h - 10.0)), Color(0.55, 0.78, 0.98), 1.6)
+		_draw_arrow(Vector2(lx2 + col_w, ay0 + act_h * 0.5), Vector2(lx3, ay0 + act_h * 0.5), Color(0.06, 0.78, 0.55), 1.8)
+		_draw_arrow(Vector2(lx2 + col_w, ay1 + act_h * 0.5), Vector2(lx3, ay1 + act_h * 0.5), Color(0.95, 0.32, 0.32), 1.8)
+
+		# ---------------- PANEL DERECHO: RED 460V -> CCM -> VFD/DOL -> MOTOR ----------------
+		var rx1 := box_right.position.x + inner_pad
+		var rx2 := rx1 + col_w + col_gap
+		var rx3 := rx2 + col_w + col_gap
+
+		var row_gap := 24.0
+		var row1_h := (avail_h - row_gap) * 0.46
+		var row2_h := (avail_h - row_gap) * 0.48
+		var ry1 := top_y + 4.0
+		var ry2 := ry1 + row1_h + row_gap
+
+		_draw_block(rx1, ry1, col_w, row1_h, Color(0.96, 0.62, 0.04), "Red Trifásica\n460 V · 60 Hz", font)
+		_draw_block(rx2, ry1, col_w, row1_h, Color(0.62, 0.70, 0.80), "CCM Breakers\nL1 · L2 · L3", font)
+		_draw_block(rx3, ry1, col_w, row1_h, Color(0.06, 0.73, 0.51), "Variador VFD\n/ Arranque DOL", font)
+
+		var r1_mid := ry1 + row1_h * 0.5
+		_draw_arrow(Vector2(rx1 + col_w, r1_mid), Vector2(rx2, r1_mid), Color(0.95, 0.42, 0.35), 2.0)
+		_draw_arrow(Vector2(rx2 + col_w, r1_mid), Vector2(rx3, r1_mid), Color(0.95, 0.42, 0.35), 2.0)
+
+		var motor_w := col_w * 1.62
+		var motor_x := rx2 - col_w * 0.16
+		_draw_block(motor_x, ry2, motor_w, row2_h, Color(0.22, 0.74, 0.97), "MOTOR IE3 10 HP · M-101\n1750 RPM · Molino de Granos", font)
+		_draw_block(rx1, ry2, col_w * 0.76, row2_h, Color(0.10, 0.78, 0.52), "Tierra PE\n< 10 Ω RETIE", font)
+
+		# Potencia VFD/DOL -> Motor (baja por la derecha y entra limpio al costado derecho del motor)
+		var r2_mid := ry2 + row2_h * 0.5
+		var vfd_cx := rx3 + col_w * 0.5
+		draw_line(Vector2(vfd_cx, ry1 + row1_h), Vector2(vfd_cx, r2_mid), Color(0.95, 0.42, 0.35), 2.0)
+		_draw_arrow(Vector2(vfd_cx, r2_mid), Vector2(motor_x + motor_w, r2_mid), Color(0.95, 0.42, 0.35), 2.0)
+		# Puesta a tierra Motor -> Tierra PE
+		draw_line(Vector2(motor_x, r2_mid), Vector2(rx1 + col_w * 0.76, r2_mid), Color(0.10, 0.78, 0.52), 1.8)
+
+		# Puente de señal verde Control VFD -> Variador VFD (por corredor intermedio limpio sin cruzar ningún título ni caja)
+		var bridge_y := ry1 + row1_h + row_gap * 0.5
+		var p_start := Vector2(lx3 + col_w, ay0 + act_h * 0.5)
+		var mid_x := box_left.end.x + gap_mid * 0.5
+		var vfd_in_x := rx3 + col_w * 0.25
 		var wire_pts := PackedVector2Array([
-			Vector2(box_left.position.x + 451 * sx, 42.0),
-			Vector2(box_left.position.x + 451 * sx, 29.0),
-			Vector2(box_right.position.x + 435 * sx, 29.0),
-			Vector2(box_right.position.x + 435 * sx, 40.0)
+			p_start,
+			Vector2(mid_x, p_start.y),
+			Vector2(mid_x, bridge_y),
+			Vector2(vfd_in_x, bridge_y),
+			Vector2(vfd_in_x, ry1 + row1_h + 2.0)
 		])
-		draw_polyline(wire_pts, Color(0.06, 0.73, 0.51, 0.85), 1.5, true)
+		draw_polyline(wire_pts, Color(0.06, 0.80, 0.55, 0.92), 1.8, true)
+		_draw_arrow(Vector2(vfd_in_x, bridge_y), Vector2(vfd_in_x, ry1 + row1_h), Color(0.06, 0.80, 0.55, 0.95), 1.8)
+
+	func _draw_arrow(p0: Vector2, p1: Vector2, col: Color, width: float) -> void:
+		draw_line(p0, p1, col, width, true)
+		var d := (p1 - p0)
+		if d.length() < 4.0:
+			return
+		var u := d.normalized()
+		var n := Vector2(-u.y, u.x)
+		var tip := p1
+		var head := PackedVector2Array([tip, tip - u * 6.5 + n * 3.4, tip - u * 6.5 - n * 3.4])
+		draw_colored_polygon(head, col)
 
 	func _draw_block(x: float, y: float, bw: float, bh: float, border: Color, txt: String, font: Font) -> void:
 		draw_rect(Rect2(x, y, bw, bh), Color(0.075, 0.114, 0.196, 1.0), true)
@@ -131,6 +213,10 @@ class HardwareArchitectureCanvas extends Control:
 		if font == null:
 			return
 		var lines := txt.split("\n")
+		var line_h := 13.5
+		var total_h := float(lines.size()) * line_h
+		var start_y := y + (bh - total_h) * 0.5 + 10.5
 		for idx in range(lines.size()):
-			var ly := y + 15.0 + float(idx) * 14.0
-			draw_string(font, Vector2(x + 8.0, ly), lines[idx], HORIZONTAL_ALIGNMENT_LEFT, bw - 14.0, 10, Color(0.92, 0.95, 0.99))
+			var ly := start_y + float(idx) * line_h
+			var col := Color(0.95, 0.97, 1.0) if idx == 0 else Color(0.76, 0.84, 0.94)
+			draw_string(font, Vector2(x + 8.0, ly), lines[idx], HORIZONTAL_ALIGNMENT_LEFT, bw - 14.0, 10, col)

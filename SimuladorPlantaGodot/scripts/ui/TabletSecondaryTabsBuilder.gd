@@ -559,37 +559,76 @@ static func build_hardware_ai_tab() -> Dictionary:
 	var vb := VBoxContainer.new()
 	vb.name = "TabHardwareIA"
 	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vb.add_theme_constant_override("separation", 8)
+	vb.add_theme_constant_override("separation", 10)
 
 	var top_cols := HBoxContainer.new()
 	top_cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	top_cols.size_flags_stretch_ratio = 1.05
 	top_cols.add_theme_constant_override("separation", 10)
 	vb.add_child(top_cols)
 
+	# Tarjeta izquierda: Arquitectura IA estructurada en cuadrícula compacta sin espacio vacío
 	var hw_card := PanelContainer.new()
+	hw_card.name = "HardwareArchInfoCard"
 	hw_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hw_card.size_flags_stretch_ratio = 0.92
 	hw_card.add_theme_stylebox_override("panel", TTheme.make_panel_style())
 	top_cols.add_child(hw_card)
 	var hw_vb := VBoxContainer.new()
-	hw_vb.add_theme_constant_override("separation", 4)
+	hw_vb.add_theme_constant_override("separation", 8)
 	hw_card.add_child(hw_vb)
-	hw_vb.add_child(TTheme.make_label("Arquitectura IA", 12, TTheme.ACCENT_CYAN))
-	var hw_txt := TTheme.make_label(
-		"Entradas: corriente, IUF, THD, tensión, temperatura y vibración.\n"
-		+ "Red MLP: 8-16-8-4 · 99.2% exactitud.\n"
-		+ "SVM RBF: 98.8% exactitud.\n"
-		+ "Cobertura: 15 máquinas y tablero CCM 460 V.",
-		10, Color(0.84, 0.89, 0.96)
-	)
-	hw_txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hw_vb.add_child(hw_txt)
 
+	var hw_hdr := HBoxContainer.new()
+	hw_vb.add_child(hw_hdr)
+	var hw_t := TTheme.make_label("Arquitectura Edge AI", 12, TTheme.ACCENT_CYAN)
+	hw_t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hw_hdr.add_child(hw_t)
+	hw_hdr.add_child(TTheme.make_label("10 Hz · Nativo", 10, TTheme.ACCENT_EMERALD))
+
+	var hw_grid := GridContainer.new()
+	hw_grid.columns = 2
+	hw_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hw_grid.add_theme_constant_override("h_separation", 8)
+	hw_grid.add_theme_constant_override("v_separation", 8)
+	hw_vb.add_child(hw_grid)
+
+	var spec_items: Array[Dictionary] = [
+		{"t": "Entradas (8 vars)", "v": "Ia, Ib, Ic, V_LL, IUF %, THD %, Temp °C y Vib mm/s.", "col": TTheme.ACCENT_AMBER},
+		{"t": "Red MLP 8-16-8-4", "v": "Exactitud 99.2% · Inferencia en tiempo real por lote.", "col": TTheme.ACCENT_CYAN},
+		{"t": "SVM Kernel RBF", "v": "Exactitud 98.8% · Validación cruzada de fallas.", "col": TTheme.ACCENT_EMERALD},
+		{"t": "Cobertura SCADA", "v": "15 equipos de planta + Tablero CCM 460 V (Bridge 2 Hz).", "col": Color(0.66, 0.54, 0.98)}
+	]
+	for sp in spec_items:
+		var sc := PanelContainer.new()
+		sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		sc.add_theme_stylebox_override("panel", TTheme.make_left_stripe_card(sp["col"] as Color, TTheme.BG_SUBCARD))
+		hw_grid.add_child(sc)
+		var svb := VBoxContainer.new()
+		svb.add_theme_constant_override("separation", 3)
+		sc.add_child(svb)
+		svb.add_child(TTheme.make_label(str(sp["t"]), 10, sp["col"] as Color))
+		var sl := TTheme.make_label(str(sp["v"]), 10, Color(0.86, 0.90, 0.96))
+		sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		svb.add_child(sl)
+
+	var cls_bar := PanelContainer.new()
+	cls_bar.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_SUBCARD, TTheme.BORDER_SUBTLE, 5, 8, 5))
+	hw_vb.add_child(cls_bar)
+	var cls_lbl := TTheme.make_label("Clases diagnosticadas: Normal · Falla Eléctrica · Desgaste Mecánico · Deriva Térmica", 10, TTheme.TEXT_MUTED)
+	cls_lbl.clip_text = true
+	cls_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	cls_bar.add_child(cls_lbl)
+
+	# Tarjeta derecha: Diagnóstico en Vivo, MHI/RUL y Checklist RCM
 	var ai_card := PanelContainer.new()
+	ai_card.name = "LiveDiagnosisCard"
 	ai_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ai_card.size_flags_stretch_ratio = 1.18
 	ai_card.add_theme_stylebox_override("panel", TTheme.make_panel_style())
 	top_cols.add_child(ai_card)
 	var ai_vb := VBoxContainer.new()
-	ai_vb.add_theme_constant_override("separation", 4)
+	ai_vb.add_theme_constant_override("separation", 6)
 	ai_card.add_child(ai_vb)
 
 	var ai_hdr := HBoxContainer.new()
@@ -600,15 +639,22 @@ static func build_hardware_ai_tab() -> Dictionary:
 	ai_hdr.add_child(ai_t)
 	ai_hdr.add_child(lbl_conf)
 
+	var diag_box := PanelContainer.new()
+	diag_box.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_SUBCARD, TTheme.BORDER_SUBTLE, 6, 8, 6))
+	ai_vb.add_child(diag_box)
+	var diag_vb := VBoxContainer.new()
+	diag_vb.add_theme_constant_override("separation", 3)
+	diag_box.add_child(diag_vb)
+
 	var val_rc := TTheme.make_label("Causa: Operación normal.", 10, TTheme.TEXT_WHITE)
 	val_rc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var val_pr := TTheme.make_label("Pronóstico: Condición estable.", 10, TTheme.TEXT_MUTED)
 	val_pr.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var val_px := TTheme.make_label("Acción: Mantener inspección preventiva.", 10, Color(0.75, 0.92, 1.0))
 	val_px.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	ai_vb.add_child(val_rc)
-	ai_vb.add_child(val_pr)
-	ai_vb.add_child(val_px)
+	diag_vb.add_child(val_rc)
+	diag_vb.add_child(val_pr)
+	diag_vb.add_child(val_px)
 
 	var mhi_row := HBoxContainer.new()
 	ai_vb.add_child(mhi_row)
@@ -636,9 +682,13 @@ static func build_hardware_ai_tab() -> Dictionary:
 	chk_vb.add_theme_constant_override("separation", 3)
 	chk_scroll.add_child(chk_vb)
 
+	# Panel inferior expandido proporcionalmente (~48% de la pestaña) para el diagrama de hardware sin amontonamiento
 	var sch_card := PanelContainer.new()
-	sch_card.custom_minimum_size.y = 172
-	sch_card.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_CARD, TTheme.BORDER_SUBTLE, 8, 6, 6))
+	sch_card.name = "HardwareSchematicCard"
+	sch_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sch_card.size_flags_stretch_ratio = 1.0
+	sch_card.custom_minimum_size.y = 240
+	sch_card.add_theme_stylebox_override("panel", TTheme.make_panel_style(TTheme.BG_CARD, TTheme.BORDER_SUBTLE, 8, 8, 8))
 	vb.add_child(sch_card)
 	var sch_canvas := TCanvases.HardwareArchitectureCanvas.new()
 	sch_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
