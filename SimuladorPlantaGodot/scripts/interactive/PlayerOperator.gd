@@ -72,6 +72,14 @@ var _prev_input_dir: Vector2 = Vector2.ZERO
 var _unstuck_cooldown: float = 0.0
 var unstuck_teleport_count: int = 0
 
+# Cache de referencias a nodos UI/Sistemas para evitar recorridos de 11k nodos en el árbol
+var _cached_glow_ctrl: Node = null
+var _cached_tablet_root: Node = null
+var _cached_pause_menu: Node = null
+var _cached_course_modal: Node = null
+var _cached_hud_ctrl: Node = null
+var _cached_tut_mgr: Node = null
+
 func _ready() -> void:
 	floor_snap_length = 0.50
 	safe_margin = 0.02
@@ -228,8 +236,8 @@ func _input(event: InputEvent) -> void:
 	# 2. Capturar mouse al hacer clic en cualquier parte de la ventana
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-			var tablet = get_tree().root.find_child("TabletRoot", true, false)
-			var pause_menu = get_tree().root.find_child("PauseMenuController", true, false)
+			var tablet = _get_tablet_root()
+			var pause_menu = _get_pause_menu()
 			var pause_open: bool = pause_menu != null and pause_menu.has_method("is_pause_open") and bool(pause_menu.is_pause_open())
 			if (tablet == null or not tablet.visible) and not pause_open:
 				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -238,22 +246,22 @@ func _input(event: InputEvent) -> void:
 
 	# 3. Menú de pausa o interacción de escape con ESC
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE):
-		var tablet = get_tree().root.find_child("TabletRoot", true, false)
+		var tablet = _get_tablet_root()
 		if tablet != null and tablet.visible:
 			tablet.toggle_tablet()
 			get_viewport().set_input_as_handled()
 			return
-		var hud = get_tree().root.find_child("HUDController", true, false)
+		var hud = _get_hud_controller()
 		if hud != null and hud.has_method("is_briefing_visible") and hud.is_briefing_visible():
 			hud.close_briefing_panel()
 			get_viewport().set_input_as_handled()
 			return
-		var c_modal = get_tree().root.find_child("RetieCourseModal", true, false)
+		var c_modal = _get_course_modal()
 		if c_modal != null and c_modal.visible:
 			c_modal.close_modal(false)
 			get_viewport().set_input_as_handled()
 			return
-		var pause_menu = get_tree().root.find_child("PauseMenuController", true, false)
+		var pause_menu = _get_pause_menu()
 		if pause_menu != null and pause_menu.has_method("toggle_pause"):
 			pause_menu.toggle_pause()
 			get_viewport().set_input_as_handled()
@@ -272,8 +280,15 @@ func _input(event: InputEvent) -> void:
 		head.rotation.x = clampf(head.rotation.x, -deg_to_rad(85.0), deg_to_rad(85.0))
 
 	# 5. Cambio de herramienta con teclas 1-5 o rueda del mouse (bloqueado cuando se navega la tablet/menús)
-	var ui_blocks_tools := _is_ui_blocking_tool_input()
-	if not ui_blocks_tools:
+	var is_tool_event: bool = (
+		event.is_action_pressed("tool_1") or
+		event.is_action_pressed("tool_2") or
+		event.is_action_pressed("tool_3") or
+		event.is_action_pressed("tool_4") or
+		event.is_action_pressed("tool_5") or
+		(event is InputEventMouseButton and event.pressed and (event.button_index == MOUSE_BUTTON_WHEEL_DOWN or event.button_index == MOUSE_BUTTON_WHEEL_UP))
+	)
+	if is_tool_event and not _is_ui_blocking_tool_input():
 		if event.is_action_pressed("tool_1"): _select_tool(1)
 		elif event.is_action_pressed("tool_2"): _select_tool(2)
 		elif event.is_action_pressed("tool_3"): _select_tool(3)
@@ -290,7 +305,7 @@ func _input(event: InputEvent) -> void:
 
 	# 6. Interacción física (E siempre en juego activo; Clic Izquierdo cuando el mouse está capturado)
 	if event.is_action_pressed("interact") and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not (event is InputEventMouseButton)):
-		var tablet_chk = get_tree().root.find_child("TabletRoot", true, false)
+		var tablet_chk = _get_tablet_root()
 		if (tablet_chk == null or not tablet_chk.visible) and not get_tree().paused:
 			_handle_interaction()
 
@@ -302,14 +317,49 @@ func _select_tool(id: int) -> void:
 		bus.tool_changed.emit(id, t_name)
 
 func _get_glow_controller() -> Node:
-	if not is_inside_tree() or get_tree() == null:
-		return null
-	return get_tree().root.find_child("InteractableGlowController", true, false)
+	if not is_instance_valid(_cached_glow_ctrl):
+		if not is_inside_tree() or get_tree() == null:
+			return null
+		_cached_glow_ctrl = get_tree().root.find_child("InteractableGlowController", true, false)
+	return _cached_glow_ctrl
+
+func _get_tablet_root() -> Node:
+	if not is_instance_valid(_cached_tablet_root):
+		if not is_inside_tree() or get_tree() == null:
+			return null
+		_cached_tablet_root = get_tree().root.find_child("TabletRoot", true, false)
+	return _cached_tablet_root
+
+func _get_pause_menu() -> Node:
+	if not is_instance_valid(_cached_pause_menu):
+		if not is_inside_tree() or get_tree() == null:
+			return null
+		_cached_pause_menu = get_tree().root.find_child("PauseMenuController", true, false)
+	return _cached_pause_menu
+
+func _get_course_modal() -> Node:
+	if not is_instance_valid(_cached_course_modal):
+		if not is_inside_tree() or get_tree() == null:
+			return null
+		_cached_course_modal = get_tree().root.find_child("RetieCourseModal", true, false)
+	return _cached_course_modal
+
+func _get_hud_controller() -> Node:
+	if not is_instance_valid(_cached_hud_ctrl):
+		if not is_inside_tree() or get_tree() == null:
+			return null
+		_cached_hud_ctrl = get_tree().root.find_child("HUDController", true, false)
+	return _cached_hud_ctrl
+
+func _get_tutorial_induction_manager() -> Node:
+	if not is_instance_valid(_cached_tut_mgr):
+		if not is_inside_tree() or get_tree() == null:
+			return null
+		_cached_tut_mgr = get_tree().root.find_child("TutorialInductionManager", true, false)
+	return _cached_tut_mgr
 
 func _is_tablet_open() -> bool:
-	if not is_inside_tree() or get_tree() == null:
-		return false
-	var tablet := get_tree().root.find_child("TabletRoot", true, false)
+	var tablet := _get_tablet_root()
 	return tablet != null and bool(tablet.visible)
 
 func _is_ui_blocking_tool_input() -> bool:
@@ -317,14 +367,13 @@ func _is_ui_blocking_tool_input() -> bool:
 		return false
 	if get_tree().paused or _is_tablet_open():
 		return true
-	var root := get_tree().root
-	var pause_menu := root.find_child("PauseMenuController", true, false)
+	var pause_menu := _get_pause_menu()
 	if pause_menu != null and pause_menu.has_method("is_pause_open") and bool(pause_menu.is_pause_open()):
 		return true
-	var c_modal := root.find_child("RetieCourseModal", true, false)
+	var c_modal := _get_course_modal()
 	if c_modal != null and bool(c_modal.visible):
 		return true
-	var hud := root.find_child("HUDController", true, false)
+	var hud := _get_hud_controller()
 	if hud != null and hud.has_method("is_briefing_visible") and bool(hud.is_briefing_visible()):
 		return true
 	return false
@@ -823,7 +872,7 @@ func _update_ray_prompt() -> void:
 		return
 
 	current_interactable = null
-	var tut := get_tree().root.find_child("TutorialInductionManager", true, false) if is_inside_tree() else null
+	var tut := _get_tutorial_induction_manager()
 	if tut != null and tut.has_method("get_interact_advance_prompt"):
 		var adv_prompt := String(tut.get_interact_advance_prompt())
 		if adv_prompt != "":

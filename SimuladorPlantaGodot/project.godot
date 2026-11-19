@@ -106,6 +106,10 @@ toggle_camera={
 ]
 }
 
+[physics]
+
+common/max_physics_steps_per_frame=2
+
 [rendering]
 
 scaling_3d/mode=0

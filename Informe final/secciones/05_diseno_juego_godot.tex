@@ -129,12 +129,12 @@ Implementada en \texttt{Industrial\allowbreak Tablet\allowbreak Controller.gd} y
 \centering
 \begin{minipage}[t]{0.485\textwidth}
 \centering
-\includegraphics[width=0.94\textwidth]{godot_tablet_iot.png}
+\includegraphics[width=0.88\textwidth]{godot_tablet_iot.png}
 \par\vspace{2pt}{\footnotesize (a) Pestaña \texttt{Monitoreo IoT}: alerta RETIE activa y enclavamiento en \qty{0}{\hertz}.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.485\textwidth}
 \centering
-\includegraphics[width=0.94\textwidth]{godot_tablet_camaras.png}
+\includegraphics[width=0.88\textwidth]{godot_tablet_camaras.png}
 \par\vspace{2pt}{\footnotesize (b) Pestaña \texttt{Cámaras}: mosaico $2\times 2$ de visores 3D en zona \texttt{Recepción}.}
 \end{minipage}
 \caption{Capturas reales de las dos primeras pestañas de la Tablet Industrial SCADA (\texttt{[TAB]}): (a)~\texttt{Monitoreo IoT} desplegando la barra de nueve pestañas, el conmutador \texttt{Modo: VFD}, el botón \texttt{Audio: ON}, la alerta crítica roja \texttt{Acceso sin EPP prohibido (RETIE -0.8)} con enlace \texttt{Ver RCM} y el enclavamiento de seguridad con la línea detenida a \qty{0}{\hertz} y \qty{0.0}{\ampere} antes de completar la inducción; (b)~\texttt{Cámaras} renderizando simultáneamente cuatro visores \texttt{SubViewport} 3D (\texttt{01~Banda de Descarga}, \texttt{02~Banda Inclinada}, \texttt{03~Tolva Receptora} y \texttt{04~Banda Trituradora}) con telemetría superpuesta y controles orbitales \texttt{Iso}, \texttt{Frente}, \texttt{Top} y \texttt{Rotar}.}
@@ -145,12 +145,12 @@ Implementada en \texttt{Industrial\allowbreak Tablet\allowbreak Controller.gd} y
 \centering
 \begin{minipage}[t]{0.485\textwidth}
 \centering
-\includegraphics[width=0.94\textwidth]{godot_tablet_retie.png}
+\includegraphics[width=0.88\textwidth]{godot_tablet_retie.png}
 \par\vspace{2pt}{\footnotesize (a) Pestaña \texttt{RETIE}: 5 Reglas de Oro, estado \texttt{EPP: 0/6} y riesgos críticos.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.485\textwidth}
 \centering
-\includegraphics[width=0.94\textwidth]{godot_tablet_ia_falla.png}
+\includegraphics[width=0.88\textwidth]{godot_tablet_ia_falla.png}
 \par\vspace{2pt}{\footnotesize (b) Pestaña \texttt{Hardware \& IA}: régimen base de espera segura (\texttt{MHI 99.6\%}).}
 \end{minipage}
 \caption{Capturas reales de supervisión normativa e inteligencia artificial embebida en la Tablet SCADA: (a)~pestaña \texttt{RETIE} con las cinco tarjetas secuenciales de consignación LOTO, fichas técnicas del \texttt{Motor 10 HP}, \texttt{Tablero CCM y VFD} y \texttt{Protección EPP} (\texttt{0/6}), y matriz de cinco riesgos eléctricos y ATEX; (b)~pestaña \texttt{Hardware \& IA} en estado base de espera segura (\texttt{0.0 A}, \texttt{IUF 0.0\%}, \texttt{460 V}, \qty{28.0}{\celsius}), mostrando la arquitectura nativa a \qty{10}{\hertz}, certezas \texttt{MLP 100.0\%} y \texttt{SVM 94.2\%}, \texttt{MHI 99.6\%}, \texttt{RUL 24000 h}, checklist RCM de tres pasos y esquema dual Control/Edge AI frente a Potencia Trifásica \qty{460}{\volt}.}
@@ -163,7 +163,7 @@ Por su parte, la Fig.~\ref{fig:godot_tablet_retie_ia}(a) evidencia la pestaña \
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.68\textwidth]{godot_tablet_rubrica.png}
+\includegraphics[width=0.58\textwidth]{godot_tablet_rubrica.png}
 \caption{Captura real de la pestaña \texttt{Rúbrica} en la Tablet SCADA: se observa la actualización instantánea de la nota normativa (\texttt{RETIE 4.2/5.0}) tras la deducción de \num{-0.8} por ingreso a la planta sin equipo de protección personal, el recuadro de ponderación de bonos y sanciones, y el tablero de progreso de las estaciones (\texttt{E1~OK}, \texttt{E2~Actual} hasta \texttt{E19}).}
 \label{fig:godot_tablet_rubrica}
 \end{figure*}

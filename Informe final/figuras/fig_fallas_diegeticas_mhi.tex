@@ -35,11 +35,11 @@
     xtick={1,2,3,4,5,6,7},
     xticklabels={Nom.~60Hz, VFD~42Hz, Corte~L3, Atasco, Sag~340V, Vent.~Obs., Pernos},
     xticklabel style={
-      rotate=45,
-      anchor=north east,
-      font=\fontsize{5.4}{6.0}\selectfont,
+      rotate=70,
+      anchor=east,
+      font=\fontsize{5.2}{5.8}\selectfont,
       text=f5Axis,
-      yshift=1pt,
+      yshift=-1pt,
       xshift=1pt
     },
     yticklabel style={font=\fontsize{6.8}{7.5}\selectfont, text=f5Axis},
@@ -171,11 +171,11 @@
     xtick={1,2,3,4,5,6,7},
     xticklabels={Nom.~60Hz, VFD~42Hz, Corte~L3, Atasco, Sag~340V, Vent.~Obs., Pernos},
     xticklabel style={
-      rotate=45,
-      anchor=north east,
-      font=\fontsize{5.4}{6.0}\selectfont,
+      rotate=70,
+      anchor=east,
+      font=\fontsize{5.2}{5.8}\selectfont,
       text=f5Axis,
-      yshift=1pt,
+      yshift=-1pt,
       xshift=1pt
     },
     yticklabel style={font=\fontsize{6.8}{7.5}\selectfont, text=f5VibEdge},
@@ -323,11 +323,11 @@
     \node[tempLbl, anchor=south west, xshift=-2.6pt, yshift=3.8pt] at (axis cs:7,60.3)  {60.3$^\circ$};
   \end{axis}
 
-  % Subtítulos alineados de ambos paneles
+  % Subtítulos alineados de ambos paneles con despeje vertical holgado
   \node[anchor=north, font=\fontsize{7.8}{8.8}\selectfont, text=f5Axis]
-    at ($(axA.south)+(0,-1.05cm)$) {(a) Degradación del MHI y vida útil remanente (RUL).};
+    at ($(axA.south)+(0,-1.35cm)$) {(a) Degradación del MHI y vida útil remanente (RUL).};
   \node[anchor=north, font=\fontsize{7.8}{8.8}\selectfont, text=f5Axis]
-    at ($(axB.south)+(0,-1.05cm)$) {(b) Firma vibratoria ($v_{\mathrm{rms}}$) y térmica ($T_w$) frente a umbrales.};
+    at ($(axB.south)+(0,-1.35cm)$) {(b) Firma vibratoria ($v_{\mathrm{rms}}$) y térmica ($T_w$) frente a umbrales.};
 \end{tikzpicture}
 \endgroup
 \caption{Evaluación cuantitativa de los siete regímenes operativos y de falla diegética simulados en Godot~4.7.2 (\texttt{InductionMotorKloss.gd} y \texttt{EdgeAIEngine.gd}). (a)~Índice de salud del motor (MHI) codificado por severidad y vida útil remanente estimada (RUL [h]) frente a los umbrales de operación saludable ($85\%$) y alerta ($60\%$). (b)~Firma física multifactorial de vibración $v_{\mathrm{rms}}$ (barras, eje izquierdo) y temperatura de devanado $T_w$ (curva, eje derecho) contrastadas con las zonas normativas ISO~10816-3 (Zona~A/B en \SI{1.8}{mm/s}; Zona~D en \SI{4.5}{mm/s}) y el límite térmico de aislamiento RETIE Clase~F (\SI{155}{\celsius}).}

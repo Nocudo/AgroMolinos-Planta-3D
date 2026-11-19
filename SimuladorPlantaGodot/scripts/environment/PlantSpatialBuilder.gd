@@ -1093,9 +1093,13 @@ func _physics_process(_delta: float) -> void:
 	if not is_inside_tree() or (get_tree() != null and get_tree().paused):
 		return
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		var parent_n := get_parent()
-		if parent_n != null:
-			_player_ref = parent_n.find_child("PlayerOperator", true, false) as Node3D
+		var cur_scene := get_tree().current_scene if get_tree() != null else null
+		if cur_scene != null:
+			_player_ref = cur_scene.get_node_or_null("PlayerOperator") as Node3D
+		if _player_ref == null and get_parent() != null and get_parent().get_parent() != null:
+			_player_ref = get_parent().get_parent().get_node_or_null("PlayerOperator") as Node3D
+		if _player_ref == null and get_tree() != null and get_tree().root != null:
+			_player_ref = get_tree().root.find_child("PlayerOperator", true, false) as Node3D
 	if _player_ref != null and is_instance_valid(_player_ref):
 		evaluate_player_hazard_lines(_player_ref.global_position)
 
