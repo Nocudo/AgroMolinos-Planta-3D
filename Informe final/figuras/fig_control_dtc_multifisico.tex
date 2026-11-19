@@ -1,0 +1,366 @@
+\begin{figure*}[!t]
+\centering
+% Paleta cromática IEEE (alcance local a la figura)
+\definecolor{elecFill}{HTML}{EFF6FF}
+\definecolor{elecBox}{HTML}{DBEAFE}
+\definecolor{elecBorder}{HTML}{1D4ED8}
+\definecolor{ctrlFill}{HTML}{F5F3FF}
+\definecolor{ctrlBox}{HTML}{EDE9FE}
+\definecolor{ctrlLut}{HTML}{DDD6FE}
+\definecolor{ctrlBorder}{HTML}{5B21B6}
+\definecolor{motHalo}{HTML}{CCFBF1}
+\definecolor{motFill}{HTML}{99F6E4}
+\definecolor{motBorder}{HTML}{0F766E}
+\definecolor{mechFill}{HTML}{ECFDF5}
+\definecolor{mechBox}{HTML}{D1FAE5}
+\definecolor{mechBorder}{HTML}{047857}
+\definecolor{thermFill}{HTML}{FFF7ED}
+\definecolor{thermBox}{HTML}{FFEDD5}
+\definecolor{thermBorder}{HTML}{C2410C}
+\definecolor{vibFill}{HTML}{ECFEFF}
+\definecolor{vibBox}{HTML}{CFFAFE}
+\definecolor{vibBorder}{HTML}{0E7490}
+\definecolor{inkDark}{HTML}{0F172A}
+\definecolor{inkMuted}{HTML}{334155}
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[
+    font=\sffamily,
+    >=Stealth,
+    % Estilos de bloques por dominio (Layout by Construction con text width fijo)
+    pwr/.style={
+        rectangle, draw=elecBorder, fill=elecBox, line width=0.9pt,
+        rounded corners=3pt, align=center, inner sep=5pt,
+        text=inkDark, font=\footnotesize
+    },
+    ctrl/.style={
+        rectangle, draw=ctrlBorder, fill=ctrlBox, line width=0.9pt,
+        rounded corners=3pt, align=center, inner sep=5pt,
+        text=inkDark, font=\footnotesize
+    },
+    lutbox/.style={
+        rectangle, draw=ctrlBorder, fill=ctrlLut, line width=1.1pt,
+        rounded corners=3pt, align=center, inner sep=5pt,
+        text=inkDark, font=\footnotesize
+    },
+    refpill/.style={
+        rectangle, draw=ctrlBorder, fill=white, line width=0.85pt,
+        rounded corners=3pt, align=center, inner sep=4.5pt,
+        text=inkDark, font=\footnotesize
+    },
+    sum/.style={
+        circle, draw=ctrlBorder, fill=white, line width=1.0pt,
+        inner sep=0pt, minimum size=20pt, text=inkDark, font=\small\bfseries
+    },
+    mot/.style={
+        circle, draw=motBorder, fill=motFill, line width=1.6pt,
+        double=motHalo, double distance=2.2pt,
+        align=center, inner sep=3pt, minimum size=2.50cm,
+        text=inkDark, font=\footnotesize
+    },
+    mech/.style={
+        rectangle, draw=mechBorder, fill=mechBox, line width=0.9pt,
+        rounded corners=3pt, align=center, inner sep=5pt,
+        text=inkDark, font=\footnotesize
+    },
+    therm/.style={
+        rectangle, draw=thermBorder, fill=thermBox, line width=0.9pt,
+        rounded corners=3pt, align=center, inner sep=5.5pt,
+        text=inkDark, font=\footnotesize
+    },
+    vib/.style={
+        rectangle, draw=vibBorder, fill=vibBox, line width=0.9pt,
+        rounded corners=3pt, align=center, inner sep=5.5pt,
+        text=inkDark, font=\footnotesize
+    },
+    % Estilos de flechas canónicas
+    arrPwr/.style={-{Stealth[length=5pt,width=3.6pt]}, line width=1.05pt, draw=elecBorder},
+    arrPwrShort/.style={-{Stealth[length=4pt,width=3pt]}, line width=1.05pt, draw=elecBorder},
+    arrCtrl/.style={-{Stealth[length=5pt,width=3.6pt]}, line width=0.95pt, draw=ctrlBorder},
+    arrCtrlShort/.style={-{Stealth[length=4pt,width=3pt]}, line width=0.95pt, draw=ctrlBorder},
+    arrMech/.style={-{Stealth[length=5pt,width=3.6pt]}, line width=1.05pt, draw=mechBorder},
+    arrShaft/.style={{Stealth[length=5.5pt,width=4.2pt]}-{Stealth[length=5.5pt,width=4.2pt]}, line width=1.6pt, draw=mechBorder},
+    arrTherm/.style={-{Stealth[length=5pt,width=3.6pt]}, line width=1.0pt, draw=thermBorder},
+    arrVib/.style={-{Stealth[length=5pt,width=3.6pt]}, line width=1.0pt, draw=vibBorder},
+    lbl/.style={font=\scriptsize, text=inkDark},
+    domTitle/.style={font=\scriptsize\bfseries, inner sep=2.5pt, rounded corners=2pt}
+]
+
+% =============================================================================
+% 1. CADENA ELECTROMECÁNICA CENTRAL (FILA MEDIA: IZQUIERDA -> DERECHA)
+% =============================================================================
+\node[pwr, text width=2.30cm, minimum height=1.35cm] (grid) at (0,0) {%
+    \textbf{Red AC Trif\'asica}\\[2pt]
+    \scriptsize $460\,\text{V}_{\text{LL}},\, 60\,\text{Hz}$
+};
+
+\node[pwr, text width=2.50cm, minimum height=1.35cm, right=0.55cm of grid] (rect) {%
+    \textbf{Rectificador + Bus DC}\\[2pt]
+    \scriptsize $V_{dc}=650\,\text{V},\, C_{dc}$
+};
+
+\node[pwr, text width=2.45cm, minimum height=1.35cm, right=0.75cm of rect] (inv) {%
+    \textbf{Inversor VSI}\\[2pt]
+    \scriptsize 6 IGBTs,\; $f_{sw}=2\,\text{kHz}$
+};
+
+\node[pwr, text width=2.20cm, minimum height=1.35cm, right=0.90cm of inv] (sens) {%
+    \textbf{Sensores}\\[2pt]
+    \scriptsize $v_{abc}(t),\, i_{abc}(t)$
+};
+
+% Núcleo Central: Motor ASM 10 HP (Hero Multifísico)
+\node[mot, right=1.45cm of sens] (motor) {%
+    \textbf{Motor ASM}\\[1pt]
+    \textbf{10 HP}\\[1.5pt]
+    \scriptsize $460\,\text{V}$, 4 polos\\[-1pt]
+    \scriptsize $P_n = 7.46\,\text{kW}$
+};
+
+% =============================================================================
+% 3. DOMINIO MECÁNICO (DERECHA DE MOTOR)
+% =============================================================================
+\node[mech, text width=3.60cm, minimum height=1.40cm, right=1.65cm of motor] (load) {%
+    \textbf{Carga Molino}\\[2pt]
+    \scriptsize Vac\'io $\to T_n \to 1.35\,T_n$\\[-0.5pt]
+    \scriptsize ($T_n = 39.58\,\text{N}\!\cdot\!\text{m}$)
+};
+
+\node[mech, text width=3.60cm, minimum height=1.18cm, below=0.62cm of load] (kin) {%
+    \textbf{Sensor Cinem\'atico}\\[2pt]
+    \scriptsize $\omega_r(t),\; T_e(t)$
+};
+
+% =============================================================================
+% 2. DOMINIO DE CONTROL DTC Y LAZO PI (FILA SUPERIOR, ANCLADO SOBRE INV/SENS)
+% =============================================================================
+% Fila C2 (inferior del control): LUT directamente sobre Inversor VSI, Estimador sobre Sensores
+\node[lutbox, text width=3.15cm, minimum height=1.24cm, above=2.05cm of inv] (lut) {%
+    \textbf{Tabla LUT DTC}\\[2pt]
+    \scriptsize Conmutaci\'on \'optima\\[-0.5pt]
+    \scriptsize Sector $S_k \in \{1,\dots,6\}$
+};
+
+\node[ctrl, text width=3.20cm, minimum height=1.24cm, right=1.05cm of lut] (est) {%
+    \textbf{Estimador DTC}\\[2pt]
+    \scriptsize Flujo $\boldsymbol{\psi}_s$, Par $T_e$,\\[-0.5pt]
+    \scriptsize Sector angular $S_k$
+};
+
+% Fila C1 (superior del control): Comparadores arriba de Estimador, PI, Sumador, Consigna
+% Reservamos 0.90 cm libres a la derecha del texto para el icono de histéresis (0 colisión)
+\node[ctrl, text width=5.15cm, minimum height=1.42cm, above=1.45cm of est, xshift=0.55cm] (hyst) {%
+    \textbf{Comparadores de Hist\'eresis}\\[3pt]
+    \begin{minipage}[c]{4.05cm}\centering\scriptsize
+        Par (3 niv.): $\Delta T = 3\,\text{N}\!\cdot\!\text{m}$\\[1pt]
+        Flujo (2 niv.): $\Delta\psi = 0.015\,\text{Wb}$
+    \end{minipage}\hfill\hspace*{0.85cm}
+};
+
+% Mini icono vectorial de histéresis en el slot reservado a la derecha (sin tocar texto)
+\begin{scope}[shift={($(hyst.east)+(-0.56cm, -0.18cm)$)}]
+    \draw[ctrlBorder!35, fill=white, rounded corners=1.5pt, line width=0.5pt]
+        (-0.34,-0.30) rectangle (0.34,0.30);
+    \draw[ctrlBorder!55, line width=0.45pt] (-0.27,0) -- (0.27,0);
+    \draw[ctrlBorder!55, line width=0.45pt] (0,-0.24) -- (0,0.24);
+    \draw[ctrlBorder, line width=0.85pt]
+        (-0.23,-0.16) -- (0.10,-0.16) -- (0.10,0.16) -- (0.23,0.16);
+    \draw[ctrlBorder, line width=0.85pt]
+        (-0.10,-0.16) -- (-0.10,0.16) -- (0.10,0.16);
+\end{scope}
+
+\node[refpill, text width=1.70cm, minimum height=0.95cm, right=0.72cm of hyst] (psiref) {%
+    \textbf{Ref. Flujo}\\[1pt]
+    \scriptsize $\psi_s^* \approx 1.0\,\text{Wb}$
+};
+
+\node[ctrl, text width=3.55cm, minimum height=1.42cm, left=1.05cm of hyst] (pi) {%
+    \textbf{PI Velocidad}\\[2.5pt]
+    \scriptsize \mbox{$K_p = 21.86$},\; \mbox{$K_i = 218.72$}\\[1pt]
+    \scriptsize ($\zeta=1.0,\; \omega_n=20\,\text{rad/s}$)
+};
+
+\node[sum, left=0.80cm of pi] (sumw) {$\Sigma$};
+
+\node[ctrl, text width=2.85cm, minimum height=1.42cm, left=0.84cm of sumw] (ref) {%
+    \textbf{Consigna $\omega_r^*$}\\[2pt]
+    \scriptsize + \textit{Rate Limiter}\\[0.5pt]
+    \scriptsize ($2000\,\text{rpm/s}$)
+};
+
+% =============================================================================
+% 4. DOMINIO TÉRMICO (INFERIOR IZQUIERDA)
+% =============================================================================
+\coordinate (botRowY) at ($(kin.south)+(0, -1.68cm)$);
+
+\node[therm, text width=4.45cm, minimum height=1.62cm, anchor=north west] (cauer) at (grid.west |- botRowY) {%
+    \textbf{Red T\'ermica Cauer RC}\\[2pt]
+    \scriptsize $C_{th} \parallel R_{th} \to T_{amb}$ (1.\textsuperscript{er} orden)\\[2.5pt]
+    \scriptsize $\displaystyle C_{th}\frac{dT_{dev}}{dt} + \frac{T_{dev}-T_{amb}}{R_{th}} = P_{cu}$
+};
+
+\node[therm, text width=4.25cm, minimum height=1.62cm, right=1.05cm of cauer] (temp) {%
+    \textbf{Telemetr\'ia $T_{dev}(t)$}\\[2.5pt]
+    \scriptsize Supervisi\'on t\'ermica de devanados\\[1.5pt]
+    \scriptsize \textbf{L\'imite RETIE Clase F: $155\,^\circ\text{C}$}
+};
+
+% =============================================================================
+% 5. DOMINIO VIBRACIONAL (INFERIOR DERECHA)
+% =============================================================================
+\node[vib, text width=4.35cm, minimum height=1.62cm, anchor=north east] (vtele) at (load.east |- botRowY) {%
+    \textbf{Velocidad $v_{vib}(t)$}\\[2.5pt]
+    \scriptsize $v_{vib}(t) = 0.002\,|\omega_r|\,s(t)$\\[1.5pt]
+    \scriptsize \textbf{ISO~10816-1} ($1.8\,/\,4.5\,\text{mm/s}$)
+};
+
+\node[vib, text width=4.20cm, minimum height=1.62cm, left=0.95cm of vtele] (vkin) {%
+    \textbf{Modelo Cinem\'atico}\\[2pt]
+    \scriptsize $\theta_m(t) = \int \omega_r(t)\,dt$\\[2pt]
+    \scriptsize $s(t) = \sin(\theta_m) + \eta(t)$
+};
+
+% =============================================================================
+% ETIQUETAS DE DOMINIO (INCLUIDAS EN FIT PARA GARANTIZAR CERO COLISIONES)
+% =============================================================================
+\node[domTitle, text=elecBorder, anchor=south west] (lbl_elec)
+    at ($(grid.north west)+(0.0, 0.18cm)$) {DOMINIO EL\'ECTRICO DE POTENCIA};
+
+\node[domTitle, text=ctrlBorder, anchor=south east] (lbl_ctrl)
+    at ($(psiref.north east |- hyst.north east)+(0.0, 0.24cm)$) {DOMINIO DE CONTROL DTC Y LAZO PI};
+
+\node[domTitle, text=mechBorder, anchor=south] (lbl_mech)
+    at ($(load.north)+(0.0, 0.18cm)$) {DOMINIO MEC\'ANICO};
+
+\node[domTitle, text=thermBorder, anchor=north] (lbl_therm)
+    at ($($(cauer.south west)!0.5!(temp.south east)$)+(0.0, -0.15cm)$) {DOMINIO T\'ERMICO (MODELO CAUER)};
+
+\node[domTitle, text=vibBorder, anchor=north] (lbl_vib)
+    at ($($(vkin.south west)!0.5!(vtele.south east)$)+(0.0, -0.15cm)$) {DOMINIO VIBRACIONAL (ISO~10816-1)};
+
+% =============================================================================
+% CAJAS DELIMITADORAS DE DOMINIOS (BACKGROUND LAYER, FIT POR CONSTRUCCIÓN)
+% =============================================================================
+\begin{scope}[on background layer]
+    \node[draw=elecBorder!55, fill=elecFill, line width=0.8pt, rounded corners=6pt,
+          fit=(grid)(rect)(inv)(sens)(lbl_elec), inner sep=8pt] (box_elec) {};
+
+    \node[draw=ctrlBorder!55, fill=ctrlFill, line width=0.8pt, rounded corners=6pt,
+          fit=(ref)(sumw)(pi)(hyst)(psiref)(lut)(est)(lbl_ctrl), inner sep=9pt] (box_ctrl) {};
+
+    \node[draw=mechBorder!55, fill=mechFill, line width=0.8pt, rounded corners=6pt,
+          fit=(load)(kin)(lbl_mech), inner sep=8pt] (box_mech) {};
+
+    \node[draw=thermBorder!55, fill=thermFill, line width=0.8pt, rounded corners=6pt,
+          fit=(cauer)(temp)(lbl_therm), inner sep=8pt] (box_therm) {};
+
+    \node[draw=vibBorder!55, fill=vibFill, line width=0.8pt, rounded corners=6pt,
+          fit=(vkin)(vtele)(lbl_vib), inner sep=8pt] (box_vib) {};
+\end{scope}
+
+% =============================================================================
+% CONEXIONES ORTOGONALES (ZERO-CROSSING POR CONSTRUCCIÓN)
+% =============================================================================
+
+% --- 1. Cadena Eléctrica de Potencia ---
+\draw[arrPwrShort] (grid.east) -- (rect.west);
+\draw[arrPwrShort] (rect.east) -- node[above=2pt, lbl, text=elecBorder] {$V_{dc}$} (inv.west);
+\draw[arrPwrShort] (inv.east) -- node[above=2pt, lbl, text=elecBorder] {$v_{pwm}$} (sens.west);
+\draw[arrPwr] (sens.east) -- (motor.west);
+% Etiquetas centradas exactamente en el canal blanco y alineadas en Y a la flecha
+\coordinate (sensMotMid) at ($(sens.east -| box_elec.east)!0.50!(motor.west)$);
+\node[lbl, text=elecBorder, anchor=south] at ($(sensMotMid)+(0, 2.5pt)$) {$v_{abc}$};
+\node[lbl, text=elecBorder, anchor=north] at ($(sensMotMid)+(0, -2.5pt)$) {$i_{abc}$};
+
+% --- 2. Control DTC y Lazo de Velocidad PI ---
+\draw[arrCtrlShort] (ref.east) -- node[above=2pt, lbl, pos=0.76] {\bfseries $+$} (sumw.west);
+\draw[arrCtrlShort] (sumw.east) -- node[above=2pt, lbl] {$e_\omega$} (pi.west);
+\draw[arrCtrl] (pi.east) -- node[above=2pt, lbl, text=ctrlBorder] {$T_e^*$} (hyst.west);
+\draw[arrCtrlShort] (psiref.west) -- (hyst.east);
+
+% Estimador -> Comparadores (vertical recto en el lado derecho del estimador)
+\coordinate (estUpX) at ($(est.north)+(0.55cm, 0)$);
+\draw[arrCtrl] (estUpX) -- node[right=3pt, lbl, text=ctrlBorder, pos=0.48] {$|\boldsymbol{\psi}_s|,\, T_e$} (estUpX |- hyst.south);
+
+% Comparadores -> Tabla LUT (corredor horizontal despejado entre Fila C1 y Fila C2)
+\coordinate (hystOut) at ($(hyst.south)+(-1.60cm, 0)$);
+\coordinate (ctrlMidY) at ($(hyst.south)!0.48!(lut.north)$);
+\draw[arrCtrl, rounded corners=4pt]
+    (hystOut) -- (hystOut |- ctrlMidY)
+    -- node[below=2.5pt, lbl, text=ctrlBorder, pos=0.48] {$d_T,\, d_\psi$} (lut.north |- ctrlMidY)
+    -- (lut.north);
+
+% Estimador -> Tabla LUT (horizontal recto: sector Sk)
+\draw[arrCtrl] (est.west) -- node[above=2pt, lbl, text=ctrlBorder] {$S_k$} (lut.east);
+
+% Interfaz Control <-> Potencia (verticales exactos, etiquetas centradas en canal blanco)
+\coordinate (elecCtrlMidY) at ($(box_elec.north)!0.50!(box_ctrl.south)$);
+\draw[arrCtrl] (lut.south) -- (inv.north);
+\node[lbl, text=ctrlBorder, anchor=east] at ($(lut.south |- elecCtrlMidY)+(-4pt, 0)$) {$S_{a,b,c}$};
+
+\draw[arrCtrl] (sens.north) -- (sens.north |- est.south);
+\node[lbl, text=ctrlBorder, anchor=west] at ($(sens.north |- elecCtrlMidY)+(4pt, 0)$) {$v_{abc},\, i_{abc}$};
+
+% --- 3. Dominio Mecánico y Realimentación de Velocidad ---
+\draw[arrShaft] (motor.east) -- (load.west);
+\coordinate (motMechMid) at ($(motor.east)!0.50!(motor.east -| box_mech.west)$);
+\node[lbl, text=mechBorder, anchor=south] at ($(motMechMid)+(0, 3.5pt)$) {\textbf{Eje}};
+\node[lbl, text=mechBorder, anchor=north] at ($(motMechMid)+(0, -3.5pt)$) {$T_e \mid T_L$};
+\draw[arrMech] (load.south) -- (kin.north);
+
+% Riel superior de realimentación de velocidad ω_r(t) (perímetro externo, 0 cruces)
+\coordinate (railRightX) at ($(box_mech.east)+(0.70cm, 0)$);
+\coordinate (railTopY) at ($(box_ctrl.north)+(0, 0.58cm)$);
+\draw[arrMech, rounded corners=5pt]
+    (kin.east) -- (kin.east -| railRightX)
+    -- node[right=2.5pt, lbl, text=mechBorder, pos=0.55] {$\omega_r(t)$} (railRightX |- railTopY)
+    -- node[above=2.5pt, lbl, text=mechBorder, pos=0.45] {Realimentaci\'on de velocidad $\omega_r(t)$} (sumw.north |- railTopY)
+    -- (sumw.north);
+\node[lbl, font=\scriptsize\bfseries] at ($(sumw.north)+(0.24cm, 0.22cm)$) {$-$};
+
+% --- 4. Dominio Térmico (Pérdidas Joule P_cu desde Motor ASM) ---
+\coordinate (thermBusY) at ($(motor.south)+(0, -0.78cm)$);
+\draw[arrTherm, rounded corners=5pt]
+    (motor.south) -- (motor.south |- thermBusY)
+    -- node[above=2.5pt, lbl, text=thermBorder, pos=0.45] {P\'erdidas Joule $P_{cu} = 3I_s^2 R_s$} (cauer.north |- thermBusY)
+    -- (cauer.north);
+\draw[arrTherm] (cauer.east) -- node[above=2pt, lbl, text=thermBorder] {$T_{dev}(t)$} (temp.west);
+
+% --- 5. Dominio Vibracional (Velocidad ω_r(t) desde Sensor Cinemático) ---
+\coordinate (vibBusY) at ($(kin.south)!0.48!(vkin.north)$);
+\draw[arrVib, rounded corners=5pt]
+    (kin.south) -- (kin.south |- vibBusY)
+    -- node[above=2pt, lbl, text=vibBorder, pos=0.50] {Velocidad $\omega_r(t)$} (vkin.north |- vibBusY)
+    -- (vkin.north);
+\draw[arrVib] (vkin.east) -- node[above=2pt, lbl, text=vibBorder] {$s(t)$} (vtele.west);
+
+% =============================================================================
+% LEYENDA COMPACTA INFERIOR (CENTRADA POR CONSTRUCCIÓN, SIN TIKZ ANIDADO)
+% =============================================================================
+\coordinate (legCenter) at ($($(box_therm.south west)!0.5!(box_vib.south east)$)+(0, -0.58cm)$);
+
+\node[lbl, anchor=center] (lg3t) at (legCenter) {Eje mec\'anico ($T_e \mid T_L$)};
+\draw[arrShaft] ($(lg3t.west)+(-0.70cm, 0)$) -- ($(lg3t.west)+(-0.08cm, 0)$);
+
+\node[lbl, anchor=east] (lg2t) at ($(lg3t.west)+(-1.05cm, 0)$) {Control DTC / PI};
+\draw[arrCtrlShort] ($(lg2t.west)+(-0.62cm, 0)$) -- ($(lg2t.west)+(-0.08cm, 0)$);
+
+\node[lbl, anchor=east] (lg1t) at ($(lg2t.west)+(-0.98cm, 0)$) {Potencia AC/DC/VSI};
+\draw[arrPwrShort] ($(lg1t.west)+(-0.62cm, 0)$) -- ($(lg1t.west)+(-0.08cm, 0)$);
+
+\node[lbl, anchor=west] (lg4t) at ($(lg3t.east)+(0.98cm, 0)$) {Flujo t\'ermico ($P_{cu}$)};
+\draw[arrTherm] ($(lg4t.west)+(-0.62cm, 0)$) -- ($(lg4t.west)+(-0.08cm, 0)$);
+
+\node[lbl, anchor=west] (lg5t) at ($(lg4t.east)+(0.98cm, 0)$) {Cinem\'atica vibracional};
+\draw[arrVib] ($(lg5t.west)+(-0.62cm, 0)$) -- ($(lg5t.west)+(-0.08cm, 0)$);
+
+\coordinate (lgLeft) at ($(lg1t.west)+(-0.70cm, 0)$);
+\begin{scope}[on background layer]
+    \node[draw=inkMuted!35, fill=white, rounded corners=3pt, line width=0.6pt,
+          fit=(lgLeft)(lg1t)(lg2t)(lg3t)(lg4t)(lg5t), inner xsep=8pt, inner ysep=3.5pt] {};
+\end{scope}
+
+\end{tikzpicture}%
+}
+\caption{Arquitectura multif\'isica acoplada y esquema de Control Directo de Par (DTC) con lazo externo PI de velocidad implementados en \texttt{InductionMachineDTC.slx} para el motor ASM de 10\,HP ($460\,\text{V}$, 4 polos). Se articulan los cinco dominios f\'isicos: etapa el\'ectrica de potencia (red trif\'asica, bus DC de $650\,\text{V}$ e inversor VSI a $f_{sw}=2\,\text{kHz}$), control DTC por hist\'eresis ($\Delta T=3\,\text{N}\!\cdot\!\text{m}$, $\Delta\psi=0.015\,\text{Wb}$) con estimador y tabla LUT, carga din\'amica de molienda ($T_n=39.58\,\text{N}\!\cdot\!\text{m}$), red t\'ermica Cauer RC (monitoreo RETIE Clase~F a $155\,^\circ\text{C}$) y modelo vibracional seg\'un ISO~10816-1.}
+\label{fig:control_dtc_multifisico}
+\end{figure*}

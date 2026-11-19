@@ -1,0 +1,362 @@
+\begin{figure*}[!t]
+\centering
+\begingroup
+% Paleta cromática académica (local al grupo de la figura)
+\definecolor{rcmNavy}{HTML}{1B3A5C}
+\definecolor{rcmSlateDark}{HTML}{334155}
+\definecolor{rcmSlateBorder}{HTML}{64748B}
+\definecolor{rcmCyanDark}{HTML}{0369A1}
+\definecolor{rcmCyanBg}{HTML}{F0F9FF}
+\definecolor{rcmBlueDark}{HTML}{1D4ED8}
+\definecolor{rcmBlueBg}{HTML}{EFF6FF}
+\definecolor{rcmIndigoDark}{HTML}{3730A3}
+\definecolor{rcmIndigoBg}{HTML}{EEF2FF}
+\definecolor{rcmGoldDark}{HTML}{B45309}
+\definecolor{rcmGoldBg}{HTML}{FFFBEB}
+\definecolor{rcmGreenDark}{HTML}{15803D}
+\definecolor{rcmGreenBg}{HTML}{F0FDF4}
+\definecolor{rcmGreenLine}{HTML}{86EFAC}
+\definecolor{rcmAmberDark}{HTML}{B45309}
+\definecolor{rcmAmberBg}{HTML}{FFFBEB}
+\definecolor{rcmAmberLine}{HTML}{FCD34D}
+\definecolor{rcmRedDark}{HTML}{B91C1C}
+\definecolor{rcmRedBg}{HTML}{FEF2F2}
+\definecolor{rcmRedLine}{HTML}{FCA5A5}
+\definecolor{rcmVioletDark}{HTML}{6D28D9}
+\definecolor{rcmVioletBg}{HTML}{F5F3FF}
+\definecolor{rcmVioletLine}{HTML}{C4B5FD}
+\definecolor{rcmTealDark}{HTML}{0F766E}
+\definecolor{rcmTealBg}{HTML}{F0FDFA}
+\definecolor{rcmTealBadge}{HTML}{115E59}
+
+% Constantes de layout centralizadas (Layout by Construction)
+\def\pipgap{0.54cm}
+\def\hdrgap{0.64cm}
+
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[
+    % Flechas canónicas
+    flow/.style={draw=rcmSlateDark, line width=0.95pt, -{Stealth[length=2.3mm, width=1.65mm]}},
+    flowshort/.style={draw=rcmSlateDark, line width=0.95pt, -{Stealth[length=1.85mm, width=1.4mm]}, shorten <=0pt},
+    feedback/.style={draw=rcmRedDark, line width=0.9pt, densely dashed, -{Stealth[length=2.1mm, width=1.55mm]}},
+    % Nodos de Fase I (altura uniforme)
+    pipbox/.style={
+        rectangle,
+        rounded corners=3pt,
+        line width=0.9pt,
+        inner xsep=5pt,
+        inner ysep=5pt,
+        minimum height=2.05cm,
+        align=center,
+        font=\scriptsize
+    },
+    herobox/.style={
+        rectangle,
+        rounded corners=3pt,
+        line width=1.2pt,
+        inner xsep=5.5pt,
+        inner ysep=5pt,
+        minimum height=2.05cm,
+        align=left,
+        font=\scriptsize
+    },
+    decbox/.style={
+        diamond,
+        aspect=2.0,
+        draw=rcmGoldDark,
+        fill=rcmGoldBg,
+        line width=1.05pt,
+        inner sep=2pt,
+        align=center,
+        font=\sffamily\scriptsize\bfseries
+    },
+    % Sub-bloques sincronizados de los 4 carriles (Fase II)
+    lanehdr/.style={
+        rectangle,
+        rounded corners=2pt,
+        text width=4.68cm,
+        inner xsep=4pt,
+        inner ysep=4pt,
+        minimum height=0.60cm,
+        align=center,
+        text=white,
+        font=\sffamily\scriptsize\bfseries
+    },
+    lanecond/.style={
+        rectangle,
+        rounded corners=2pt,
+        line width=0.55pt,
+        text width=4.68cm,
+        inner xsep=4pt,
+        inner ysep=3.5pt,
+        minimum height=1.22cm,
+        align=center,
+        font=\scriptsize
+    },
+    lanecard/.style={
+        rectangle,
+        rounded corners=2pt,
+        line width=0.55pt,
+        text width=4.68cm,
+        inner xsep=4pt,
+        inner ysep=4pt,
+        align=left,
+        font=\scriptsize
+    },
+    zonepill/.style={
+        rectangle,
+        rounded corners=2pt,
+        inner xsep=6pt,
+        inner ysep=2.2pt,
+        text=white,
+        font=\sffamily\scriptsize\bfseries
+    }
+]
+
+% ==============================================================================
+% FASE I: PIPELINE EDGE AI (10 Hz EN GODOT 4.7 / MATLAB)
+% ==============================================================================
+\node[pipbox, draw=rcmCyanDark, fill=rcmCyanBg, text width=4.75cm] (s1) at (0,0) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\sffamily\textcolor{rcmCyanDark}{1. Telemetría Multisensor}}\\[2pt]
+        {\tiny\textcolor{rcmSlateDark}{Adquisición 10\,Hz (Hall, PT100, vib.)}}\\[3pt]
+        $\mathbf{x}=[I_{\mathrm{rms}},\,IUF,\,THD,\,V_{\mathrm{rms}},$\\[2pt]
+        $T_w,\,\frac{dT}{dt},\,v_{\mathrm{rms}},\,v_{\mathrm{pk}}]^T \in \mathbb{R}^8$
+    \end{tabular}%
+};
+
+\node[pipbox, draw=rcmBlueDark, fill=rcmBlueBg, text width=4.05cm, right=\pipgap of s1] (s2) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\sffamily\textcolor{rcmBlueDark}{2. Adaptación + Z-Score}}\\[3pt]
+        Escala: $I'_{\mathrm{rms}} = I_{\mathrm{rms}}\!\cdot\!\frac{9.363}{13.5}$\\[4pt]
+        $\hat{x}_j = \dfrac{x_j - \mu_j}{\sigma_j}\;\;(j=1\dots 8)$
+    \end{tabular}%
+};
+
+\node[herobox, draw=rcmIndigoDark, fill=rcmIndigoBg, text width=6.15cm, right=\pipgap of s2] (s3) {%
+    \parbox{\linewidth}{%
+        \centering\textbf{\sffamily\textcolor{rcmIndigoDark}{3. Clasificación Dual + Pronóstico}}\\[4pt]
+        \raggedright
+        $\bullet$~\textbf{MLP} $8\!\to\!16\!\to\!8\!\to\!4$ (316 params, Softmax)\\[2.5pt]
+        $\bullet$~\textbf{SVM} Kernel RBF ($\gamma=0.125$, $C=10$)\\[2.5pt]
+        $\bullet$~\textbf{MHI} (0--100\%) y \textbf{RUL} (Arrhenius / $L_{10h}$)%
+    }%
+};
+
+\node[decbox, right=\pipgap of s3] (dec) {%
+    \begin{tabular}{@{}c@{}}
+        \textcolor{rcmGoldDark}{¿Certeza}\\[-1pt]
+        \textcolor{rcmGoldDark}{$\ge 90\%$?}
+    \end{tabular}%
+};
+
+% Flechas horizontales directas de Fase I
+\draw[flowshort] (s1.east) -- (s2.west);
+\draw[flowshort] (s2.east) -- (s3.west);
+\draw[flowshort] (s3.east) -- (dec.west);
+
+% Bucle limpio de retorno (No -> Re-muestreo) por encima de Fase I
+\coordinate (fb_y) at ($(s3.north) + (0, 0.58cm)$);
+\coordinate (fb_r) at (dec.north |- fb_y);
+\coordinate (fb_l) at (s1.north |- fb_y);
+\draw[feedback, rounded corners=4pt] (dec.north) -- (fb_r) -- (fb_l) -- (s1.north);
+\node[rectangle, rounded corners=2pt, draw=rcmRedLine, fill=white, inner xsep=5pt, inner ysep=2pt, font=\scriptsize, text=rcmRedDark] (fb_lbl) at ($(fb_l)!0.5!(fb_r)$) {\textbf{No:} Re-muestreo (descarte de transitorio, $\Delta t=100$\,ms)};
+
+% ==============================================================================
+% FASE II: TRIAGE OPERACIONAL EN 4 CARRILES (PLANTA vs. TALLER ELECTROMECÁNICO)
+% ==============================================================================
+% Referencias verticales estrictas desde s3.south (corredor amplio para Sí y Fase II)
+\coordinate (b1_bot_ref) at ($(s3.south) + (0, -0.22cm)$);
+\coordinate (b2_top_ref) at ($(b1_bot_ref) + (0, -0.96cm)$);
+\coordinate (bus_y)      at ($(b2_top_ref) + (0, -0.44cm)$);
+\coordinate (lanes_top)  at ($(bus_y)      + (0, -0.50cm)$);
+
+% --- CARRIL 4 (VIOLETA): FALLA MECÁNICA (anclado exactamente bajo dec.south) ---
+\node[lanehdr, fill=rcmVioletDark, anchor=north] (l4_hdr) at (dec.south |- lanes_top) {4. FALLA MECÁNICA};
+\node[lanecond, draw=rcmVioletLine, fill=rcmVioletBg, below=2.5pt of l4_hdr] (l4_cond) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\textcolor{rcmVioletDark}{Umbral de Telemetría:}}\\[2pt]
+        $v_{\mathrm{rms}} > 4.5$\,mm/s\\[1.5pt]
+        (Zona D — ISO 10816-1 / 3)
+    \end{tabular}%
+};
+\node[lanecard, draw=rcmVioletLine, fill=white, below=2.5pt of l4_cond] (l4_plant) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmVioletDark}{En Planta}} {\tiny\sffamily\textcolor{rcmSlateBorder}{[CONTENCIÓN]}}\\[2.5pt]
+        $\bullet$~Parar máquina de inmediato.\\[1.5pt]
+        $\bullet$~Reapriete de pernos $3/4''$.\\[1.5pt]
+        $\bullet$~Inspección de acople y apoyos.%
+    }%
+};
+\node[lanecard, draw=rcmVioletDark!75, line width=0.75pt, fill=rcmVioletBg!75, below=2.5pt of l4_plant] (l4_shop) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmVioletDark}{Taller Electromecánico}} {\tiny\sffamily\textcolor{rcmVioletDark}{[TALLER]}}\\[2.5pt]
+        $\bullet$~Cambio de rodamientos C3.\\[1.5pt]
+        $\bullet$~Alineación láser ($<0.05$\,mm).\\[1.5pt]
+        $\bullet$~Balanceo dinámico (2 planos).%
+    }%
+};
+\node[draw=rcmVioletDark, line width=0.95pt, rounded corners=3.5pt, inner sep=3.5pt, fill=none, fit=(l4_hdr)(l4_cond)(l4_plant)(l4_shop)] (lane4) {};
+
+% --- CARRIL 3 (ROJO): FALLA ELÉCTRICA ---
+% Encadenado directamente a l4_hdr.north west con dy=0 exacto (0.00pt de deriva)
+\node[lanehdr, fill=rcmRedDark, anchor=north east] (l3_hdr) at ($(l4_hdr.north west) + (-\hdrgap, 0)$) {3. FALLA ELÉCTRICA};
+\node[lanecond, draw=rcmRedLine, fill=rcmRedBg, below=2.5pt of l3_hdr] (l3_cond) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\textcolor{rcmRedDark}{Umbral de Telemetría:}}\\[2pt]
+        $IUF > 8\%$,\; $THD > 10\%$\\[1.5pt]
+        o pérdida fase L3 / sag
+    \end{tabular}%
+};
+\node[lanecard, draw=rcmRedLine, fill=white, below=2.5pt of l3_cond] (l3_plant) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmRedDark}{En Planta}} {\tiny\sffamily\textcolor{rcmSlateBorder}{[SEGURIDAD RETIE]}}\\[2.5pt]
+        $\bullet$~Paro controlado en Tablet.\\[1.5pt]
+        $\bullet$~5 Reglas de Oro + LOTO.\\[1.5pt]
+        $\bullet$~Prueba Megger preliminar.%
+    }%
+};
+\node[lanecard, draw=rcmRedDark!75, line width=0.75pt, fill=rcmRedBg!75, below=2.5pt of l3_plant] (l3_shop) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmRedDark}{Taller Electromecánico}} {\tiny\sffamily\textcolor{rcmRedDark}{[TALLER]}}\\[2.5pt]
+        $\bullet$~CoreLoss Test ($<2$\,W/kg).\\[1.5pt]
+        $\bullet$~Horno BurnOut ($370\,^\circ\mathrm{C}$).\\[1.5pt]
+        $\bullet$~Rebobinado CNC y barnizado VPI.%
+    }%
+};
+\node[draw=rcmRedDark, line width=0.95pt, rounded corners=3.5pt, inner sep=3.5pt, fill=none, fit=(l3_hdr)(l3_cond)(l3_plant)(l3_shop)] (lane3) {};
+
+% --- CARRIL 2 (ÁMBAR): SOBRECALENTAMIENTO ---
+\node[lanehdr, fill=rcmAmberDark, anchor=north east] (l2_hdr) at ($(l3_hdr.north west) + (-\hdrgap, 0)$) {2. SOBRECALENTAMIENTO};
+\node[lanecond, draw=rcmAmberLine, fill=rcmAmberBg, below=2.5pt of l2_hdr] (l2_cond) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\textcolor{rcmAmberDark}{Umbral de Telemetría:}}\\[2pt]
+        $T > 105\,^\circ\mathrm{C}$ o $\tfrac{dT}{dt} > 1.5\,^\circ\mathrm{C/min}$\\[2.5pt]
+        Límite RETIE Clase F: $155\,^\circ\mathrm{C}$
+    \end{tabular}%
+};
+\node[lanecard, draw=rcmAmberLine, fill=white, below=2.5pt of l2_cond] (l2_plant) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmAmberDark}{En Planta}} {\tiny\sffamily\textcolor{rcmSlateBorder}{[CONTENCIÓN]}}\\[2.5pt]
+        $\bullet$~Reducir tolva al 60\% de carga.\\[1.5pt]
+        $\bullet$~Despejar flujo de ventilación.\\[1.5pt]
+        $\bullet$~Inspección por termografía IR.%
+    }%
+};
+\node[lanecard, draw=rcmAmberDark!60, fill=rcmAmberBg!65, below=2.5pt of l2_plant] (l2_shop) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmAmberDark}{Control / Escalamiento}} {\tiny\sffamily\textcolor{rcmAmberDark}{[PLANTA]}}\\[2.5pt]
+        $\bullet$~Verificar descenso $<85\,^\circ\mathrm{C}$.\\[1.5pt]
+        $\bullet$~Resistencia óhmica en caliente.\\[1.5pt]
+        $\bullet$~Inspección de barniz Clase F.%
+    }%
+};
+\node[draw=rcmAmberDark, line width=0.95pt, rounded corners=3.5pt, inner sep=3.5pt, fill=none, fit=(l2_hdr)(l2_cond)(l2_plant)(l2_shop)] (lane2) {};
+
+% --- CARRIL 1 (VERDE): NORMAL ---
+\node[lanehdr, fill=rcmGreenDark, anchor=north east] (l1_hdr) at ($(l2_hdr.north west) + (-\hdrgap, 0)$) {1. OPERACIÓN NORMAL};
+\node[lanecond, draw=rcmGreenLine, fill=rcmGreenBg, below=2.5pt of l1_hdr] (l1_cond) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\textcolor{rcmGreenDark}{Umbral de Telemetría:}}\\[2pt]
+        $IUF < 3\%$,\; $T < 75\,^\circ\mathrm{C}$\\[1.5pt]
+        $v_{\mathrm{rms}} \le 1.8$\,mm/s (ISO Zona A)
+    \end{tabular}%
+};
+\node[lanecard, draw=rcmGreenLine, fill=white, below=2.5pt of l1_cond] (l1_plant) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmGreenDark}{En Planta}} {\tiny\sffamily\textcolor{rcmSlateBorder}{[RÉGIMEN VFD]}}\\[2.5pt]
+        $\bullet$~Molienda continua con VFD.\\[1.5pt]
+        $\bullet$~Vigilancia en SCADA y Tablet.\\[1.5pt]
+        $\bullet$~Sin intervención correctiva.%
+    }%
+};
+\node[lanecard, draw=rcmGreenDark!60, fill=rcmGreenBg!65, below=2.5pt of l1_plant] (l1_shop) {%
+    \parbox[t][1.46cm][t]{\linewidth}{\raggedright
+        \textbf{\textcolor{rcmGreenDark}{Preventivo Rutinario}} {\tiny\sffamily\textcolor{rcmGreenDark}{[PLANTA]}}\\[2.5pt]
+        $\bullet$~Limpieza de rejillas y aletas.\\[1.5pt]
+        $\bullet$~Engrase mensual programado.\\[1.5pt]
+        $\bullet$~Tendencia térmica y vibratoria.%
+    }%
+};
+\node[draw=rcmGreenDark, line width=0.95pt, rounded corners=3.5pt, inner sep=3.5pt, fill=none, fit=(l1_hdr)(l1_cond)(l1_plant)(l1_shop)] (lane1) {};
+
+% ==============================================================================
+% CONTENEDORES DE FASE I Y FASE II (ALINEADOS POR CONSTRUCCIÓN A LOS CARRILES)
+% ==============================================================================
+\coordinate (b1_left)  at (lane1.west |- s1.center);
+\coordinate (b1_right) at (lane4.east |- s1.center);
+\coordinate (b1_top)   at ($(fb_lbl.north) + (0, 0.24cm)$);
+\node[draw=rcmSlateBorder, densely dashed, line width=0.75pt, rounded corners=4pt, inner xsep=7pt, inner ysep=6pt, fill=none, fit=(s1)(s2)(s3)(dec)(fb_lbl)(b1_left)(b1_right)(b1_top)(b1_bot_ref)] (band1) {};
+\node[zonepill, fill=rcmNavy, anchor=west] at ([xshift=4mm]band1.north west) {FASE I: PIPELINE EDGE AI (10\,Hz — GODOT 4.7 / MATLAB)};
+
+\node[draw=rcmSlateBorder, densely dashed, line width=0.75pt, rounded corners=4pt, inner xsep=7pt, inner ysep=6pt, fill=none, fit=(lane1)(lane2)(lane3)(lane4)(b2_top_ref)] (band2) {};
+\node[zonepill, fill=rcmSlateDark, anchor=west] at ([xshift=4mm]band2.north west) {FASE II: TRIAGE OPERACIONAL RCM EN 4 CARRILES (PLANTA vs. TALLER ELECTROMECÁNICO)};
+
+% ==============================================================================
+% BUS ORTOGONAL DE DISTRIBUCIÓN (FASE I -> FASE II)
+% ==============================================================================
+\coordinate (bus1) at (lane1.north |- bus_y);
+\coordinate (bus2) at (lane2.north |- bus_y);
+\coordinate (bus3) at (lane3.north |- bus_y);
+\coordinate (bus4) at (lane4.north |- bus_y);
+
+% Tronco vertical Sí desde el rombo hasta el bus
+\draw[draw=rcmSlateDark, line width=1.0pt] (dec.south) -- (bus4);
+\node[rectangle, rounded corners=2pt, draw=rcmGreenDark, fill=rcmGreenBg, inner xsep=4pt, inner ysep=1.3pt, font=\sffamily\scriptsize\bfseries, text=rcmGreenDark, anchor=west] at ($(band1.south -| dec.south)!0.50!(band2.north -| dec.south) + (5pt, 0)$) {Sí};
+
+% Espina horizontal del bus y derivaciones verticales sin holgura
+\draw[draw=rcmSlateDark, line width=1.0pt] (bus1) -- (bus4);
+\fill[rcmSlateDark] (bus2) circle (1.4pt) (bus3) circle (1.4pt) (bus4) circle (1.4pt);
+
+\draw[flowshort, draw=rcmGreenDark]  (bus1) -- (lane1.north);
+\draw[flowshort, draw=rcmAmberDark]  (bus2) -- (lane2.north);
+\draw[flowshort, draw=rcmRedDark]    (bus3) -- (lane3.north);
+\draw[flowshort, draw=rcmVioletDark] (bus4) -- (lane4.north);
+
+% ==============================================================================
+% FASE III: BANDA DE CIERRE (TEAL — CERTIFICACIÓN RETIE Y RETORNO SEGURO)
+% ==============================================================================
+\coordinate (close_y) at ($(band2.south) + (0, -0.88cm)$);
+\node[draw=none, fill=none, align=center, font=\scriptsize, anchor=north] (close_txt) at ($(band2.south |- close_y) + (0.75cm, 0)$) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\sffamily\footnotesize\textcolor{rcmTealBadge}{Pruebas de Recepción y Certificación RETIE}}%
+        \;\;{\scriptsize(Megger $>100\,\mathrm{M}\Omega$, Surge Test, Rigidez Dieléctrica)}%
+        \;\;{\footnotesize\textcolor{rcmTealDark}{$\boldsymbol{\longrightarrow}$}}\;\;%
+        \textbf{\sffamily\footnotesize\textcolor{rcmTealBadge}{Retorno Seguro a Operación}}\\[3pt]
+        {\scriptsize\textcolor{rcmSlateDark}{Validación dieléctrica y mecánica post-intervención (Carriles 2--4) y continuidad bajo vigilancia SCADA / VFD (Carril 1)}}
+    \end{tabular}%
+};
+\coordinate (close_l) at (band2.west |- close_txt.center);
+\coordinate (close_r) at (band2.east |- close_txt.center);
+\node[draw=rcmTealDark, line width=1.15pt, rounded corners=4pt, fill=rcmTealBg, inner xsep=0pt, inner ysep=6.5pt, fit=(close_txt)(close_l)(close_r)] (closing) {};
+% Re-dibujar texto y píldora FASE III encima del relleno sin depender de backgrounds
+\node[zonepill, fill=rcmTealBadge, anchor=west] at ([xshift=4.5mm]closing.west) {FASE III};
+\node[draw=none, fill=none, align=center, font=\scriptsize] at (close_txt.center) {%
+    \begin{tabular}{@{}c@{}}
+        \textbf{\sffamily\footnotesize\textcolor{rcmTealBadge}{Pruebas de Recepción y Certificación RETIE}}%
+        \;\;{\scriptsize(Megger $>100\,\mathrm{M}\Omega$, Surge Test, Rigidez Dieléctrica)}%
+        \;\;{\footnotesize\textcolor{rcmTealDark}{$\boldsymbol{\longrightarrow}$}}\;\;%
+        \textbf{\sffamily\footnotesize\textcolor{rcmTealBadge}{Retorno Seguro a Operación}}\\[3pt]
+        {\scriptsize\textcolor{rcmSlateDark}{Validación dieléctrica y mecánica post-intervención (Carriles 2--4) y continuidad bajo vigilancia SCADA / VFD (Carril 1)}}
+    \end{tabular}%
+};
+
+% Flechas limpias desde los 4 carriles hacia la banda de cierre
+\draw[flow, draw=rcmGreenDark, densely dashed] (lane1.south) -- (lane1.south |- closing.north);
+\draw[flow, draw=rcmAmberDark]                 (lane2.south) -- (lane2.south |- closing.north);
+\draw[flow, draw=rcmRedDark]                   (lane3.south) -- (lane3.south |- closing.north);
+\draw[flow, draw=rcmVioletDark]                (lane4.south) -- (lane4.south |- closing.north);
+
+% Etiquetas centradas en el corredor blanco entre band2.south y closing.north
+\coordinate (lbl_y) at ($(band2.south)!0.42!(closing.north)$);
+\node[font=\tiny\sffamily\itshape, text=rcmGreenDark, fill=white, inner xsep=2.5pt, inner ysep=1pt] at (lane1.south |- lbl_y) {Ciclo preventivo};
+\node[font=\tiny\sffamily\itshape, text=rcmAmberDark, fill=white, inner xsep=2.5pt, inner ysep=1pt] at (lane2.south |- lbl_y) {Verificación térmica};
+\node[font=\tiny\sffamily\itshape, text=rcmRedDark,   fill=white, inner xsep=2.5pt, inner ysep=1pt] at (lane3.south |- lbl_y) {Post-taller eléctrico};
+\node[font=\tiny\sffamily\itshape, text=rcmVioletDark,fill=white, inner xsep=2.5pt, inner ysep=1pt] at (lane4.south |- lbl_y) {Post-taller mecánico};
+
+\end{tikzpicture}%
+}%
+\endgroup
+\caption{Diagrama de flujo integrado de diagnóstico predictivo Edge AI a 10\,Hz (Godot~4.7 / MATLAB) y ruta de mantenimiento preventivo/predictivo (RCM) planta--taller para el motor trifásico de inducción de 10\,HP y 460\,V, articulando inferencia dual MLP/SVM, estimación MHI/RUL, triage en cuatro carriles y pruebas de certificación RETIE previas al retorno seguro a operación.}
+\label{fig:flujo_ia_rcm}
+\end{figure*}

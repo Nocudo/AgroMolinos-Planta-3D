@@ -1,0 +1,282 @@
+% ==============================================================================
+% SECCION VII Y ANEXOS - INFORME FINAL IEEE MAQUINAS ELECTRICAS (2026-2)
+% AgroMolinos del Valle S.A. - Planta Molino de Granos (10 HP, 460 V)
+% ==============================================================================
+
+\section{Conclusiones y Trabajo Futuro}\label{sec:conclusiones}
+
+El desarrollo integral ejecutado a lo largo de los tres cortes evaluativos del
+curso de M\'aquinas El\'ectricas~\cite{GuiaProyecto2026} permiti\'o articular
+el modelado electromec\'anico de alta fidelidad, el diagn\'ostico predictivo
+con inteligencia artificial transferida al borde, la optimizaci\'on
+energ\'etica mediante accionamiento de frecuencia variable y la capacitaci\'on
+inmersiva centrada en el ser humano para la planta molino de granos de
+AgroMolinos del Valle S.A. Con base en las simulaciones verificadas, la
+auditor\'ia de c\'odigo y el contraste con la literatura especializada, se
+establecen cinco conclusiones cuantitativas:
+
+\begin{enumerate}
+  \item \textbf{Convergencia del Modelado Electromec\'anico Dual (DTC y
+  Kloss):} Se comprob\'o consistencia num\'erica entre la placa comercial IE3
+  (\qty{10}{HP}, \qty{7.46}{\kilo\watt}, \qty{460}{\volt}, \qty{60}{\hertz},
+  \qty{1750}{RPM}, $I_{\mathrm{FLA}}=\qty{13.5}{\ampere}$,
+  $T_n=\qty{40.7}{\newton\meter}$, $\eta=\qty{91.7}{\percent}$)~\cite{WEG2024,IEC60034},
+  el modelo electromagn\'etico en MATLAB/Simulink con Control Directo de Par
+  (DTC) y lazo PI cr\'iticamente amortiguado ($\zeta=1.0$,
+  $\omega_n=\qty{20}{\radian\per\second}$), y el gemelo en tiempo real de
+  Godot~4.7.2. El esquema DTC recuper\'o el par electromagn\'etico en menos de
+  \qty{15}{\milli\second} y mantuvo la regulaci\'on de velocidad dentro de
+  $\pm\qty{2}{\percent}$ frente a perturbaciones de atasco de $1.35\,T_n$,
+  ratificando la rapidez din\'amica formulada por Takahashi y
+  Noguchi~\cite{Takahashi1986} y el control de pulsaciones discutido por
+  Shabestari y Mehrizi-Sani~\cite{Shabestari2019}. A su vez, el n\'ucleo de
+  Kloss ($T_{\max}=\qty{101.75}{\newton\meter}$, $s_{\max}=0.15$) acoplado a la
+  din\'amica Newton-Euler ($J=\qty{0.35}{\kilogram\meter\squared}$) convergi\'o
+  a \qty{1743.8}{RPM} (error relativo de \qty{0.35}{\percent}) y reprodujo la
+  corriente de rotor bloqueado en $I_{\mathrm{LRA}}=\qty{81.39}{\ampere}$
+  (error relativo de \qty{0.48}{\percent} frente a los \qty{81.0}{\ampere} de
+  placa). Este acoplamiento electromec\'anico-t\'ermico
+  ($C_{\mathrm{th}}=\qty{185.0}{\joule\per\celsius}$,
+  $R_{\mathrm{th}}=\qty{0.068}{\celsius\per\watt}$ nominal frente a
+  \qty{0.210}{\celsius\per\watt} con ventilaci\'on obstruida) respalda la
+  arquitectura de gemelos digitales predictivos propuesta por Singh
+  et~al.~\cite{Singh2023} y Zhang et~al.~\cite{Thermal2025}.
+
+  \item \textbf{Diagn\'ostico Predictivo con IA y Transferencia al Borde:} El
+  vector multivariable de ocho caracter\'isticas $\mathbf{x}\in\mathbb{R}^8$
+  estandarizado por $Z$-Score sobre \num{1200} registros balanceados alcanz\'o
+  \qty{100.0}{\percent} de exactitud en prueba ciega ($N=240$, cero falsos
+  negativos) en MATLAB tanto para el Perceptr\'on Multicapa MLP
+  ($8\to 16\to 8\to 4$, 316 par\'ametros entrenables y huella de memoria de
+  \qty{1.26}{kB} en precisi\'on simple) como para la SVM con kernel RBF
+  ($\gamma=0.125$). Al portar los pesos de forma nativa a GDScript
+  (\texttt{EdgeAIEngine.gd}) incorporando la adaptaci\'on de dominio
+  ($9.363/13.5$) y salvaguardas normativas ISO~10816-3~\cite{ISO10816,ISO20816},
+  el motor discrimin\'o en tiempo real las cinco fallas f\'isicas dieg\'eticas
+  con certezas MLP entre \qty{98.6}{\percent} y \qty{100.0}{\percent},
+  reflejando una ca\'ida del \'indice de salud MHI de \qty{99.6}{\percent} a
+  \qty{20.0}{\percent} y de la vida \'util remanente RUL desde
+  \qty{24000}{\hour} hasta \qty{19}{\hour}. Estos hallazgos coinciden con
+  Gangsar y Tiwari~\cite{Gangsar2020} sobre la sinergia entre vibraci\'on y
+  corriente, con Soualhi et~al.~\cite{Soualhi2022} sobre la superioridad de la
+  clasificaci\'on multivariable frente a umbrales est\'aticos y con Struwig
+  et~al.~\cite{AI2026} respecto al despliegue industrial de IA calibrada desde
+  l\'ineas base sint\'eticas.
+
+  \item \textbf{Optimizaci\'on Energ\'etica y Sostenibilidad Industria~5.0:}
+  Reemplazar el arranque directo DOL ($I_{\mathrm{LRA}}=\qty{81.39}{\ampere}$ y
+  consumo espec\'ifico de \qty{10.50}{\kilo\watt\hour\per\tonne} a
+  \qty{60}{\hertz} constantes) por un variador de frecuencia VFD escalar $V/f$
+  con rampa de aceleraci\'on de \qty{10}{\second} (\qty{6.0}{\hertz\per\second},
+  limitaci\'on $\le 1.3\,I_{\mathrm{FLA}}$) y lazo PID modulado por flujo
+  m\'asico (\qty{7.52}{\kilo\watt\hour\per\tonne}) redujo la potencia demandada
+  en baja carga (\qty{42}{\hertz}, caudal $\le\qty{0.35}{\kilogram\per\second}$)
+  hasta \qty{2.56}{\kilo\watt} ---una ca\'ida del \qty{65.7}{\percent} respecto
+  a potencia nominal por ley de afinidad c\'ubica--- y consolid\'o un ahorro
+  energ\'etico espec\'ifico del \qty{28.38}{\percent}. Para una producci\'on de
+  referencia de \num{1000}\,t/a\~no, ello representa
+  \qty{2980}{\kilo\watt\hour}/a\~no ahorrados y evita
+  \qty{488.72}{\kilogram}\,CO\textsubscript{2}e/a\~no con el factor
+  parametrizado en el simulador (\qty{0.164}{\kilogram}\,CO\textsubscript{2}e/kWh),
+  o \qty{489.85}{\kilogram}\,CO\textsubscript{2}e/a\~no empleando el factor
+  oficial UPME~2024 del SIN colombiano
+  (\qty{164.38}{\gram}\,CO\textsubscript{2}/kWh)~\cite{UPME2024}. Los m\'argenes
+  de ahorro concuerdan con Resa et~al.~\cite{Resa2019} y refuerzan el enfoque
+  de diagn\'ostico centrado en eficiencia propuesto por Adamou y
+  Alaoui~\cite{Adamou2024}.
+
+  \item \textbf{Transici\'on Centrada en el Humano (Serious Game 3D y Seguridad
+  RETIE):} El entorno interactivo sobre Vulkan~1.3 Forward+
+  (\texttt{planta\_\allowbreak completa.glb} con \num{1338166} tri\'angulos,
+  846 colisionadores \texttt{BoxShape3D}, 28 puertas alineadas por PCA y cero
+  primitivas sint\'eticas), el recorrido guiado de 20 estaciones con
+  enclavamiento obligatorio de EPP~6/6 y las 5~Reglas de Oro LOTO en el CCM de
+  \qty{460}{\volt}, la inducci\'on f\'isica dieg\'etica de fallas y la Tablet
+  SCADA de 9 pesta\~nas (100\% \emph{in-game}, sin navegador externo)
+  operacionalizan la centralidad humana, resiliencia y sostenibilidad de la
+  Industria~5.0~\cite{Breque2021,Xu2021}. En l\'inea con los estudios de
+  Stefan et~al.~\cite{Stefan2023,Stefan2024}, el entrenamiento inmersivo con
+  retroalimentaci\'on inmediata y r\'ubrica cuantitativa potencia la retenci\'on
+  de maniobras seguras exigidas por el RETIE~\cite{RETIE2026},
+  OSHA~1910.147~\cite{OSHA1910} y NFPA~61~\cite{NFPA61}.
+
+  \item \textbf{Calidad de Ingenier\'ia y Reproducibilidad Verificada:} La
+  suite automatizada \texttt{headless\_\allowbreak verify.gd} certific\'o
+  \texttt{10/10 PASS} (cero fallos) sobre las 16 escenas \texttt{.tscn}, las 16
+  se\~nales de \texttt{EventBus}, los subsistemas electromec\'anico, t\'ermico,
+  energ\'etico y de Edge~AI, la invarianza geom\'etrica de la Tablet SCADA
+  ($1228\times 748$\,px) y la pol\'itica de activos 3D. La publicaci\'on
+  \'integra de c\'odigos MATLAB/Simulink, GDScript~2.0 y lanzadores
+  automatizados en GitHub asegura plena reproducibilidad t\'ecnica y
+  auditabilidad acad\'emica.
+\end{enumerate}
+
+\subsection{Trabajo Futuro}\label{subsec:trabajo_futuro}
+
+Como hoja de ruta para escalar el gemelo digital desde la validaci\'on
+computacional hacia el despliegue industrial en campo, se proyectan tres
+l\'ineas prioritarias:
+\begin{enumerate}
+  \item \emph{Enlace Hardware-in-the-Loop (HIL) en banco real:} acoplar la
+  telemetr\'ia de Godot~4.7.2 y MATLAB mediante un nodo ESP32 o PLC industrial
+  bajo protocolos Modbus~TCP y MQTT~\cite{EdgeCloud2022,Fog2025} conectado a un
+  banco de motor trif\'asico instrumentado con sensores de corriente de efecto
+  Hall, sondas RTD~PT100 y aceler\'ometro triaxial MEMS calibrado.
+  \item \emph{Seguridad funcional cableada independiente:} implementar un
+  circuito de paro de emergencia categor\'ia~0 cableado directamente sobre la
+  bobina del contactor principal mediante rel\'e de seguridad certificado, sin
+  dependencia del software ni del bus de comunicaciones, en estricto apego al
+  RETIE~\cite{RETIE2026} y NFPA~70E~\cite{NFPA70E}.
+  \item \emph{Aprendizaje por transferencia con se\~nales reales de molienda:}
+  reentrenar las capas finales del clasificador MLP y ajustar la calibraci\'on
+  de dominio empleando registros reales de vibraci\'on y firma de corriente
+  adquiridos en molinos de martillos en servicio, aprovechando esquemas de
+  fusi\'on multisensorial y transferencia de dominio~\cite{SensorFusion2022,AI2026}.
+\end{enumerate}
+
+% ==============================================================================
+\section*{Agradecimientos}
+
+Los autores expresan su agradecimiento a la Universidad de los Llanos y al
+Programa de Ingenier\'ia Electr\'onica de la Facultad de Ciencias B\'asicas e
+Ingenier\'ia por el respaldo acad\'emico e institucional para el desarrollo de
+este proyecto. De manera especial, se agradece a la docente titular
+Ing.\ Lauren Genith Isaza Dom\'inguez por su direcci\'on t\'ecnica, su
+acompa\~namiento continuo en los tres cortes evaluativos y su impulso al
+abordaje aplicado de las m\'aquinas el\'ectricas bajo los principios de la
+Industria~5.0.
+
+% ==============================================================================
+\appendices
+
+\section{Par\'ametros Maestros MATLAB y Repositorio Oficial}\label{app:matlab}
+
+El c\'odigo fuente \'integro del proyecto ---incluyendo el modelo en Simulink
+(\texttt{Induction\allowbreak Machine\allowbreak DTC.slx}), los scripts de IA y panel en MATLAB
+(\texttt{generate\_\allowbreak dataset.m}, \texttt{train\_\allowbreak classifiers.m} y
+\texttt{Motor\allowbreak Fault\allowbreak Diagnostic\allowbreak GUI.m}), el simulador en Godot~4.7.2
+(\texttt{Simulador\allowbreak Planta\allowbreak Godot/}), los lanzadores de un clic y la suite
+\texttt{headless\_\allowbreak verify.gd}--- se encuentra publicado en el repositorio
+oficial de acceso abierto:
+\begin{center}
+\url{https://github.com/Nocudo/AgroMolinos-Planta-3D}
+\end{center}
+De forma complementaria, se entreg\'o el paquete aut\'onomo sin conexi\'on
+\texttt{AgroMolinos\_\allowbreak Planta3D\_\allowbreak USB\_\allowbreak
+Portable.zip}, que agrupa el ejecutable para Windows y las simulaciones de los
+tres cortes. El Listado~\ref{lst:matlab_params} compendia las constantes
+maestras del motor de \qty{10}{HP} (\texttt{InductionMachineDTCData.m}) y la
+s\'intesis anal\'itica del regulador PI (\texttt{tune\_pi.m}).
+
+\begin{lstlisting}[language=Matlab,float=htbp,numbers=none,breaklines=true,xleftmargin=0pt,xrightmargin=0pt,caption={Constantes maestras de \texttt{InductionMachineDTCData.m} y s\'intesis PI de \texttt{tune\_pi.m} (motor \qty{10}{HP}, \qty{460}{\volt}, \qty{60}{\hertz}).},label={lst:matlab_params}]
+% InductionMachineDTCData.m - Placa 10 HP, 460 V, 60 Hz
+Pn  = 7460;   Vn = 460;   fn = 60;   p = 2;
+Rs  = 0.0139; Lls = 0.0672;          % Estator [pu]
+Rr  = 0.0112; Llr = 0.0672; Lm = 2.717;
+H   = 0.2734; F   = 0.0106;          % Inercia/friccion
+Vbase = Vn/sqrt(3)*sqrt(2);          % V pico L-N
+Ibase = Pn/(1.5*Vbase);              % A pico base
+Zbase = Vbase/Ibase;  wbase = 2*pi*fn;
+Tbase = Pn/(wbase/p); psin = Vbase/wbase;
+Ts = 5e-6;  fsw = 2e3;  Tsc = Ts;    % Muestreo DTC
+zeta = 1.0; wn  = 20;                % PI critico
+Kp_wr = 2*zeta*wn*(2*H) - F;
+Ki_wr = (wn^2)*(2*H);
+FluxHystBand = 0.015; THystBand = 3; % [Wb, N*m]
+
+% tune_pi.m - Sintesis analitica del lazo PI en SI
+wbase_mech = 2*pi*fn/p;
+J        = (2*H*Tbase)/wbase_mech;   % kg*m^2
+F_si     = F*(Tbase/wbase_mech);     % N*m*s/rad
+K_planta = Tbase/J;  a_planta = F_si/J;
+wn_si    = 4/(zeta*ts);              % ts = [0.05..0.5]
+Kp_calc  = (2*zeta*wn_si - a_planta)/K_planta;
+Ki_calc  = (wn_si^2)/K_planta;
+\end{lstlisting}
+
+% ==============================================================================
+\section{N\'ucleo Electromec\'anico Kloss e Inferencia Edge AI en Godot 4.7.2}\label{app:godot}
+
+El Listado~\ref{lst:godot_core} recoge las ecuaciones centrales ejecutadas en
+tiempo real dentro del Serious Game en GDScript~2.0: el c\'alculo de par por
+f\'ormula de Kloss, la integraci\'on rotacional Newton-Euler y el balance
+t\'ermico Joule en \texttt{InductionMotorKloss.gd}, junto con la adaptaci\'on
+de dominio ($9.363/13.5$), la inferencia MLP, el \'indice de salud MHI y el
+pron\'ostico RUL (Arrhenius + SKF~$L_{10h}$) en \texttt{EdgeAIEngine.gd}.
+
+\begin{lstlisting}[language=Python,float=htbp,numbers=none,breaklines=true,xleftmargin=0pt,xrightmargin=0pt,caption={Extracto verificado de \texttt{InductionMotorKloss.gd} y \texttt{EdgeAIEngine.gd} en Godot~4.7.2 (GDScript~2.0).},label={lst:godot_core}]
+# InductionMotorKloss.gd - Kloss, Newton-Euler y Termica
+var v_pu = current_voltage / rated_voltage_ll
+var f_pu = maxf(0.15, current_frequency / 60.0)
+var vf = v_pu if is_vfd else (v_pu / f_pu)
+var s = clampf(absf(slip), 0.0005, 1.0)
+var k_den = (s / critical_slip) + (critical_slip / s)
+electrical_torque_nm = (2.0 * 101.75 / k_den) * vf * vf
+var alpha = (electrical_torque_nm - total_res) / 0.35
+var w_next = rotor_speed_rad_s + alpha * delta
+rotor_speed_rad_s = maxf(0.0, w_next)
+var r_th = 0.210 if is_cooling_blocked else (
+    0.068 / (0.35 + 0.65 * speed_ratio))
+d_temp_dt = (total_losses_w - (Tw - Ta) / r_th) / 185.0
+
+# EdgeAIEngine.gd - Dominio (9.363/13.5), MHI y RUL
+var mlp_i_rms = i_rms * (9.363 / 13.5)
+for j in range(8):
+    x_norm.append((x_scaled[j] - MU[j]) / SIGMA[j])
+# Forward MLP 8->16->8->4 (ReLU + Softmax) -> mlp_conf
+var t_pen = clampf((temp_c - 70.0) * 0.9, 0.0, 45.0)
+var v_pen = clampf((vib_rms - 1.4) * 9.5, 0.0, 45.0)
+var i_pen = clampf((iuf - 3.0) * 0.85, 0.0, 45.0)
+var u_pen = clampf(absf(460.0 - v_rms)*0.35, 0.0, 35.0)
+var pen = t_pen + v_pen + i_pen + u_pen
+var mhi = clampf(100.0 - pen, 5.0, 99.6)
+var dt_th = clampf((temp_c - 75.0) / 10.0, 0.0, 8.0)
+var th_a = pow(2.0, dt_th)
+var vb_a = pow(maxf(1.0, vib_rms / 1.4), 2.2)
+var el_a = 1.0 + (iuf / 12.0) + (u_pen * 0.15)
+var stress = maxf(1.0, th_a * vb_a * el_a)
+var rul_h = clampf(24000.0 / stress, 12.0, 24000.0)
+\end{lstlisting}
+
+% ==============================================================================
+\section{Matriz de Cumplimiento frente a la Gu\'ia y R\'ubrica Oficial}\label{app:qa}
+
+La Tabla~\ref{tab:cumplimiento_guia} consolida la trazabilidad directa entre
+los cuatro criterios ponderados de la r\'ubrica oficial, los tres cortes
+evaluativos establecidos en la gu\'ia del curso~\cite{GuiaProyecto2026} y los
+productos t\'ecnicos verificados en este informe, MATLAB/Simulink y el
+simulador 3D en Godot~4.7.2.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{Matriz de cumplimiento integral frente a los criterios de la r\'ubrica oficial y los tres cortes evaluativos del curso~\cite{GuiaProyecto2026}.}
+\label{tab:cumplimiento_guia}
+\begin{tabularx}{\textwidth}{@{} >{\raggedright\arraybackslash}p{2.85cm} >{\raggedright\arraybackslash}p{2.55cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.45cm} @{}}
+\toprule
+\textbf{Criterio de R\'ubrica (Peso)} & \textbf{Alineaci\'on con Cortes} & \textbf{Evidencia Verificada (Informe IEEE, MATLAB/Simulink y Godot~4.7.2)} & \textbf{Estado / M\'etrica} \\
+\midrule
+\textbf{Entrega y Normatividad IEEE} (\qty{20}{\percent}, RG~4--7, RA~3) &
+Transversal: Cortes~1, 2 y~3 (Informe Final) &
+Art\'iculo en formato \texttt{IEEEtran} a dos columnas con resumen, palabras clave, introducci\'on, marco te\'orico, estado del arte (2019--2026, $>20$ referencias verificadas en \texttt{referencias\_\allowbreak maquinas.bib}), dise\~no completo por avances, conclusiones con discusi\'on bibliogr\'afica y anexos de c\'odigo y repositorio GitHub/USB portable. &
+Cumplido \qty{100}{\percent} (0~errores~\LaTeX) \\
+\midrule
+\textbf{Dise\~no} (\qty{30}{\percent}, RG~4--7, RA~3) &
+Corte~1 (\qty{20}{\percent}) y Corte~2 (\qty{30}{\percent}) &
+Caracterizaci\'on normativa RETIE/IE3 del motor \qty{10}{HP}/\qty{460}{\volt}; circuito equivalente y par\'ametros en \texttt{InductionMachineDTCData.m}; modelo multif\'isico DTC + red t\'ermica Cauer + vibraci\'on ISO~10816 en \texttt{InductionMachineDTC.slx} y \texttt{tune\_\allowbreak pi.m}; ruta de mantenimiento RCM y dise\~no de clasificadores MLP ($8\to 16\to 8\to 4$) y SVM RBF (\texttt{train\_\allowbreak classifiers.m}). &
+Error Kloss \qty{0.35}{\percent} RPM; DTC $<\qty{15}{\milli\second}$ \\
+\midrule
+\textbf{Implementaci\'on} (\qty{40}{\percent}, RG~4--7, RA~3) &
+Corte~2 (\qty{30}{\percent}) y Corte~3 / Final (\qty{40}{\percent}) &
+Panel interactivo \texttt{MotorFaultDiagnosticGUI.m} en MATLAB App Designer; Serious Game 3D en Godot~4.7.2 Vulkan~1.3 (\texttt{planta\_\allowbreak completa.glb}, \num{1338166} tri\'angulos, 846 \texttt{BoxShape3D}, 28 puertas PCA, 0 primitivas); recorrido de 20 estaciones con EPP~6/6 y 5~Reglas LOTO; 5 fallas f\'isicas dieg\'eticas; optimizaci\'on VFD vs.\ DOL (\num{7.52} vs.\ \qty{10.50}{\kilo\watt\hour\per\tonne}); Tablet SCADA de 9 pesta\~nas 100\% \emph{in-game} con Edge~AI nativo (MHI/RUL). &
+\texttt{headless\_\allowbreak verify}: \texttt{10/10 PASS}; ahorro \qty{28.38}{\percent} \\
+\midrule
+\textbf{Conclusiones y An\'alisis} (\qty{10}{\percent}, RG~4--7, RA~3) &
+Corte~3 / Entrega Final (\qty{100}{\percent}) &
+Cinco conclusiones cuantitativas mapeadas 1-a-1 a objetivos y cortes, contrastadas con autores de referencia~\cite{Singh2023,Thermal2025,Gangsar2020,Soualhi2022,AI2026,Resa2019,Adamou2024,Breque2021,Xu2021,Stefan2023,Stefan2024,UPME2024}, balance de emisiones CO\textsubscript{2}e (UPME~2024), trabajo futuro HIL/RETIE/Transfer Learning y evidencia de trabajo en equipo. &
+\qty{100.0}{\percent} test IA ($N=240$); \qty{489.85}{\kilogram}\,CO\textsubscript{2}e \\
+\bottomrule
+\end{tabularx}
+\end{table*}

@@ -1,0 +1,335 @@
+\begin{figure*}[!t]
+\centering
+\begingroup
+% Paleta científica armonizada (alto contraste, fondo claro, apta para daltonismo)
+\definecolor{f5Green}{HTML}{1E8E5A}
+\definecolor{f5GreenEdge}{HTML}{13613C}
+\definecolor{f5Amber}{HTML}{E39623}
+\definecolor{f5AmberEdge}{HTML}{9E620A}
+\definecolor{f5Red}{HTML}{C93B3B}
+\definecolor{f5RedEdge}{HTML}{8A1F1F}
+\definecolor{f5Rul}{HTML}{2A5278}
+\definecolor{f5Vib}{HTML}{4A89B8}
+\definecolor{f5VibEdge}{HTML}{275478}
+\definecolor{f5Temp}{HTML}{AD1A4B}
+\definecolor{f5ClassF}{HTML}{6A1B6D}
+\definecolor{f5Grid}{HTML}{DFE5EC}
+\definecolor{f5Axis}{HTML}{2C3642}
+\definecolor{f5BgNote}{HTML}{F7F9FB}
+
+\begin{tikzpicture}
+  % ==========================================================================
+  % PANEL (a): Degradación del Motor Health Index (MHI [%]) y RUL [h]
+  % ==========================================================================
+  \begin{axis}[
+    name=axA,
+    scale only axis=true,
+    width=6.80cm,
+    height=5.10cm,
+    ybar,
+    bar width=13.8pt,
+    bar shift=0pt,
+    ymin=0, ymax=118,
+    xmin=0.38, xmax=7.68,
+    ytick={0,20,40,60,80,100},
+    xtick={1,2,3,4,5,6,7},
+    xticklabels={Nom.~60Hz, VFD~42Hz, Corte~L3, Atasco, Sag~340V, Vent.~Obs., Pernos},
+    xticklabel style={
+      rotate=45,
+      anchor=north east,
+      font=\fontsize{5.4}{6.0}\selectfont,
+      text=f5Axis,
+      yshift=1pt,
+      xshift=1pt
+    },
+    yticklabel style={font=\fontsize{6.8}{7.5}\selectfont, text=f5Axis},
+    ylabel={Motor Health Index, MHI [\%]},
+    ylabel style={font=\fontsize{7.5}{8.5}\selectfont\bfseries, text=f5Axis, yshift=-2pt},
+    ymajorgrids=true,
+    major grid style={color=f5Grid, line width=0.45pt},
+    axis lines*=left,
+    axis line style={color=f5Axis, line width=0.65pt},
+    tick style={color=f5Axis, line width=0.55pt},
+    clip=false,
+    legend style={
+      at={(0.5,1.03)},
+      anchor=south,
+      legend columns=-1,
+      draw=f5Grid,
+      fill=white,
+      rounded corners=1.5pt,
+      inner xsep=4pt,
+      inner ysep=2pt,
+      column sep=4pt,
+      font=\fontsize{6.2}{7.0}\selectfont,
+      text=f5Axis,
+      /tikz/every even column/.append style={column sep=6pt}
+    },
+    legend image code/.code={%
+      \draw[#1] (0cm,-0.07cm) rectangle (0.19cm,0.11cm);
+    },
+  ]
+    % Bandas sutiles de severidad coherentes con los intervalos de la leyenda
+    \fill[f5Green!6] (axis cs:0.38,85) rectangle (axis cs:7.68,118);
+    \fill[f5Amber!4] (axis cs:0.38,40) rectangle (axis cs:7.68,85);
+    \fill[f5Red!4]   (axis cs:0.38,0)  rectangle (axis cs:7.68,40);
+
+    % Líneas horizontales punteadas de umbral MHI
+    \draw[f5GreenEdge, densely dashed, line width=0.8pt]
+      (axis cs:0.38,85) -- (axis cs:7.68,85);
+    \draw[f5AmberEdge, densely dashed, line width=0.8pt]
+      (axis cs:0.38,60) -- (axis cs:7.68,60);
+
+    % Etiquetas de umbrales en zonas completamente libres
+    \node[anchor=south east, font=\fontsize{5.6}{6.2}\selectfont\bfseries,
+          text=f5GreenEdge, fill=white, fill opacity=0.86, text opacity=1,
+          inner sep=1.1pt, rounded corners=1pt]
+      at (axis cs:7.58,86.4) {Saludable ($85\%$)};
+    \node[anchor=south, font=\fontsize{5.6}{6.2}\selectfont\bfseries,
+          text=f5AmberEdge, fill=white, fill opacity=0.90, text opacity=1,
+          inner sep=1.1pt, rounded corners=1pt]
+      at (axis cs:3.90,61.6) {Alerta ($60\%$)};
+
+    % Barras Verde (>85%)
+    \addplot[draw=f5GreenEdge, fill=f5Green, fill opacity=0.88, line width=0.55pt]
+      coordinates {(1,99.6) (2,99.6)};
+    \addlegendentry{Saludable ($>85\%$)}
+
+    % Barras Ámbar (40-85%)
+    \addplot[draw=f5AmberEdge, fill=f5Amber, fill opacity=0.88, line width=0.55pt]
+      coordinates {(4,41.7) (6,55.0) (7,59.4)};
+    \addlegendentry{Alerta ($40\text{--}85\%$)}
+
+    % Barras Rojo (<40%)
+    \addplot[draw=f5RedEdge, fill=f5Red, fill opacity=0.88, line width=0.55pt]
+      coordinates {(3,23.0) (5,20.0)};
+    \addlegendentry{Crítico ($<40\%$)}
+
+    % Anotaciones exactas y compactas de MHI [%] y RUL [h] sobre cada barra
+    \tikzset{
+      mhiLbl/.style={
+        anchor=south,
+        align=center,
+        font=\fontsize{5.9}{6.5}\selectfont,
+        inner xsep=1.0pt,
+        inner ysep=0.9pt,
+        yshift=1.4pt,
+        fill=white,
+        fill opacity=0.88,
+        text opacity=1,
+        rounded corners=1.2pt
+      }
+    }
+    \node[mhiLbl] at (axis cs:1,99.6)
+      {\textbf{\color{f5Axis}99.6\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}23.0k\,h}};
+    \node[mhiLbl] at (axis cs:2,99.6)
+      {\textbf{\color{f5Axis}99.6\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}22.5k\,h}};
+    \node[mhiLbl] at (axis cs:3,23.0)
+      {\textbf{\color{f5Axis}23.0\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}174\,h}};
+    \node[mhiLbl] at (axis cs:4,41.7)
+      {\textbf{\color{f5Axis}41.7\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}19\,h}};
+    \node[mhiLbl] at (axis cs:5,20.0)
+      {\textbf{\color{f5Axis}20.0\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}80\,h}};
+    \node[mhiLbl, yshift=1.5pt] at (axis cs:6,55.0)
+      {\textbf{\color{f5Axis}55.0\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}331\,h}};
+    \node[mhiLbl, yshift=2.4pt] at (axis cs:7,59.4)
+      {\textbf{\color{f5Axis}59.4\%}\\[-0.2pt]%
+       {\fontsize{5.1}{5.5}\selectfont\color{f5Rul}1083\,h}};
+
+    % Recuadro informativo discreto en la zona libre superior derecha
+    \node[anchor=north east, draw=f5Grid, fill=f5BgNote, rounded corners=1.5pt,
+          inner xsep=3.5pt, inner ysep=2.2pt, align=left,
+          font=\fontsize{5.5}{6.4}\selectfont, text=f5Axis]
+      at (axis cs:7.56,115.5)
+      {\textbf{Valor sup.:} MHI [\%]\\[-0.3pt]%
+       \color{f5Rul}\textbf{Valor inf.:} RUL [h]};
+  \end{axis}
+
+  % ==========================================================================
+  % PANEL (b): Firma Física Multifactorial — Vibración v_rms y Temperatura T_w
+  % ==========================================================================
+  % Eje izquierdo: Vibración v_rms [mm/s] (barras)
+  \begin{axis}[
+    name=axB,
+    at={($(axA.south east)+(1.85cm,0cm)$)},
+    anchor=south west,
+    scale only axis=true,
+    width=6.80cm,
+    height=5.10cm,
+    ybar,
+    bar width=13.8pt,
+    bar shift=0pt,
+    ymin=0, ymax=7.2,
+    xmin=0.38, xmax=7.68,
+    ytick={0,1,2,3,4,5,6,7},
+    xtick={1,2,3,4,5,6,7},
+    xticklabels={Nom.~60Hz, VFD~42Hz, Corte~L3, Atasco, Sag~340V, Vent.~Obs., Pernos},
+    xticklabel style={
+      rotate=45,
+      anchor=north east,
+      font=\fontsize{5.4}{6.0}\selectfont,
+      text=f5Axis,
+      yshift=1pt,
+      xshift=1pt
+    },
+    yticklabel style={font=\fontsize{6.8}{7.5}\selectfont, text=f5VibEdge},
+    ylabel={Vibración $v_{\mathrm{rms}}$ [mm/s]},
+    ylabel style={font=\fontsize{7.5}{8.5}\selectfont\bfseries, text=f5VibEdge, yshift=-2pt},
+    ymajorgrids=true,
+    major grid style={color=f5Grid, line width=0.45pt},
+    axis y line*=left,
+    axis x line*=bottom,
+    axis line style={color=f5Axis, line width=0.65pt},
+    y axis line style={color=f5VibEdge, line width=0.75pt},
+    tick style={color=f5Axis, line width=0.55pt},
+    ytick style={color=f5VibEdge},
+    clip=false,
+  ]
+    % Barras de vibración v_rms
+    \addplot[draw=f5VibEdge, fill=f5Vib, fill opacity=0.78, line width=0.55pt]
+      coordinates {
+        (1,1.06) (2,0.82) (3,4.77) (4,2.80) (5,1.09) (6,1.12) (7,5.68)
+      };
+
+    % Umbrales ISO 10816-3 (v_rms)
+    \draw[f5GreenEdge, densely dashed, line width=0.8pt]
+      (axis cs:0.38,1.8) -- (axis cs:7.68,1.8);
+    \draw[f5RedEdge, densely dashed, line width=0.8pt]
+      (axis cs:0.38,4.5) -- (axis cs:7.68,4.5);
+
+    % Etiquetas ISO 10816-3 con despeje garantizado respecto a eje, barras y curva
+    \node[anchor=south, font=\fontsize{5.0}{5.5}\selectfont\bfseries,
+          text=f5GreenEdge, fill=white, fill opacity=0.90, text opacity=1,
+          inner xsep=0.8pt, inner ysep=0.7pt, rounded corners=1pt]
+      at (axis cs:5.50,1.90) {ISO Zona A/B (1.8)};
+    \node[anchor=south west, font=\fontsize{5.0}{5.5}\selectfont\bfseries,
+          text=f5RedEdge, fill=white, fill opacity=0.90, text opacity=1,
+          inner xsep=0.8pt, inner ysep=0.7pt, rounded corners=1pt]
+      at (axis cs:0.54,4.60) {ISO Zona D (4.5)};
+
+    % Valores de vibración (en blanco nítido dentro de barras bajas y encima en barras altas)
+    \tikzset{
+      vibIn/.style={
+        anchor=center,
+        font=\fontsize{5.2}{5.7}\selectfont\bfseries,
+        text=white,
+        inner sep=0.4pt
+      },
+      vibTop/.style={
+        anchor=south,
+        font=\fontsize{5.5}{6.0}\selectfont\bfseries,
+        text=f5VibEdge,
+        fill=white, fill opacity=0.86, text opacity=1,
+        inner sep=0.7pt, rounded corners=1pt,
+        yshift=1.2pt
+      }
+    }
+    \node[vibIn]              at (axis cs:1,0.53) {1.06};
+    \node[vibIn]              at (axis cs:2,0.41) {0.82};
+    \node[vibTop, xshift=-1pt] at (axis cs:3,4.77) {4.77};
+    \node[vibTop]             at (axis cs:4,2.80) {2.80};
+    \node[vibIn]              at (axis cs:5,0.54) {1.09};
+    \node[vibIn]              at (axis cs:6,0.56) {1.12};
+    \node[vibTop]             at (axis cs:7,5.68) {5.68};
+  \end{axis}
+
+  % Eje derecho: Temperatura del devanado T_w [°C] (línea + marcadores)
+  \begin{axis}[
+    at={(axB.south west)},
+    anchor=south west,
+    scale only axis=true,
+    width=6.80cm,
+    height=5.10cm,
+    ymin=0, ymax=210,
+    xmin=0.38, xmax=7.68,
+    ytick={0,30,60,90,120,150,180,210},
+    axis y line*=right,
+    axis x line=none,
+    yticklabel style={font=\fontsize{6.8}{7.5}\selectfont, text=f5Temp},
+    ylabel={Temperatura $T_w$ [$^\circ$C]},
+    ylabel style={font=\fontsize{7.5}{8.5}\selectfont\bfseries, text=f5Temp, yshift=2pt},
+    y axis line style={color=f5Temp, line width=0.75pt},
+    ytick style={color=f5Temp},
+    clip=false,
+    legend style={
+      at={(0.5,1.03)},
+      anchor=south,
+      legend columns=-1,
+      draw=f5Grid,
+      fill=white,
+      rounded corners=1.5pt,
+      inner xsep=4pt,
+      inner ysep=2pt,
+      column sep=4pt,
+      font=\fontsize{6.2}{7.0}\selectfont,
+      text=f5Axis,
+      /tikz/every even column/.append style={column sep=6pt}
+    },
+  ]
+    % Entrada de leyenda para barras v_rms con muestra rectangular compacta
+    \addlegendimage{
+      legend image code/.code={%
+        \draw[draw=f5VibEdge, fill=f5Vib, fill opacity=0.78, line width=0.55pt]
+          (0cm,-0.07cm) rectangle (0.20cm,0.11cm);
+      }
+    }
+    \addlegendentry{$v_{\mathrm{rms}}$ [mm/s]}
+
+    % Umbral RETIE Clase F (155 °C) alineado verticalmente con ISO Zona D
+    \draw[f5ClassF, densely dotted, line width=0.95pt]
+      (axis cs:0.38,155) -- (axis cs:7.68,155);
+    \node[anchor=south west, font=\fontsize{5.2}{5.8}\selectfont\bfseries,
+          text=f5ClassF, fill=white, fill opacity=0.90, text opacity=1,
+          inner xsep=0.8pt, inner ysep=0.7pt, rounded corners=1pt]
+      at (axis cs:0.54,158.0) {RETIE Clase F (155\,$^\circ$C)};
+
+    % Curva de Temperatura T_w [°C]
+    \addplot[
+      color=f5Temp,
+      line width=1.25pt,
+      mark=*,
+      mark size=2.1pt,
+      mark options={fill=white, draw=f5Temp, line width=1.0pt}
+    ] coordinates {
+      (1,49.5) (2,49.6) (3,61.5) (4,180.0) (5,130.8) (6,136.3) (7,60.3)
+    };
+    \addlegendentry{$T_w$ [$^\circ$C]}
+
+    % Entrada de leyenda para Clase F
+    \addlegendimage{color=f5ClassF, densely dotted, line width=0.95pt}
+    \addlegendentry{Clase F ($155\,^\circ$C)}
+
+    % Anotaciones precisas de T_w [°C] (posicionamiento libre de choques con curva, barras y ejes)
+    \tikzset{
+      tempLbl/.style={
+        font=\fontsize{5.3}{5.8}\selectfont\bfseries,
+        text=f5Temp,
+        fill=white, fill opacity=0.92, text opacity=1,
+        inner sep=0.7pt, rounded corners=1pt
+      }
+    }
+    \node[tempLbl, anchor=south, yshift=7.0pt]               at (axis cs:1,49.5)  {49.5$^\circ$};
+    \node[tempLbl, anchor=south, yshift=7.0pt]               at (axis cs:2,49.6)  {49.6$^\circ$};
+    \node[tempLbl, anchor=south east, xshift=-1.5pt, yshift=3.4pt] at (axis cs:3,61.5)  {61.5$^\circ$};
+    \node[tempLbl, anchor=south, yshift=3.4pt]               at (axis cs:4,180.0) {180.0$^\circ$};
+    \node[tempLbl, anchor=north, yshift=-4.0pt]              at (axis cs:5,130.8) {130.8$^\circ$};
+    \node[tempLbl, anchor=south, yshift=3.2pt]               at (axis cs:6,136.3) {136.3$^\circ$};
+    \node[tempLbl, anchor=south west, xshift=-2.6pt, yshift=3.8pt] at (axis cs:7,60.3)  {60.3$^\circ$};
+  \end{axis}
+
+  % Subtítulos alineados de ambos paneles
+  \node[anchor=north, font=\fontsize{7.8}{8.8}\selectfont, text=f5Axis]
+    at ($(axA.south)+(0,-1.05cm)$) {(a) Degradación del MHI y vida útil remanente (RUL).};
+  \node[anchor=north, font=\fontsize{7.8}{8.8}\selectfont, text=f5Axis]
+    at ($(axB.south)+(0,-1.05cm)$) {(b) Firma vibratoria ($v_{\mathrm{rms}}$) y térmica ($T_w$) frente a umbrales.};
+\end{tikzpicture}
+\endgroup
+\caption{Evaluación cuantitativa de los siete regímenes operativos y de falla diegética simulados en Godot~4.7.2 (\texttt{InductionMotorKloss.gd} y \texttt{EdgeAIEngine.gd}). (a)~Índice de salud del motor (MHI) codificado por severidad y vida útil remanente estimada (RUL [h]) frente a los umbrales de operación saludable ($85\%$) y alerta ($60\%$). (b)~Firma física multifactorial de vibración $v_{\mathrm{rms}}$ (barras, eje izquierdo) y temperatura de devanado $T_w$ (curva, eje derecho) contrastadas con las zonas normativas ISO~10816-3 (Zona~A/B en \SI{1.8}{mm/s}; Zona~D en \SI{4.5}{mm/s}) y el límite térmico de aislamiento RETIE Clase~F (\SI{155}{\celsius}).}
+\label{fig:fallas_mhi}
+\end{figure*}

@@ -1,0 +1,292 @@
+\section{Diseño del Proyecto: Caracterización, Control DTC e Inteligencia Artificial}\label{sec:diseno_avances}
+
+En cumplimiento de la estructura acumulativa exigida por la guía del curso~\cite{GuiaProyecto2026}, esta sección consolida de manera integral la totalidad de los productos de ingeniería desarrollados durante el \emph{Avance~1} (caracterización normativa RETIE, parametrización, sintonización analítica del lazo PI y simulación multifísica DTC en MATLAB/Simulink) y el \emph{Avance~2} (construcción del corpus de fallas, entrenamiento nativo y comparación de clasificadores MLP/SVM, ruta de mantenimiento RCM e interfaz interactiva en MATLAB App Designer). Los fundamentos analíticos de la máquina de inducción, la fórmula de Kloss, el esquema DTC, la red térmica de Cauer y las arquitecturas de aprendizaje supervisado se presentan en la Sección~\ref{sec:marco_teorico}; aquí se documentan sus parametrizaciones concretas, cálculos numéricos verificados y resultados experimentales.
+
+\subsection{Avance 1: Caracterización RETIE y Modelado Multifísico en Simulink}\label{subsec:avance1}
+
+\subsubsection{Caracterización del Motor de \texorpdfstring{\qty{10}{HP}}{10 HP} y Consistencia Paramétrica}
+El accionamiento principal del molino de martillos en AgroMolinos del Valle~S.A. corresponde a un motor trifásico de inducción tipo jaula de ardilla de \qty{10}{HP}, \qty{460}{\volt}, \qty{60}{\hertz} y cuatro polos ($p=2$, velocidad síncrona $n_s=\qty{1800}{RPM}$). Para asegurar trazabilidad completa a lo largo de los tres cortes del proyecto, el ecosistema articula dos representaciones paramétricas coherentes y matemáticamente acopladas:
+\begin{enumerate}\setlength{\itemsep}{2pt}\setlength{\topsep}{2pt}
+    \item \textbf{Fuente Maestra en MATLAB/Simulink:} el script \texttt{Induction\allowbreak Machine\allowbreak DTC\allowbreak Data.m} define el modelo en sistema por unidad (p.u.) utilizado simultáneamente por el modelo dinámico multifísico (\texttt{Induction\allowbreak Machine\allowbreak DTC.slx}), el generador de fallas (\texttt{generate\_\allowbreak dataset.m}), los clasificadores (\texttt{train\_\allowbreak classifiers.m}) y la consola App Designer (\texttt{Motor\allowbreak Fault\allowbreak Diagnostic\allowbreak GUI.m}).
+    \item \textbf{Placa Comercial IE3 NEMA Premium:} el módulo \texttt{Induction\allowbreak Motor\allowbreak Kloss.gd} implementa en tiempo real dentro del gemelo digital 3D en Godot los datos técnicos del motor comercial WEG~W22 de \qty{10}{HP}, carcasa~213/5T, clase de eficiencia IE3~\cite{WEG2024,IEC60034}, en conformidad con los requisitos de seguridad dieléctrica, puesta a tierra y protección térmica del RETIE~\cite{RETIE2024,RETIE2026}, la NTC~2050~\cite{NTC2050}, IEEE~Std~112~\cite{IEEE112} y operación en atmósferas con polvo de grano ATEX Zona~22~\cite{NFPA61}.
+\end{enumerate}
+
+La Tabla~\ref{tab:parametros_motor} contrasta lado a lado ambos conjuntos paramétricos. Nótese que la diferencia entre la corriente base activa del modelo en p.u. ($I_{n,\text{rms}}=\qty{9.36}{\ampere}$, deducida a partir de la potencia mecánica útil sin pérdidas ni potencia reactiva) y la corriente real a plena carga de placa ($I_{\text{FLA}}=\qty{13.5}{\ampere}$, que incorpora $\eta=\qty{91.7}{\percent}$ y $\cos\phi=\num{0.85}$), así como el incremento de la inercia rotacional desde $J=\qty{0.1147}{\kilogram\meter\squared}$ (eje motor aislado en Simulink) hasta $J_{\text{tot}}=\qty{0.35}{\kilogram\meter\squared}$ (motor \qty{0.045}{\kilogram\meter\squared} más rotor del molino \qty{0.305}{\kilogram\meter\squared} en el gemelo 3D), responde a la transición desde un banco de control DTC normalizado hacia una línea de molienda comercial completa. Para mantener invariante la frontera de decisión de los clasificadores entrenados en MATLAB al desplegarse en el gemelo 3D, la capa Edge~AI escala linealmente la corriente eficaz medida por la razón exacta $9.363/13.5$ antes de aplicar la normalización $Z$-Score.
+
+\begin{table*}[!t]
+\begingroup\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.06}
+\centering\footnotesize
+\caption{Comparativa paramétrica entre la fuente maestra DTC en Simulink (\texttt{InductionMachineDTCData.m}) y la placa comercial WEG~W22~IE3 implementada en el gemelo digital 3D (\texttt{InductionMotorKloss.gd}).}
+\label{tab:parametros_motor}
+\begin{tabularx}{\textwidth}{@{} >{\raggedright\arraybackslash}p{4.3cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X @{}}
+\toprule
+\textbf{Magnitud / Parámetro} & \textbf{Modelo DTC Simulink (\texttt{InductionMachineDTCData.m})} & \textbf{Placa Comercial WEG~W22~IE3 (\texttt{InductionMotorKloss.gd})~\cite{WEG2024,IEC60034}} \\
+\midrule
+Potencia nominal ($P_n$) & \qty{7460}{\watt} (\qty{10}{HP}) & \qty{7457}{\watt} (\qty{10}{HP}) \\
+Tensión, frecuencia y polos ($V_n, f_n, p$) & \qty{460}{\volt} (LL RMS), \qty{60}{\hertz}, $p=2$ (4 polos, $n_s=\qty{1800}{RPM}$) & \qty{460}{\volt} (LL RMS), \qty{60}{\hertz}, $p=2$ (4 polos, $n_s=\qty{1800}{RPM}$) \\
+Velocidad mecánica ($N_r$) & Consigna dinámica regulada a \qty{1600}{RPM} (DTC/PI) & \qty{1750}{RPM} nominal ($s_n = \num{0.0278}$) \\
+Corrientes características & $I_{\text{base,pk}}=\qty{13.24}{\ampere}$, $I_{n,\text{rms}}=\qty{9.36}{\ampere}$ (base activa) & $I_{\text{FLA}}=\qty{13.5}{\ampere}$, $I_0=\qty{4.5}{\ampere}$, $I_{\text{LRA}}=\qty{81.0}{\ampere}$ ($6\,I_{\text{FLA}}$) \\
+Par y deslizamiento crítico & $T_{\text{base}}=\qty{39.58}{\newton\meter}$ (carga de ensayo hasta $1.35\,T_n$) & $T_n=\qty{40.7}{\newton\meter}$, $T_{\max}=\qty{101.75}{\newton\meter}$ ($2.5\,T_n$), $s_{\max}=\num{0.15}$ \\
+Factor de potencia y eficiencia & Base p.u. sobre potencia útil en el eje & $\cos\phi=\num{0.85}$, $\eta=\qty{91.7}{\percent}$ (clase IE3 NEMA Premium) \\
+Resistencia estatórica ($R_s$) & \num{0.0139}\,p.u. (\qty{0.394}{\ohm}) & \qty{0.435}{\ohm} (referida a \qty{75}{\celsius}) \\
+Resistencia rotórica referida ($R_r'$) & \num{0.0112}\,p.u. (\qty{0.318}{\ohm}) & \qty{0.816}{\ohm} \\
+Inductancias de dispersión ($L_{ls}=L_{lr}'$) & \num{0.0672}\,p.u. (\qty{5.05}{\milli\henry}) & \qty{2.0}{\milli\henry} \\
+Inductancia de magnetización ($L_m$) & \num{2.717}\,p.u. (\qty{204.4}{\milli\henry}) & \qty{69.3}{\milli\henry} \\
+Inercia y fricción viscosa & $H=\qty{0.2734}{\second}$ ($J=\qty{0.1147}{\kilogram\meter\squared}$), $F=\num{0.0106}\,\text{p.u.}$ (\qty{0.0022}{\newton\meter\second\per\radian}) & $J_{\text{tot}}=\qty{0.35}{\kilogram\meter\squared}$ (motor \num{0.045} + molino \num{0.305}), $B=\qty{0.012}{\newton\meter\second\per\radian}$ \\
+Aislamiento y marco normativo RETIE & Red Cauer RC; alerta \qty{105}{\celsius} y techo Clase~F \qty{155}{\celsius}~\cite{RETIE2024,RETIE2026} & Aislamiento Clase~F (\qty{155}{\celsius}), carcasa~213/5T, entorno ATEX Zona~22~\cite{NFPA61,RETIE2026} \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table*}
+
+\subsubsection{Cálculos Paso a Paso de Magnitudes Base y Sintonización PI}
+A partir de los valores nominales de \texttt{Induction\allowbreak Machine\allowbreak DTC\allowbreak Data.m} ($P_n=\qty{7460}{\watt}$, $V_n=\qty{460}{\volt}$, $f_n=\qty{60}{\hertz}$ y $p=2$), se deducen analíticamente las magnitudes base que gobiernan la normalización en por unidad del accionamiento DTC~\cite{Bose2006,Krishnan2001}:
+\begin{align}
+    V_{\text{base}} &= V_n\sqrt{\frac{2}{3}} = 460\sqrt{\frac{2}{3}} = \qty{375.59}{\volt}, \label{eq:vbase_calc}\\
+    I_{\text{base}} &= \frac{P_n}{1.5\,V_{\text{base}}} = \frac{7460}{1.5\times 375.59} = \qty{13.24}{\ampere}, \label{eq:ibase_calc}\\
+    I_{n,\text{rms}} &= \frac{I_{\text{base}}}{\sqrt{2}} = \frac{13.24}{\sqrt{2}} = \qty{9.36}{\ampere}, \label{eq:inrms_calc}\\
+    Z_{\text{base}} &= \frac{V_{\text{base}}}{I_{\text{base}}} = \frac{375.59}{13.24} = \qty{28.36}{\ohm}, \label{eq:zbase_calc}\\
+    \omega_{\text{base,m}} &= \frac{2\pi f_n}{p} = \frac{2\pi(60)}{2} = \qty{188.50}{\radian\per\second}, \label{eq:wbasem_calc}\\
+    T_{\text{base}} &= \frac{P_n}{\omega_{\text{base,m}}} = \frac{7460}{188.50} = \qty{39.58}{\newton\meter}. \label{eq:tbase_calc}
+\end{align}
+Adicionalmente, el flujo magnético estatórico nominal de referencia queda definido por $\psi_n = V_{\text{base}}/(2\pi f_n) = \qty{0.996}{\weber}$, mientras que las impedancias reales del circuito equivalente se recuperan escalando las constantes en p.u. por $Z_{\text{base}}$ y $\omega_{\text{base,e}}=2\pi f_n=\qty{376.99}{\radian\per\second}$: $R_s = 0.0139\,Z_{\text{base}} = \qty{0.394}{\ohm}$, $R_r' = 0.0112\,Z_{\text{base}} = \qty{0.318}{\ohm}$, $L_{ls}=L_{lr}' = 0.0672\,Z_{\text{base}}/\omega_{\text{base,e}} = \qty{5.05}{\milli\henry}$ y $L_m = 2.717\,Z_{\text{base}}/\omega_{\text{base,e}} = \qty{204.4}{\milli\henry}$.
+
+Para trasladar el subsistema mecánico a unidades del Sistema Internacional dentro de \texttt{tune\_pi.m}, la inercia rotacional equivalente y el coeficiente de fricción viscosa se calculan a partir de $H=\qty{0.2734}{\second}$ y $F=\num{0.0106}\,\text{p.u.}$:
+\begin{align}
+    J &= \frac{2 H T_{\text{base}}}{\omega_{\text{base,m}}} = \frac{2(0.2734)(39.58)}{188.50} \approx \qty{0.1147}{\kilogram\meter\squared}, \label{eq:j_si_calc}\\
+    F_{\text{SI}} &= F\,\frac{T_{\text{base}}}{\omega_{\text{base,m}}} = 0.0106\left(\frac{39.58}{188.50}\right) = \qty{0.0022}{\newton\meter\second\per\radian}. \label{eq:f_si_calc}
+\end{align}
+
+Sobre la función de transferencia mecánica normalizada en por unidad $G_{\text{pu}}(s) = \omega_{\text{pu}}(s)/T_{\text{pu}}(s) = 1/(2Hs + F)$ (deducida en la Sección~\ref{sec:marco_teorico}), el script \texttt{tune\_pi.m} explora tiempos de establecimiento $t_s \in \{\num{0.05}, \num{0.10}, \num{0.20}, \num{0.50}\}\,\unit{\second}$ imponiendo amortiguamiento crítico ($\zeta=\num{1.0}$) para eliminar sobreoscilaciones perjudiciales sobre los martillos y engranajes del molino. Seleccionando un ancho de banda $\omega_n = \qty{20}{\radian\per\second}$ (equivalente a $t_s \approx 4/(\zeta\omega_n) = \qty{0.20}{\second}$), se fijan en \texttt{Induction\allowbreak Machine\allowbreak DTC\allowbreak Data.m} las ganancias exactas del compensador PI de velocidad en p.u.:
+\begin{align}
+    K_{p,\omega} &= 2\zeta\omega_n(2H) - F \nonumber\\
+                 &= 2(1.0)(20)(0.5468) - 0.0106 = \num{21.861}, \label{eq:kp_pu_calc}\\
+    K_{i,\omega} &= \omega_n^2(2H) = (20)^2(0.5468) = \num{218.72}. \label{eq:ki_pu_calc}
+\end{align}
+El núcleo DTC~\cite{Takahashi1986,Vas1998} se complementa con bandas de histéresis calibradas en $\Delta\psi = \qty{0.015}{\weber}$ para el comparador de flujo de dos niveles y $\Delta T = \qty{3.0}{\newton\meter}$ para el comparador de par de tres niveles, operando con paso de muestreo fundamental y de control unificado $T_s = T_{sc} = \qty{5}{\micro\second}$ (evitando aliasing e inestabilidad numérica en la tabla de conmutación) y frecuencia nominal de conmutación de los IGBT $f_{\text{sw}} = \qty{2}{\kilo\hertz}$. Los listados íntegros de \texttt{Induction\allowbreak Machine\allowbreak DTC\allowbreak Data.m} y \texttt{tune\_pi.m} se documentan en el Apéndice~\ref{app:matlab}.
+
+\subsubsection{Arquitectura Multifísica en Simulink y Validación de Regímenes Dinámicos}
+La Fig.~\ref{fig:control_dtc_multifisico} sintetiza la arquitectura multifísica acoplada implementada en \texttt{Induction\allowbreak Machine\allowbreak DTC.slx}, integrando cinco dominios interdependientes: la etapa eléctrica de potencia (red trifásica de \qty{460}{\volt}, rectificador de diodos, bus DC de \qty{650}{\volt} e inversor VSI de seis IGBT), el control vectorial directo de par con lazo externo PI, el acoplamiento mecánico con el perfil de carga de molienda, el subsistema térmico por red Cauer de primer orden alimentado por las pérdidas en el cobre estatórico ($P_{\text{cu}} = 3I_s^2 R_s$)~\cite{Thermal2025}, y el bloque cinemático de vibraciones mecánicas conforme a ISO~10816-1~\cite{ISO10816}.
+
+\input{figuras/fig_control_dtc_multifisico.tex}
+
+La implementación concreta de los dos subsistemas internos críticos en Simulink se muestra en la Fig.~\ref{fig:simulink_bloques}. En la Fig.~\ref{fig:simulink_bloques}(a), la referencia de velocidad atraviesa un limitador de rampa (\emph{Rate Limiter}) calibrado en \qty{2000}{rpm/s}, alimenta la ley de debilitamiento de flujo hacia \texttt{FluxRef} y se convierte a p.u. mediante la ganancia $p/(60 f_n)$ para compararse con $\omega_r$ muestreada mediante \emph{Zero-Order Hold}. El bloque discreto \texttt{PI(z)} con protección \emph{anti-windup} genera la consigna de par normalizada, escalada por $T_{\text{base}}$ hacia \texttt{TqRef} del módulo \texttt{Direct Torque Control}, el cual emite los seis pulsos de compuerta \texttt{Ga(H)}--\texttt{Gc(L)}.
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\parbox[c][3.75cm][c]{\textwidth}{\centering\includegraphics[width=\textwidth]{control.png}}
+\centerline{\footnotesize (a) Lazo discreto PI de velocidad (\qty{2000}{rpm/s}) y núcleo DTC.}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\parbox[c][3.75cm][c]{\textwidth}{\centering\includegraphics[width=\textwidth]{vibraciones_bloque.png}}
+\centerline{\footnotesize (b) Subsistema cinemático de vibraciones (\texttt{Vibrations [mm/s]}).}
+\end{minipage}
+\caption{Implementación detallada en MATLAB/Simulink (\texttt{InductionMachineDTC.slx}) de: (a) el regulador discreto de velocidad PI con \emph{rate limiter}, debilitamiento de campo y selector DTC; y (b) el bloque estimador de velocidad vibratoria acoplado al eje del rotor.}
+\label{fig:simulink_bloques}
+\end{figure*}
+
+Por su parte, la Fig.~\ref{fig:simulink_bloques}(b) ilustra el subsistema \texttt{Vibrations [mm/s]}, que reconstruye el ángulo mecánico $\theta_m(t)=\int_0^t \omega_r(\tau)\,d\tau$ mediante un integrador continuo ($1/s$), evalúa el armónico fundamental $1\times$ de excentricidad y desbalance residual ($\sin\theta_m$), adiciona ruido blanco de banda limitada $\eta(t)$ representativo de impactos de cereal y rugosidad en pistas de rodamientos, modula la señal por la magnitud $|\omega_r(t)|$ para anular la vibración en reposo y escala a \unit{\milli\meter\per\second}:
+\begin{equation}
+    v_{\text{vib}}(t) = 0.002\,|\omega_r(t)|\left[\sin\!\left(\int_0^t \omega_r(\tau)\,d\tau\right) + \eta(t)\right].
+    \label{eq:vib_cinematica_simulink}
+\end{equation}
+
+La validación dinámica en \texttt{Induction\allowbreak Machine\allowbreak DTC.slx} se ejecutó sobre un horizonte de \qty{2.5}{\second} con consigna escalonada de \qty{1600}{RPM} en $t=\qty{0.1}{\second}$ y un ciclo de carga multifásico representativo de la trituración industrial. Los resultados obtenidos en las seis variables físicas fundamentales se analizan en las Figs.~\ref{fig:simulink_carga_vel}--\ref{fig:simulink_temp_vib}:
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{carga.png}
+\centerline{\footnotesize (a) Perfil de carga $T_L$ y par electromagnético DTC $T_e$.}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{velocidad.png}
+\centerline{\footnotesize (b) Regulación de velocidad mecánica $\omega_r$ (\qty{1600}{RPM} $\pm\qty{2}{\percent}$).}
+\end{minipage}
+\caption{Dinámica electromecánica simulada en Simulink durante las cuatro fases de molienda: (a) seguimiento del par electromagnético frente a arranque en vacío, carga nominal ($T_n=\qty{39.58}{\newton\meter}$), atasco ($1.35\,T_n=\qty{53.43}{\newton\meter}$) y alivio ($0.5\,T_n=\qty{19.79}{\newton\meter}$); (b) regulación de velocidad del rotor dentro de la banda conforme de \num{1568}--\qty{1632}{RPM}.}
+\label{fig:simulink_carga_vel}
+\end{figure*}
+
+\begin{itemize}\setlength{\itemsep}{2pt}\setlength{\topsep}{2pt}
+    \item \textbf{Perfil de carga y seguimiento de velocidad (Fig.~\ref{fig:simulink_carga_vel}):} el ciclo articula cuatro regímenes bien diferenciados: (1)~\emph{arranque en vacío} ($0$--\qty{1.0}{\second}, $T_L=\qty{0}{\newton\meter}$), donde el núcleo DTC aplica un par acelerador con pico transitorio de $\approx\qty{29.8}{\newton\meter}$ y meseta de rampa cercana a \qty{24.5}{\newton\meter} mientras $\omega_r$ asciende linealmente a \qty{2000}{rpm/s}; (2)~\emph{molienda nominal} ($1.0$--\qty{1.6}{\second}, $T_L=T_n=\qty{39.58}{\newton\meter}$), donde $T_e$ rastrea instantáneamente la carga dentro de la banda de histéresis $\Delta T=\qty{3.0}{\newton\meter}$ y la zona verde conforme ($T\le T_n$); (3)~\emph{atasco de tolva} ($1.6$--\qty{2.1}{\second}, $T_L=1.35\,T_n=\qty{53.43}{\newton\meter}$), excediendo la capacidad continua y disparando el marcador de advertencia en $t=\qty{1.60}{\second}$; y (4)~\emph{alivio de carga} ($2.1$--\qty{2.5}{\second}, $T_L=0.5\,T_n=\qty{19.79}{\newton\meter}$), retornando de inmediato a la franja segura. En la Fig.~\ref{fig:simulink_carga_vel}(b), la velocidad ingresa a la banda conforme de $\pm\qty{2}{\percent}$ (\num{1568}--\qty{1632}{RPM}) antes de $t=\qty{0.92}{\second}$; tanto el choque nominal en $t=\qty{1.0}{\second}$ como el atasco de $1.35\,T_n$ en $t=\qty{1.60}{\second}$ inducen únicamente caídas transitorias breves que la acción integral del regulador PI amortigua sin oscilaciones sostenidas ni pérdida de estabilidad.
+    \item \textbf{Tensiones PWM y corrientes estatóricas (Fig.~\ref{fig:simulink_volt_curr}):} la ventana ampliada $t\in[\num{1.58}, \num{1.66}]\,\unit{\second}$ de la Fig.~\ref{fig:simulink_volt_curr}(a) evidencia los pulsos discretos generados por el inversor DTC acotados por el límite físico del bus DC ($V_{\text{dc}}=\qty{650}{\volt}$) junto con su componente fundamental sinusoidal de \qty{60}{\hertz}; al activarse la sobrecarga en $t=\qty{1.60}{\second}$ (punto de advertencia), el selector de histéresis incrementa la densidad de vectores activos para sostener el par requerido. En la Fig.~\ref{fig:simulink_volt_curr}(b), las corrientes trifásicas $i_{abc}$ exhiben un pico inicial de magnetización (\emph{inrush}) de $\approx\qty{85}{\ampere}$ al energizar el flujo en $t\approx\qty{0.11}{\second}$, se confinan simétricamente dentro de la zona conforme de régimen continuo ($|i|\le I_{\text{peak,nom}}\approx\qty{18.7}{\ampere}$, amplitud operativa $\approx\qty{17.5}{\ampere}$) durante la molienda nominal, superan dicha frontera alcanzando \qty{21.5}{\ampere} de pico en la sobrecarga ($t=\qty{1.62}{\second}$, marcador de advertencia) y regresan a $\approx\qty{9.5}{\ampere}$ tras el alivio en $t=\qty{2.10}{\second}$.
+    \item \textbf{Evolución térmica y vibraciones (Fig.~\ref{fig:simulink_temp_vib}):} la Fig.~\ref{fig:simulink_temp_vib}(a) muestra la respuesta de la red térmica Cauer RC partiendo de $T_{\text{amb}}=\qty{25.0}{\celsius}$ hasta $\sim\qty{26.2}{\celsius}$ en los \qty{2.5}{\second} de simulación; se distingue con claridad el escalón inicial por corriente de magnetización y el incremento súbito de la pendiente $dT/dt$ en $t=\qty{1.60}{\second}$ al elevarse las pérdidas $I^2 R_s$ durante el atasco. El recuadro normativo superior derecho confirma que el transitorio permanece ampliamente por debajo de la alerta preventiva (\qty{105}{\celsius}) y del techo dieléctrico RETIE Clase~F (\qty{155}{\celsius})~\cite{RETIE2024,RETIE2026}. Finalmente, la Fig.~\ref{fig:simulink_temp_vib}(b) demuestra que $v_{\text{vib}}(t)$ escala suavemente con $|\omega_r(t)|$ y mantiene su envolvente estrictamente dentro de la Zona~A/B conforme de la norma ISO~10816-1 ($\le\qty{1.8}{\milli\meter\per\second}$, con pico máximo $\approx\qty{1.15}{\milli\meter\per\second}$), muy distante de la frontera crítica Zona~C/D ($\pm\qty{4.5}{\milli\meter\per\second}$)~\cite{ISO10816}.
+\end{itemize}
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{voltaje.png}
+\centerline{\footnotesize (a) Pulsos PWM/DTC ($V_{\text{dc}}=\qty{650}{\volt}$) y fundamental \qty{60}{\hertz}.}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{corrientes.png}
+\centerline{\footnotesize (b) Corrientes trifásicas de estator $i_{abc}$ y banda conforme.}
+\end{minipage}
+\caption{Respuesta eléctrica del accionamiento DTC en Simulink: (a) tensión de fase conmutada $v_a$ en la ventana del escalón de atasco ($t\in[\num{1.58}, \num{1.66}]\,\unit{\second}$); (b) corrientes de fase $i_{abc}$ destacando el pico inicial de magnetización (\qty{85}{\ampere}), el régimen nominal conforme ($|i|\le\qty{18.7}{\ampere}$) y la sobrecarga a \qty{21.5}{\ampere} en $t=\qty{1.62}{\second}$.}
+\label{fig:simulink_volt_curr}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{temperatura.png}
+\centerline{\footnotesize (a) Calentamiento en red Cauer RC y recuadro normativo RETIE.}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{vibraciones.png}
+\centerline{\footnotesize (b) Velocidad vibratoria $v_{\text{vib}}(t)$ y límites ISO~10816-1.}
+\end{minipage}
+\caption{Supervisión multifísica de condición en Simulink: (a) evolución térmica desde $T_{\text{amb}}=\qty{25.0}{\celsius}$ hasta $\sim\qty{26.2}{\celsius}$ con cambio de pendiente en $t=\qty{1.60}{\second}$ y contraste frente a los límites RETIE de \qty{105}{\celsius} y \qty{155}{\celsius}; (b) velocidad vibratoria confinada en la Zona~A/B conforme ($\le\qty{1.8}{\milli\meter\per\second}$), lejos de la alarma crítica ($\pm\qty{4.5}{\milli\meter\per\second}$).}
+\label{fig:simulink_temp_vib}
+\end{figure*}
+
+\subsection{Avance 2: Diagnóstico Predictivo con IA, Ruta RCM y App Designer}\label{subsec:avance2}
+
+\subsubsection{Generación del Dataset y Vector de Características}
+Dado que los esquemas de protección basados en umbrales univariables resultan vulnerables a falsas alarmas ante variaciones de carga en molienda~\cite{Gao2015,Soualhi2022}, el segundo avance articula un clasificador supervisado multivariable entrenado sobre un corpus fenomenológico generado por \texttt{generate\_\allowbreak dataset.m} (Apéndice~\ref{app:matlab}). El script importa dinámicamente las constantes maestras de \texttt{Induction\allowbreak Machine\allowbreak DTC\allowbreak Data.m} ($I_{n,\text{rms}}=\qty{9.36}{\ampere}$, $V_n=\qty{460}{\volt}$, $T_n=\qty{39.58}{\newton\meter}$), fija la semilla determinística \texttt{rng(42)} para reproducibilidad exacta y sintetiza \num{1200} registros balanceados (\num{300} por clase) representados por el vector multisensor $\mathbf{x}\in\mathbb{R}^8$~\cite{AI2026}:
+\begin{equation}
+    \mathbf{x} = \bigl[I_{\text{rms}},\,\text{IUF},\,\text{THD}_i,\,V_{\text{rms}},\,T_{\text{dev}},\,dT/dt,\,v_{\text{rms}},\,v_{\text{peak}}\bigr]^T,
+    \label{eq:vector_x8}
+\end{equation}
+donde $I_{\text{rms}}$ [\unit{\ampere}] es la corriente eficaz del estator, $\text{IUF}$ [\unit{\percent}] el factor de desbalance de corriente, $\text{THD}_i$ [\unit{\percent}] la distorsión armónica total~\cite{IEEE519}, $V_{\text{rms}}$ [\unit{\volt}] la tensión eficaz de línea, $T_{\text{dev}}$ [\unit{\celsius}] la temperatura del devanado, $dT/dt$ [\unit{\celsius\per\minute}] el gradiente térmico, $v_{\text{rms}}$ [\unit{\milli\meter\per\second}] la velocidad vibratoria eficaz ISO~10816-1~\cite{ISO10816} y $v_{\text{peak}}$ [\unit{\milli\meter\per\second}] la amplitud pico de impacto en rodamientos.
+
+Las cuatro clases operativas reproducen firmas físicas diferenciadas y consistentes con la normativa industrial:
+\begin{enumerate}\setlength{\itemsep}{1.5pt}\setlength{\topsep}{2pt}
+    \item \textbf{Normal (Clase~1):} carga entre \num{20}\% y \qty{100}{\percent} de $T_n$, $\text{IUF}<\qty{3}{\percent}$, $\text{THD}_i<\qty{5}{\percent}$, $V_{\text{rms}}\approx\qty{460}{\volt}$, $T_{\text{dev}}\in\num{40}$--\qty{75}{\celsius}, $dT/dt\approx\qty{0}{\celsius\per\minute}$ y $v_{\text{rms}}\le\qty{1.8}{\milli\meter\per\second}$.
+    \item \textbf{Sobrecalentamiento (Clase~2):} sobrecarga térmica sostenida de \num{1.15}--\num{1.60}\,$I_{n,\text{rms}}$ u obstrucción de ventilación, elevando $T_{\text{dev}}$ entre \num{98} y \qty{150}{\celsius} (próximo al techo RETIE Clase~F de \qty{155}{\celsius}) con gradiente acelerado $dT/dt\ge\qty{1.2}{\celsius\per\minute}$.
+    \item \textbf{Falla Eléctrica (Clase~3):} asimetría entre fases o cortocircuito incipiente entre espiras con severidad variable (\num{0.20}--\num{1.00}), originando $\text{IUF}\in\num{8}$--\qty{42}{\percent}, $\text{THD}_i\in\num{6}$--\qty{17}{\percent} y caídas asimétricas de tensión hasta \qty{-15}{\volt}.
+    \item \textbf{Falla Mecánica (Clase~4):} desalineación eje--molino y deterioro de pistas en rodamientos, provocando $v_{\text{rms}}\in\num{4.2}$--\qty{12.7}{\milli\meter\per\second} (Zona~C/D de ISO~10816-1) y factores de cresta severos ($v_{\text{peak}}=(2.1\text{--}3.2)\,v_{\text{rms}}$).
+\end{enumerate}
+
+El corpus exportado (\texttt{motor\_\allowbreak fault\_\allowbreak dataset.mat} y \texttt{.csv}) se particiona de manera estratificada bajo \texttt{rng(42)} en \qty{80}{\percent} entrenamiento (\num{960} registros, \num{240} por clase) y \qty{20}{\percent} prueba ciega (\num{240} registros, \num{60} por clase). Para neutralizar las escalas físicas dispares sin introducir fuga de datos (\emph{data leakage}), los vectores de media $\boldsymbol{\mu}$ y desviación estándar $\boldsymbol{\sigma}$ de la estandarización $Z$-Score, $\hat{x}_j = (x_j-\mu_j)/\sigma_j$, se ajustan estrictamente sobre el conjunto de entrenamiento y se congelan para el conjunto de prueba y la inferencia en línea.
+
+\subsubsection{Arquitectura, Entrenamiento Nativo y Validación Comparativa}
+Con el fin de garantizar portabilidad directa hacia procesadores embebidos y al entorno 3D sin depender de cajas negras propietarias, ambos clasificadores se codificaron de forma nativa y vectorizada en \texttt{train\_\allowbreak classifiers.m} (Apéndice~\ref{app:matlab}):
+
+\begin{itemize}\setlength{\itemsep}{2pt}\setlength{\topsep}{2pt}
+    \item \textbf{Perceptrón Multicapa (MLP $8\to 16\to 8\to 4$):} red prealimentada con activaciones ReLU en las dos capas ocultas, salida Softmax de cuatro clases (Sección~\ref{sec:marco_teorico}) e inicialización gaussiana de He ($\mathcal{N}(0, 2/n_{\text{in}})$) con sesgos nulos. Su número exacto de parámetros entrenables es
+    \begin{equation}
+        N_{\text{params}} = (8\cdot 16 + 16) + (16\cdot 8 + 8) + (8\cdot 4 + 4) = 316,
+        \label{eq:mlp_params_count}
+    \end{equation}
+    equivalente a una huella de memoria de apenas $\approx\qty{1.26}{\kilo\byte}$ en formato \texttt{float32}. El entrenamiento se ejecutó durante \textbf{60 épocas} con minilotes de tamaño $B=32$, optimizador Adam ($\eta=\num{0.0012}$, $\beta_1=\num{0.9}$, $\beta_2=\num{0.999}$, $\epsilon=10^{-8}$) y regularización $L_2$ ($\lambda=10^{-4}$) sobre la pérdida de entropía cruzada.
+    \item \textbf{Máquina de Vectores de Soporte (SVM RBF OvR)~\cite{Gangsar2020}:} ensamble de cuatro clasificadores binarios \emph{One-vs-Rest} con núcleo gaussiano RBF ($\gamma = 1/8 = \num{0.125}$ y penalización de caja $C=\num{5.0}$), resuelto en su formulación dual mediante \num{200} iteraciones de ascenso por gradiente proyectado ($\alpha_i\in[0, C]$, paso \num{0.001}).
+\end{itemize}
+
+La Fig.~\ref{fig:ia_train_conf} documenta el aprendizaje y la generalización ciega del MLP. En la Fig.~\ref{fig:ia_train_conf}(a), la pérdida de entropía cruzada cae abruptamente desde $\approx\num{1.55}$ en la época~0 hasta situarse por debajo de \num{0.005} en la época~20 y converger asintóticamente a cero hacia la época~60; en paralelo, la exactitud asciende desde $\approx\qty{35}{\percent}$ hasta estabilizarse en \qty{100.0}{\percent} a partir de la época~10 tanto en entrenamiento como en prueba, con superposición casi exacta entre ambas curvas que descarta sobreajuste. La matriz de confusión sobre las \num{240} muestras independientes de prueba ciega (Fig.~\ref{fig:ia_train_conf}(b)) confirma una diagonal perfecta de 60/60 aciertos en cada estado y cero confusiones fuera de diagonal.
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\parbox[c][4.95cm][c]{\textwidth}{\centering\includegraphics[width=\textwidth,height=4.9cm,keepaspectratio]{curvas_entrenamiento_ann.png}}
+\centerline{\footnotesize (a) Pérdida Cross-Entropy y exactitud del MLP (0--60 épocas).}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\parbox[c][4.95cm][c]{\textwidth}{\centering\includegraphics[width=\textwidth,height=4.9cm,keepaspectratio]{matriz_confusion_ann.png}}
+\centerline{\footnotesize (b) Matriz de confusión en prueba ciega ($N=240$, 60/clase).}
+\end{minipage}
+\caption{Validación del entrenamiento del Perceptrón Multicapa ($8\to 16\to 8\to 4$) en \texttt{train\_classifiers.m}: (a) convergencia monótona de la función de pérdida ($<\num{0.005}$ en época~20) y estabilización de la exactitud en \qty{100.0}{\percent} desde la época~10 sin sobreajuste; (b) clasificación perfecta (60/60) en las cuatro condiciones operativas sobre el conjunto de test independiente.}
+\label{fig:ia_train_conf}
+\end{figure*}
+
+La fundamentación geométrica de esta separabilidad se verifica mediante la proyección bidimensional por Análisis de Componentes Principales (PCA) sobre el conjunto de entrenamiento estandarizado (Fig.~\ref{fig:ia_pca_comp}(a)). Los cuatro regímenes ocupan regiones claramente diferenciadas del plano $(PC_1, PC_2)$: la operación \emph{Normal} se agrupa de forma compacta en el cuadrante superior izquierdo ($PC_1\in[-2.9, -0.8]$, $PC_2\in[0.3, 1.3]$); el \emph{Sobrecalentamiento} se desplaza hacia el cuadrante superior derecho ($PC_1\in[0.2, 3.1]$, $PC_2\in[1.0, 2.9]$) dominado por $T_{\text{dev}}$ y $dT/dt$; la \emph{Falla Mecánica} conforma un conglomerado compacto en el cuadrante inferior izquierdo ($PC_1\in[-2.2, -0.8]$, $PC_2\in[-2.3, -0.2]$) guiado por $v_{\text{rms}}$ y $v_{\text{peak}}$; y la \emph{Falla Eléctrica} se extiende como una banda diagonal en el cuadrante inferior derecho ($PC_1\in[-0.4, 4.4]$, $PC_2\in[-3.1, -0.1]$) en función de la severidad de $\text{IUF}$ y $\text{THD}_i$ (con un único caso fronterizo de severidad mínima cerca de $(-1.6, 0.3)$ en la proyección 2D que las fronteras no lineales en $\mathbb{R}^8$ separan sin error).
+
+\begin{figure*}[!t]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\parbox[c][4.95cm][c]{\textwidth}{\centering\includegraphics[width=\textwidth,height=4.9cm,keepaspectratio]{espacio_caracteristicas_pca.png}}
+\centerline{\footnotesize (a) Proyección PCA 2D de los cuatro estados operativos.}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\parbox[c][4.95cm][c]{\textwidth}{\centering\includegraphics[width=\textwidth,height=4.9cm,keepaspectratio]{comparativa_modelos.png}}
+\centerline{\footnotesize (b) Contraste de métricas en test: MLP frente a SVM RBF.}
+\end{minipage}
+\caption{Análisis de separabilidad y evaluación comparativa de clasificadores: (a) distribución real de conglomerados en el plano principal $(PC_1, PC_2)$ evidenciando el desacoplamiento físico de las firmas de falla; (b) desempeño comparativo entre la Red Neuronal MLP y la SVM con núcleo RBF sobre el conjunto de prueba.}
+\label{fig:ia_pca_comp}
+\end{figure*}
+
+La Tabla~\ref{tab:metricas_ia} y la Fig.~\ref{fig:ia_pca_comp}(b) consolidan el desempeño sobre el conjunto de prueba ciega ($N=240$). Tanto el MLP como la SVM RBF logran una exactitud global de \qty{100.0}{\percent}, con el gráfico comparativo reflejando una paridad superior al \qty{99.4}{\percent} en las métricas macro-promediadas y ventaja marginal del MLP. Más allá del desempeño clasificatorio, dos ventajas operativas determinaron la selección del MLP como motor primario para despliegue embebido en MATLAB App Designer y en el gemelo 3D de Godot, conservando la SVM como validador determinístico redundante:
+\begin{enumerate}\setlength{\itemsep}{2pt}\setlength{\topsep}{2pt}
+    \item \textbf{Costo computacional y memoria mínimos:} el MLP exige únicamente \num{316} operaciones multiplicar-acumular (MAC) y \qty{1.26}{\kilo\byte} en \texttt{float32}, mientras la SVM RBF debe almacenar los vectores de soporte de los cuatro hiperplanos OvR y evaluar distancias euclidianas exponenciales en cada ciclo de muestreo.
+    \item \textbf{Calibración probabilística Softmax directa:} el MLP entrega probabilidades posteriores normalizadas $P_k\in[0,1]$ que habilitan de forma nativa la compuerta de certeza ($\max_k P_k \ge \qty{90}{\percent}$) para filtrar transitorios ruidosos, mientras la SVM produce márgenes geométricos no probabilísticos que requieren calibración sigmoidal externa (escalado de Platt).
+\end{enumerate}
+
+\begin{table}[!t]
+\begingroup\setlength{\tabcolsep}{2.8pt}\renewcommand{\arraystretch}{1.06}
+\centering\footnotesize
+\caption{Métricas de evaluación de los clasificadores de IA sobre el conjunto de prueba ciega ($N=240$, \num{60} muestras/clase).}
+\label{tab:metricas_ia}
+\begin{tabularx}{\columnwidth}{@{} >{\raggedright\arraybackslash}X cccc @{}}
+\toprule
+\textbf{Estado / Clasificador} & \textbf{Exact.\,(\%)} & \textbf{Prec.\,(\%)} & \textbf{Recall\,(\%)} & \textbf{F1\,(\%)} \\
+\midrule
+Operación Normal (MLP) & \num{100.0} & \num{100.0} & \num{100.0} & \num{100.0} \\
+Sobrecalen\-tamiento (MLP) & \num{100.0} & \num{100.0} & \num{100.0} & \num{100.0} \\
+Falla Eléctrica (MLP) & \num{100.0} & \num{100.0} & \num{100.0} & \num{100.0} \\
+Falla Mecánica (MLP) & \num{100.0} & \num{100.0} & \num{100.0} & \num{100.0} \\
+\midrule
+\textbf{Global MLP ($8\to 16\to 8\to 4$)} & \textbf{\num{100.0}} & \textbf{\num{100.0}} & \textbf{\num{100.0}} & \textbf{\num{100.0}} \\
+\textbf{Global SVM (RBF OvR)} & \textbf{\num{100.0}} & \textbf{\num{100.0}} & \textbf{\num{100.0}} & \textbf{\num{100.0}} \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+\subsubsection{Ruta Integral de Mantenimiento Preventivo y Predictivo (RCM)}
+Para traducir la inferencia inteligente en decisiones de confiabilidad industrial alineadas con el Mantenimiento Centrado en Confiabilidad (RCM)~\cite{Moubray1997,Maintenance2023}, el RETIE (Art.~18 sobre las 5 Reglas de Oro LOTO y Art.~20 sobre máquinas rotativas)~\cite{RETIE2024,RETIE2026}, OSHA~1910.147~\cite{OSHA1910}, ISO~10816-1/20816-3~\cite{ISO10816,ISO20816} e IEEE~519~\cite{IEEE519}, se estructuró una matriz de despacho en dos escalones: contención inmediata en la planta de molienda e intervención especializada en taller electromecánico (Tabla~\ref{tab:ruta_rcm}).
+
+\begin{table*}[!t]
+\begingroup\setlength{\tabcolsep}{3.4pt}\renewcommand{\arraystretch}{1.06}
+\centering\footnotesize
+\caption{Ruta integral de mantenimiento preventivo y predictivo (RCM) acoplada a los cuatro estados de diagnóstico IA para el motor de \qty{10}{HP} en AgroMolinos del Valle~S.A.}
+\label{tab:ruta_rcm}
+\begin{tabularx}{\textwidth}{@{} >{\raggedright\arraybackslash}p{1.95cm} >{\raggedright\arraybackslash}p{3.15cm} >{\raggedright\arraybackslash}p{1.65cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{1.75cm} @{}}
+\toprule
+\textbf{Estado IA} & \textbf{Umbral Normativo (RETIE / ISO / IEEE)} & \textbf{Tipo y Prioridad} & \textbf{Acción Inmediata en Planta} & \textbf{Protocolo en Taller Electromecánico} & \textbf{Frec.} \\
+\midrule
+\textbf{Normal} & $I_{\text{rms}}\le\qty{10.5}{\ampere}$, $\text{IUF}<\qty{3}{\percent}$, $T<\qty{75}{\celsius}$, $v_{\text{rms}}\le\qty{1.8}{\milli\meter\per\second}$ (ISO Zona~A/B) & Preventivo / Baja & Mantener operación continua de molienda; vigilar tendencias en panel SCADA y nivel acústico en rodamientos. & Limpieza de carcasa y rejillas, reapriete dinamométrico de bornes y engrase de cojinetes con grasa de poliurea de alta temperatura. & Mensual \\
+\addlinespace[2pt]
+\textbf{Sobrecalen\-tamiento} & $T>\qty{105}{\celsius}$ o $dT/dt>\qty{1.5}{\celsius\per\minute}$; límite RETIE Clase~F: \qty{155}{\celsius}~\cite{RETIE2024,RETIE2026} & Predictivo / Alta & Reducir alimentación de la tolva al \qty{60}{\percent}; verificar ventilador forzado, desobstruir rejillas e inspeccionar con termografía IR. & Medición de resistencia óhmica en caliente entre fases, ensayo Megger de aislamiento, prueba de rigidez dieléctrica e inspección de barniz para reimpregnación VPI. & Condicional ($<\qty{1}{\hour}$) \\
+\addlinespace[2pt]
+\textbf{Falla Eléctrica} & $\text{IUF}>\qty{8}{\percent}$, $\text{THD}_i>\qty{10}{\percent}$ (IEEE~519~\cite{IEEE519}), secuencia negativa $I_2>\qty{5}{\percent}$ & Correctivo prog. / Crítica & Parada de emergencia controlada, consignación LOTO (5 Reglas de Oro RETIE) y medición preliminar Megger en caja de bornes. & Desensamble; ensayo \emph{CoreLoss Test} ($<\qty{2.0}{\watt\per\kilogram}$); Megger a \qty{1000}{\volt}~DC ($>\qty{100}{\mega\ohm}$) e Hipot; pirólisis en horno \emph{BurnOut} a \qty{370}{\celsius}; rebobinado CNC e impregnación al vacío VPI. & Inmediata \\
+\addlinespace[2pt]
+\textbf{Falla Mecánica} & $v_{\text{rms}}>\qty{4.5}{\milli\meter\per\second}$ (ISO~10816 Zona~C/D~\cite{ISO10816}), picos de envolvente BPFO/BPFI & Predictivo-Corr. / Urgente & Parada controlada o reducción de par para impedir contacto rotor--estator; reapriete de apoyos y termografía en tapas de cojinetes. & Extracción hidráulica de cojinetes, sustitución por rodamientos de juego~C3 (SKF~Explorer), alineación láser motor--molino ($<\qty{0.05}{\milli\meter}$) y balanceo dinámico en dos planos. & Programada ($<\qty{24}{\hour}$) \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table*}
+
+La Fig.~\ref{fig:flujo_ia_rcm} integra en un único flujo operativo la cadena Edge~AI a \qty{10}{\hertz} (adquisición multisensor $\mathbf{x}\in\mathbb{R}^8$, escalado paramétrico y normalización $Z$-Score, clasificación dual MLP/SVM y estimación MHI/RUL), la compuerta de certeza ($\ge\qty{90}{\percent}$) con bucle de remuestreo ante transitorios, el triage en cuatro carriles planta--taller y la banda de cierre con pruebas de recepción RETIE (Megger $>\qty{100}{\mega\ohm}$, \emph{Surge Test} y rigidez dieléctrica) obligatorias antes del retorno seguro a molienda continua.
+
+\input{figuras/fig_flujo_ia_rcm.tex}
+
+\subsubsection{Panel de Control Interactivo en MATLAB App Designer}
+La interfaz de supervisión y validación fuera de línea del Avance~2 se materializó en \texttt{Motor\allowbreak Fault\allowbreak Diagnostic\allowbreak GUI.m} (Apéndice~\ref{app:matlab}), cuya ejecución en condición normal se presenta en la Fig.~\ref{fig:app_designer}. La ventana (\texttt{uifigure} responsiva en tema claro de $1150\times 750$~px) organiza la interacción en dos paneles acoplados en tiempo real:
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.75\textwidth]{interfaz_app_designer.png}
+\caption{Panel de control interactivo en MATLAB App Designer (\texttt{MotorFaultDiagnosticGUI.m}) en estado Normal (conforme), mostrando a la izquierda los cuatro botones de inyección de escenarios y los ocho deslizadores continuos de telemetría, y a la derecha el semáforo de diagnóstico, la distribución Softmax (\qty{100.0}{\percent} Normal) y la ruta RCM despachada.}
+\label{fig:app_designer}
+\end{figure*}
+
+\begin{itemize}\setlength{\itemsep}{2pt}\setlength{\topsep}{2pt}
+    \item \textbf{Panel izquierdo (\emph{Telemetría Multisensor y Control de Operación}):} dispone de cuatro botones de inyección rápida de escenarios precalibrados (\texttt{Normal}, \texttt{Sobrecarga}, \texttt{F.~Eléctrica} y \texttt{F.~Mecánica}) junto con ocho deslizadores continuos sincronizados con el vector $\mathbf{x}\in\mathbb{R}^8$: $I_{\text{rms}}$ (\num{0}--\qty{23.41}{\ampere}, equivalente a $2.5\,I_{n,\text{rms}}$), $\text{IUF}$ (\num{0}--\qty{50}{\percent}), $\text{THD}_i$ (\num{0}--\qty{25}{\percent}), $V_{\text{rms}}$ (\num{345}--\qty{529}{\volt}, $0.75$--$1.15\,V_n$), $T_{\text{dev}}$ (\num{20}--\qty{180}{\celsius}), $dT/dt$ (\num{-1.0}--\qty{5.0}{\celsius\per\minute}), $v_{\text{rms}}$ (\num{0}--\qty{20}{\milli\meter\per\second}) y $v_{\text{peak}}$ (\num{0}--\qty{35}{\milli\meter\per\second}). Al pie se integra un botón de exportación directa (\texttt{exportapp}) para documentación técnica.
+    \item \textbf{Panel derecho (\emph{Diagnóstico Predictivo y Dispatcher de Mantenimiento}):} procesa instantáneamente cualquier cambio en los deslizadores a través de los pesos sinápticos cargados de \texttt{modelo\_\allowbreak ia\_\allowbreak entrenado.mat}. Presenta un semáforo superior codificado dinámicamente por color (verde en condición normal, ámbar en sobrecalentamiento, rojo en falla eléctrica y púrpura en falla mecánica) con lectura numérica de la certeza Softmax, un gráfico de barras con las cuatro probabilidades a posteriori y una consola monoespaciada que despacha automáticamente las verificaciones normativas RETIE/ISO/IEEE y las acciones planta--taller de la Tabla~\ref{tab:ruta_rcm}.
+\end{itemize}
+
+Desde el punto de vista de ingeniería de software, la interfaz resuelve la restricción de \emph{espacio de trabajo estático} (\emph{static workspace}) de MATLAB para funciones con \emph{callbacks} anidados delegando la lectura de \texttt{Induction\allowbreak Machine\allowbreak DTC\allowbreak Data.m} a la subfunción local \texttt{load\allowbreak Motor\allowbreak Constants()}, evitando inyecciones dinámicas de variables que romperían la ejecución. Adicionalmente, el lanzador raíz \texttt{abrir\_panel.m} (Apéndice~\ref{app:matlab}) configura automáticamente las rutas de simulación e IA, verifica la integridad de las constantes maestras, dispara el entrenamiento si falta \texttt{modelo\_\allowbreak ia\_\allowbreak entrenado.mat} y abre la aplicación lista para operación. Toda esta lógica analítica y de diagnóstico constituyó la base directa sobre la cual se construyó la integración ciberfísica 3D del Avance~3 descrita en la siguiente sección.

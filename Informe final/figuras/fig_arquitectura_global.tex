@@ -1,0 +1,416 @@
+% Figura 1: Arquitectura integral del proyecto (Transición Industria 4.0 -> Industria 5.0)
+% AgroMolinos del Valle S.A. — Diseño por construcción (Layout by Construction)
+% Requiere en preámbulo: IEEEtran, babel[spanish], amsmath, amssymb, siunitx,
+% tikz con librerías: arrows.meta, positioning, calc, shapes.geometric, fit, backgrounds.
+\begin{figure*}[!t]
+\centering
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[
+    % Paleta sobria estilo IEEE (definida localmente para evitar colisiones)
+    /utils/exec={%
+        % Capa Base — Ámbar / Ingeniería Offline (Industria 4.0)
+        \definecolor{archAmberDark}{HTML}{9A3412}%
+        \definecolor{archAmberMed}{HTML}{C2410C}%
+        \definecolor{archAmberBg}{HTML}{FFF7ED}%
+        % Capa Central — Azul Cobalto / Hero (Godot 4.7.2)
+        \definecolor{archBlueDark}{HTML}{1E3A8A}%
+        \definecolor{archBlueMed}{HTML}{1D4ED8}%
+        \definecolor{archBlueBg}{HTML}{EFF6FF}%
+        % Bus Central & Edge AI — Violeta Técnico
+        \definecolor{archVioletDark}{HTML}{5B21B6}%
+        \definecolor{archVioletMed}{HTML}{6D28D9}%
+        \definecolor{archVioletBg}{HTML}{F5F3FF}%
+        % Mundo 3D — Verde Azulado Industrial
+        \definecolor{archTealDark}{HTML}{0F766E}%
+        % Capa Superior — Verde Esmeralda (Industria 5.0)
+        \definecolor{archGreenDark}{HTML}{065F46}%
+        \definecolor{archGreenMed}{HTML}{047857}%
+        \definecolor{archGreenBg}{HTML}{ECFDF5}%
+        % Neutros tipográficos
+        \definecolor{archSlateDark}{HTML}{0F172A}%
+        \definecolor{archSlateText}{HTML}{334155}%
+        \definecolor{archSlateLine}{HTML}{CBD5E1}%
+        \definecolor{archPanelBg}{HTML}{F8FAFC}%
+    },
+    font=\sffamily,
+    % Estilos base de tarjetas: encabezado fijo en top mediante path picture + parbox[t]
+    card base/.style 2 args={
+        rectangle,
+        rounded corners=3.5pt,
+        draw=#1,
+        line width=0.85pt,
+        fill=white,
+        inner xsep=5.5pt,
+        inner ysep=4pt,
+        align=left,
+        text=archSlateDark,
+        font=\sffamily\footnotesize,
+        path picture={
+            \fill[#2] (path picture bounding box.north west)
+                rectangle ([yshift=-0.47cm]path picture bounding box.north east);
+        }
+    },
+    card l1/.style={card base={archAmberMed}{archAmberDark}},
+    card l2 phys/.style={card base={archBlueMed}{archBlueDark}},
+    card l2 world/.style={card base={archTealDark}{archTealDark}},
+    card l2 ai/.style={card base={archVioletMed}{archVioletDark}},
+    card l3/.style={card base={archGreenMed}{archGreenDark}},
+    % Contenedores de capa (en capa background)
+    zone l1/.style={
+        rectangle, rounded corners=5pt,
+        draw=archAmberMed, line width=0.95pt,
+        fill=archAmberBg,
+        inner xsep=0.32cm, inner ysep=0.28cm
+    },
+    zone l2/.style={
+        rectangle, rounded corners=5.5pt,
+        draw=archBlueDark, line width=1.45pt,
+        fill=archBlueBg,
+        inner xsep=0.32cm, inner ysep=0.28cm
+    },
+    zone l3/.style={
+        rectangle, rounded corners=5pt,
+        draw=archGreenMed, line width=0.95pt,
+        fill=archGreenBg,
+        inner xsep=0.32cm, inner ysep=0.28cm
+    },
+    % Bus central dentro de Capa 2
+    bus container/.style={
+        rectangle, rounded corners=4pt,
+        draw=archVioletDark, line width=1.05pt,
+        fill=archVioletBg,
+        inner xsep=0pt, inner ysep=6pt
+    },
+    bus pill/.style={
+        rectangle, rounded corners=3pt,
+        draw=archVioletMed, line width=0.8pt,
+        fill=white,
+        minimum height=0.64cm,
+        inner xsep=7pt, inner ysep=2.5pt,
+        align=center,
+        font=\sffamily\footnotesize,
+        text=archSlateDark
+    },
+    % Columna izquierda de progresión I4.0 -> I5.0
+    spine card/.style 2 args={
+        rectangle, rounded corners=4pt,
+        draw=#1, line width=1.05pt,
+        fill=#2,
+        text width=2.72cm,
+        inner xsep=5pt, inner ysep=6pt,
+        align=center,
+        font=\sffamily\footnotesize,
+        text=white
+    },
+    % Estilos canónicos de flechas
+    flow amber/.style={
+        -{Stealth[length=5.5pt, width=4.2pt]},
+        draw=archAmberDark, line width=1.1pt,
+        shorten >=1.5pt, shorten <=1pt
+    },
+    flow blue bi/.style={
+        {Stealth[length=4.8pt, width=3.5pt]}-{Stealth[length=4.8pt, width=3.5pt]},
+        draw=archBlueDark, line width=1.0pt,
+        shorten >=1.2pt, shorten <=1.2pt
+    },
+    flow green bi/.style={
+        {Stealth[length=5.2pt, width=3.8pt]}-{Stealth[length=5.2pt, width=3.8pt]},
+        draw=archGreenDark, line width=1.05pt,
+        shorten >=1.5pt, shorten <=1.5pt
+    },
+    flow green uni/.style={
+        -{Stealth[length=5.5pt, width=4.0pt]},
+        draw=archGreenDark, line width=1.05pt,
+        shorten >=1.5pt, shorten <=1pt
+    },
+    flow spine/.style={
+        -{Stealth[length=6.5pt, width=5.2pt]},
+        draw=archSlateDark, line width=1.5pt,
+        shorten >=2pt, shorten <=2pt
+    },
+    edge lbl/.style={
+        font=\sffamily\scriptsize,
+        text=archSlateText,
+        align=left,
+        inner sep=1.5pt
+    }
+]
+    % Parámetros maestros de espaciado (única fuente de verdad)
+    \def\colw{5.15cm}
+    \def\colgap{0.46cm}
+    \def\busvgap{0.84cm}
+    \def\layervgap{1.36cm}
+    \def\spinegap{0.46cm}
+    % Alturas internas exactas por fila (ancladas arriba vía \parbox[t][H][t])
+    \def\hcardLtwo{2.42cm}
+    \def\hcardLthree{2.34cm}
+    \def\hcardLone{2.08cm}
+    % Macro local para evitar partición de palabras y fijar altura idéntica en cada fila
+    \def\archcard#1#2#3#4{%
+        \parbox[t][#1][t]{\linewidth}{%
+            \raggedright\hyphenpenalty=10000\exhyphenpenalty=10000%
+            \strut\textbf{\color{white}#2}\\[5pt]%
+            {\scriptsize\color{#3}#4}%
+        }%
+    }
+
+    % =========================================================================
+    % 1. CAPA CENTRAL (HERO) — NÚCLEO SERIOUS GAME GODOT 4.7.2 (VULKAN 1.3)
+    % =========================================================================
+    \node[card l2 phys, text width=\colw] (eng_phys) at (0,0) {%
+        \archcard{\hcardLtwo}{Gemelo Físico}{archBlueDark}{%
+            \texttt{InductionMotorKloss.gd}\\
+            \texttt{VFDDriveController.gd}\\[3.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ Modelo de Kloss (10\,HP, 460\,V).\\
+            $\bullet$ Control escalar V/f + lazo PID.\\
+            $\bullet$ $\text{kWh/ton}$ y $\text{CO}_2\text{e}$ (VFD vs. DOL).%
+        }%
+    };
+
+    \node[card l2 world, text width=\colw, right=\colgap of eng_phys] (eng_3d) {%
+        \archcard{\hcardLtwo}{Mundo 3D y Logística}{archTealDark}{%
+            \texttt{planta\_completa.glb}\; (1.34M tris)\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ 846 \texttt{BoxColliders} y 28 puertas PCA.\\
+            $\bullet$ 15 máquinas industriales animadas.\\
+            $\bullet$ Cadena de granos y logística de\\
+            \phantom{$\bullet$ }camiones articulados en planta.%
+        }%
+    };
+
+    \node[card l2 ai, text width=\colw, right=\colgap of eng_3d] (eng_ai) {%
+        \archcard{\hcardLtwo}{Edge AI Nativo}{archVioletDark}{%
+            \texttt{EdgeAIEngine.gd}\; (inferencia local)\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ Red MLP (\textbf{316 pesos}) + SVM RBF.\\
+            $\bullet$ Salud del motor: índice MHI y RUL.\\
+            $\bullet$ Clasificación de fallas en vivo.\\
+            $\bullet$ Motor de prescripción y alertas RCM.%
+        }%
+    };
+
+    % Bus Central abarcando exactamente de eng_phys.west a eng_ai.east (misma línea Y)
+    \coordinate (bus_left_anchor)  at ($(eng_phys.north west) + (0, \busvgap + 0.38cm)$);
+    \coordinate (bus_right_anchor) at ($(eng_ai.north east)   + (0, \busvgap + 0.38cm)$);
+
+    \node[
+        rectangle, rounded corners=2.5pt,
+        fill=archVioletDark, text=white,
+        minimum height=0.64cm,
+        font=\sffamily\scriptsize\bfseries, inner xsep=7pt, inner ysep=2.5pt,
+        anchor=west
+    ] (bus_tag) at ($(bus_left_anchor) + (0.18cm, 0)$) {\strut BUS CENTRAL};
+
+    \node[bus pill, anchor=west] (bus_eb) at ($(bus_tag.east) + (0.45cm, 0)$) {%
+        \strut\textbf{\texttt{EventBus.gd}} \;{\scriptsize\color{archVioletDark}(16 señales desacopladas)}%
+    };
+
+    \node[bus pill, anchor=east] (bus_sm) at ($(bus_right_anchor) + (-0.18cm, 0)$) {%
+        \strut\textbf{\texttt{SimulationManager.gd}} \;{\scriptsize\color{archVioletDark}(bucle 10\,Hz)}%
+    };
+
+    % Contenedor invisible para calcular el bounding box exacto del Bus Central
+    \node[inner xsep=0pt, inner ysep=6pt, fit=(bus_left_anchor)(bus_right_anchor)(bus_tag)(bus_eb)(bus_sm)] (bus_bar) {};
+
+    % Contenedor de Capa Central primero en background, luego fondo del Bus Central encima
+    \begin{pgfonlayer}{background}
+        \node[zone l2, fit=(eng_phys)(eng_3d)(eng_ai)(bus_bar)] (zone_l2) {};
+        \node[bus container, inner sep=0pt, fit=(bus_bar)] (bus_bar_bg) {};
+    \end{pgfonlayer}
+
+    % Flecha interna estrictamente horizontal del Bus Central
+    \draw[{Stealth[length=4.5pt, width=3.4pt]}-{Stealth[length=4.5pt, width=3.4pt]},
+          draw=archVioletDark, line width=1.0pt, shorten >=2pt, shorten <=2pt]
+        (bus_eb.east) -- node[above=1pt, font=\sffamily\scriptsize\bfseries, text=archVioletDark] {Sync 10\,Hz} (bus_sm.west);
+
+    % Conexiones verticales internas (Motores <-> Bus Central), todas idéntica longitud
+    \draw[flow blue bi] (eng_phys.north) -- node[edge lbl, right=4pt] {Estado $I, T, \omega$} (bus_bar.south -| eng_phys.north);
+    \draw[flow blue bi] (eng_3d.north)   -- node[edge lbl, right=4pt] {Escena / Colis.}    (bus_bar.south -| eng_3d.north);
+    \draw[flow blue bi] (eng_ai.north)   -- node[edge lbl, right=4pt] {MHI / RUL / RCM}    (bus_bar.south -| eng_ai.north);
+
+    % =========================================================================
+    % 2. CAPA SUPERIOR — OPERACIÓN CENTRADA EN EL HUMANO (INDUSTRIA 5.0)
+    % =========================================================================
+    \node[card l3, text width=\colw, anchor=south]
+        (hum_dieg) at ($(eng_phys.north |- zone_l2.north) + (0, \layervgap)$) {%
+        \archcard{\hcardLthree}{Interacción Diegética 3D}{archGreenDark}{%
+            \textit{Acción física sin botones 2D de falla}\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ 5 fallas físicas inducibles en planta.\\
+            $\bullet$ Vestuario EPP completo (6/6 RETIE).\\
+            $\bullet$ 5 Reglas de Oro LOTO en campo.\\
+            $\bullet$ Recorrido guiado en 20 estaciones.%
+        }%
+    };
+
+    \node[card l3, text width=\colw, anchor=south]
+        (hum_tab) at ($(eng_3d.north |- zone_l2.north) + (0, \layervgap)$) {%
+        \archcard{\hcardLthree}{Tablet SCADA In-Game \texttt{[TAB]}}{archGreenDark}{%
+            \textit{Nativa en Godot (sin navegador externo)}\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ 9 pestañas: IoT, Cámaras 3D, RETIE\\
+            \phantom{$\bullet$ }e IA; Rúbrica (0--5) e Historial.\\
+            $\bullet$ Alertas push y diagnóstico en vivo.\\
+            $\bullet$ Guías interactivas de mantenimiento.%
+        }%
+    };
+
+    \node[card l3, text width=\colw, anchor=south]
+        (hum_qa) at ($(eng_ai.north |- zone_l2.north) + (0, \layervgap)$) {%
+        \archcard{\hcardLthree}{Certificación QA}{archGreenDark}{%
+            \texttt{headless\_verify.gd}\; (CI determinística)\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ Suite de pruebas: \textbf{10/10 PASS}.\\
+            $\bullet$ Verificación de física e inferencia IA.\\
+            $\bullet$ Auditoría de flujo de seguridad.\\
+            $\bullet$ Exportación de reporte \texttt{JSON} RETIE.%
+        }%
+    };
+
+    \begin{pgfonlayer}{background}
+        \node[zone l3, fit=(hum_dieg)(hum_tab)(hum_qa)] (zone_l3) {};
+    \end{pgfonlayer}
+
+    % Flechas verticales Capa Central (Bus Central) <-> Capa Superior
+    \draw[flow green bi] (bus_bar.north -| hum_dieg.south) -- (hum_dieg.south);
+    \node[edge lbl, anchor=west] at ($(zone_l2.north -| hum_dieg.south)!0.5!(zone_l3.south -| hum_dieg.south) + (0.12cm, 0)$)
+        {5 fallas / EPP / LOTO};
+
+    \draw[flow green bi] (bus_bar.north -| hum_tab.south) -- (hum_tab.south);
+    \node[edge lbl, anchor=west] at ($(zone_l2.north -| hum_tab.south)!0.5!(zone_l3.south -| hum_tab.south) + (0.12cm, 0)$)
+        {Telemetría 10\,Hz / Push};
+
+    \draw[flow green uni] (bus_bar.north -| hum_qa.south) -- (hum_qa.south);
+    \node[edge lbl, anchor=west] at ($(zone_l2.north -| hum_qa.south)!0.5!(zone_l3.south -| hum_qa.south) + (0.12cm, 0)$)
+        {Trazas / Log JSON};
+
+    % =========================================================================
+    % 3. CAPA BASE — AVANCES 1 Y 2 (MATLAB/SIMULINK & ENTRENAMIENTO IA)
+    % =========================================================================
+    \node[card l1, text width=7.26cm, anchor=north west]
+        (a1) at ($(eng_phys.south west |- zone_l2.south) + (0, -\layervgap)$) {%
+        \archcard{\hcardLone}{Avance 1: MATLAB / Simulink}{archAmberDark}{%
+            \texttt{InductionMachineDTC.slx}\; $\cdot$\; Motor 10\,HP / 460\,V\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ Modelado electromecánico: lazo PI + control DTC.\\
+            $\bullet$ Red térmica equivalente de Cauer (estator y rotor).\\
+            $\bullet$ Severidad de vibración normalizada ISO~10816.%
+        }%
+    };
+
+    \node[card l1, text width=7.26cm, anchor=north east]
+        (a2) at ($(eng_ai.south east |- zone_l2.south) + (0, -\layervgap)$) {%
+        \archcard{\hcardLone}{Avance 2: Entrenamiento IA y RCM}{archAmberDark}{%
+            Dataset 1200 reg. ($\mathbf{x}\in\mathbb{R}^8$)\; $\cdot$\; App Designer y Ruta RCM\\[4.5pt]
+            \color{archSlateDark}\footnotesize
+            $\bullet$ MLP $8\to 16\to 8\to 4$ + SVM RBF (\textbf{100\,\% test}).\\
+            $\bullet$ Vector $\mathbf{x}\in\mathbb{R}^8$: rasgos eléctricos, térmicos y vibratorios.\\
+            $\bullet$ Matriz de criticidad y plan de mantenimiento RCM.%
+        }%
+    };
+
+    \begin{pgfonlayer}{background}
+        \node[zone l1, fit=(a1)(a2)] (zone_l1) {};
+    \end{pgfonlayer}
+
+    % Flecha horizontal A1 -> A2 (Dataset)
+    \draw[flow amber] (a1.east) -- (a2.west);
+    \node[edge lbl, align=center, anchor=south] at ($(a1.east)!0.5!(a2.west) + (0, 0.10cm)$)
+        {Dataset\\1200 reg.\\$\mathbf{x}\in\mathbb{R}^8$};
+
+    % Flechas verticales Capa Base -> Capa Central (estrictamente verticales)
+    \draw[flow amber] (a1.north -| eng_phys.south) -- (eng_phys.south);
+    \node[edge lbl, anchor=west] at ($(zone_l1.north -| eng_phys.south)!0.5!(zone_l2.south -| eng_phys.south) + (0.12cm, 0)$)
+        {Parámetros 10\,HP / Kloss / Cauer};
+
+    \draw[flow amber] (a2.north -| eng_ai.south) -- (eng_ai.south);
+    \node[edge lbl, anchor=east] at ($(zone_l1.north -| eng_ai.south)!0.5!(zone_l2.south -| eng_ai.south) + (-0.12cm, 0)$)
+        {316 pesos MLP + SVM + RCM};
+
+    % =========================================================================
+    % 4. COLUMNA LATERAL DE PROGRESIÓN (INDUSTRIA 4.0 -> INDUSTRIA 5.0)
+    % =========================================================================
+    \node[spine card={archAmberDark}{archAmberDark}, minimum height=2.22cm, anchor=east]
+        (sp_l1) at ($(zone_l1.west) + (-\spinegap, 0)$) {%
+        {\scriptsize\textbf{CAPA BASE}}\\[3pt]
+        {\small\textbf{Industria 4.0}}\\[3pt]
+        {\scriptsize Avances 1 y 2\\MATLAB/Simulink\\y Entrenamiento IA}%
+    };
+
+    \node[spine card={archBlueDark}{archBlueDark}, minimum height=3.05cm, anchor=east]
+        (sp_l2) at ($(zone_l2.west) + (-\spinegap, 0)$) {%
+        {\scriptsize\textbf{CAPA CENTRAL}}\\[3pt]
+        {\small\textbf{Godot 4.7.2}}\\[3pt]
+        {\scriptsize Vulkan 1.3 Forward+\\Núcleo Serious Game\\Tiempo Real (10\,Hz)}%
+    };
+
+    \node[spine card={archGreenDark}{archGreenDark}, minimum height=2.36cm, anchor=east]
+        (sp_l3) at ($(zone_l3.west) + (-\spinegap, 0)$) {%
+        {\scriptsize\textbf{CAPA SUPERIOR}}\\[3pt]
+        {\small\textbf{Industria 5.0}}\\[3pt]
+        {\scriptsize Operación Centrada\\en el Humano y\\Certificación QA}%
+    };
+
+    % Conectores laterales limpios entre columna de progresión y zonas
+    \draw[draw=archAmberMed, line width=1.1pt] (sp_l1.east) -- (zone_l1.west);
+    \draw[draw=archBlueDark, line width=1.3pt] (sp_l2.east) -- (zone_l2.west);
+    \draw[draw=archGreenMed, line width=1.1pt] (sp_l3.east) -- (zone_l3.west);
+
+    % Flechas verticales de transición de paradigma (I4.0 -> Gemelo -> I5.0)
+    \draw[flow spine] (sp_l1.north) -- node[edge lbl, align=center, fill=white, inner sep=1.5pt] {Despliegue\\Edge} (sp_l2.south);
+    \draw[flow spine] (sp_l2.north) -- node[edge lbl, align=center, fill=white, inner sep=1.5pt] {Enfoque\\Humano} (sp_l3.south);
+
+    % =========================================================================
+    % 5. ENCABEZADO GLOBAL Y LEYENDA INFERIOR (CENTRADOS Y ALINEADOS AL ANCHO)
+    % =========================================================================
+    \coordinate (hdr_y) at ($(zone_l3.north) + (0, 0.54cm)$);
+    \coordinate (hdr_l) at (sp_l3.west |- hdr_y);
+    \coordinate (hdr_r) at (zone_l3.east |- hdr_y);
+
+    \node[font=\sffamily\small\bfseries, text=archSlateDark, inner ysep=2pt]
+        (hdr_txt) at ($(hdr_l)!0.5!(hdr_r)$) {%
+        AgroMolinos del Valle S.A. \;---\; Arquitectura Integral de Transición Industria 4.0 $\rightarrow$ Industria 5.0%
+    };
+
+    \begin{pgfonlayer}{background}
+        \node[
+            rectangle, rounded corners=3.5pt,
+            draw=archSlateLine, line width=0.8pt,
+            fill=archPanelBg,
+            inner xsep=0pt, inner ysep=4pt,
+            fit=(hdr_l)(hdr_r)(hdr_txt)
+        ] (hdr_global) {};
+    \end{pgfonlayer}
+
+    % Leyenda compacta inferior perfectamente distribuida y centrada al ancho total
+    \coordinate (leg_y) at ($(zone_l1.south) + (0, -0.56cm)$);
+    \coordinate (leg_l) at (sp_l1.west |- leg_y);
+    \coordinate (leg_r) at (zone_l1.east |- leg_y);
+
+    \node[edge lbl, anchor=west] (leg_t1) at ($(leg_l)!0.052!(leg_r)$) {Transferencia offline I4.0 (parámetros y pesos)};
+    \draw[flow amber] ($(leg_t1.west) + (-0.68cm, 0)$) -- ($(leg_t1.west) + (-0.06cm, 0)$);
+
+    \node[edge lbl, anchor=west] (leg_t2) at ($(leg_l)!0.432!(leg_r)$) {Bus reactivo 10\,Hz};
+    \draw[flow blue bi] ($(leg_t2.west) + (-0.68cm, 0)$) -- ($(leg_t2.west) + (-0.06cm, 0)$);
+
+    \node[edge lbl, anchor=west] (leg_t3) at ($(leg_l)!0.635!(leg_r)$) {Operación diegética I5.0 / SCADA};
+    \draw[flow green bi] ($(leg_t3.west) + (-0.68cm, 0)$) -- ($(leg_t3.west) + (-0.06cm, 0)$);
+
+    \node[edge lbl, anchor=west] (leg_t4) at ($(leg_l)!0.902!(leg_r)$) {Auditoría QA};
+    \draw[flow green uni] ($(leg_t4.west) + (-0.68cm, 0)$) -- ($(leg_t4.west) + (-0.06cm, 0)$);
+
+    \begin{pgfonlayer}{background}
+        \node[
+            rectangle, rounded corners=3pt,
+            draw=archSlateLine, line width=0.75pt,
+            fill=archPanelBg,
+            inner xsep=0pt, inner ysep=4.5pt,
+            fit=(leg_l)(leg_r)(leg_t1)(leg_t4)
+        ] (legend_box) {};
+    \end{pgfonlayer}
+\end{tikzpicture}%
+}
+\caption{Arquitectura integral en tres capas de la transición de Industria~4.0 a Industria~5.0 en AgroMolinos del Valle S.A. La capa base consolida el modelado electromecánico y térmico de los Avances~1 y~2 en MATLAB/Simulink junto con el entrenamiento de clasificadores MLP y SVM~RBF; la capa central articula el núcleo en tiempo real del \textit{Serious Game} sobre Godot~4.7.2 (Vulkan~1.3 Forward+) mediante \texttt{EventBus.gd} y \texttt{SimulationManager.gd} a \SI{10}{\hertz}; y la capa superior materializa la operación centrada en el humano mediante interacción diegética~3D, tablet SCADA nativa \texttt{[TAB]} y certificación QA automatizada.}
+\label{fig:arquitectura_global}
+\end{figure*}

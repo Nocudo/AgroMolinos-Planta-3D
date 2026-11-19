@@ -1,0 +1,164 @@
+\section{Marco Teórico}\label{sec:marco_teorico}
+
+La operación confiable y sostenible de un accionamiento trifásico industrial bajo Industria~5.0 integra cuatro pilares: física electromecánica del motor de inducción, control electrónico de velocidad y par, modelado termo-vibracional bajo seguridad eléctrica normativa, e inteligencia artificial para diagnóstico predictivo y pronóstico de vida útil.
+
+\subsection{Dinámica Electromecánica del Motor de Inducción Trifásico}\label{subsec:dinamica_motor}
+
+El motor de inducción jaula de ardilla convierte energía eléctrica en par mecánico mediante la interacción del campo magnético giratorio estatórico con las corrientes inducidas en las barras rotóricas~\cite{Chapman2012,Fitzgerald2003}. La velocidad síncrona $n_s$ (\unit{rpm}) depende de la frecuencia eléctrica $f$ y el número de polos $P$, mientras que la diferencia relativa frente a la velocidad rotórica $n_r$ define el deslizamiento $s$:
+\begin{equation}
+n_s = \frac{120 f}{P}, \qquad s = \frac{n_s - n_r}{n_s},
+\label{eq:ns_deslizamiento}
+\end{equation}
+con velocidad angular mecánica $\omega_m = 2\pi n_r/\num{60}$ (\unit{\radian\per\second}) y $0 < s < 1$ en operación motriz normal.
+
+En un sistema trifásico balanceado de tensión línea--línea $V_{LL}$, corriente de línea $I_L$ y ángulo de desfase $\phi$, las potencias activa $P$, reactiva $Q$ y aparente $S$, junto a la eficiencia $\eta$, se definen como~\cite{Chapman2012,IEC60034}:
+\begin{equation}
+\begin{aligned}
+P &= \sqrt{3}\,V_{LL} I_L \cos\phi, & S &= \sqrt{P^2 + Q^2}, \\
+Q &= \sqrt{3}\,V_{LL} I_L \sin\phi, & \eta &= \frac{P_{\text{mec}}}{P_{\text{eléc}}},
+\end{aligned}
+\label{eq:potencias_trifasicas}
+\end{equation}
+con $P_{\text{mec}} = T_e\omega_m$ y $P_{\text{eléc}} = P$. Las asimetrías de fase y armónicos que elevan las pérdidas por secuencia negativa se cuantifican mediante el factor de desbalance de corriente ($\text{IUF}$)~\cite{IEEE112} y la distorsión armónica total ($\text{THD}_i$)~\cite{IEEE519}:
+\begin{equation}
+\begin{aligned}
+\text{IUF} &= \frac{\max_{i \in \{a,b,c\}} |I_i - I_{\text{prom}}|}{I_{\text{prom}}} \times \qty{100}{\percent}, \\
+\text{THD}_i &= \frac{\sqrt{\sum_{h=2}^{\infty} I_h^2}}{I_1} \times \qty{100}{\percent},
+\end{aligned}
+\label{eq:iuf_thd}
+\end{equation}
+siendo $I_{\text{prom}} = (I_a + I_b + I_c)/3$, $I_1$ la fundamental eficaz e $I_h$ el armónico de orden $h$.
+
+Despreciando la resistencia estatórica en la zona nominal, el par electromagnético $T_e$ sigue la fórmula de Kloss modulada por la relación tensión/frecuencia ($V/f$)~\cite{Chapman2012,Krishnan2001}:
+\begin{equation}
+T_e(s, V_{LL}, f) = T_{\max}\left(\frac{V_{LL}/V_n}{f/f_n}\right)^{\!2}
+\frac{2}{\frac{s}{s_{\max}} + \frac{s_{\max}}{s}},
+\label{eq:kloss_vf}
+\end{equation}
+donde $T_{\max}$ es el par máximo nominal ($V_n, f_n$) y $s_{\max}$ su deslizamiento crítico. Como $T_e \propto (V_{LL}/f)^2$, un hundimiento de tensión a frecuencia fija abate cuadráticamente el par, mientras que conservar constante $V_{LL}/f$ preserva el flujo de entrehierro y la capacidad motriz. La dinámica del eje acoplado obedece a la ecuación rotacional de Newton--Euler~\cite{Krishnan2001}:
+\begin{equation}
+J_{\text{tot}}\frac{d\omega_m}{dt} = T_e - T_L(\dot{m}) - B\omega_m,
+\label{eq:newton_euler}
+\end{equation}
+con inercia equivalente $J_{\text{tot}}$ (\unit{\kilogram\meter\squared}), fricción viscosa $B$ (\unit{\newton\meter\second\per\radian}) y par resistente $T_L(\dot{m})$ dependiente del flujo másico $\dot{m}$ (\unit{\kilogram\per\second}).
+
+\subsection{Accionamiento VFD, Control Directo de Par (DTC) y Eficiencia Energética}\label{subsec:vfd_dtc}
+
+El arranque directo (DOL, \emph{Direct-On-Line}) aplica tensión y frecuencia plenas con rotor detenido ($s=1$), demandando corrientes de rotor bloqueado $I_{\text{LRA}} \approx \num{6}\,I_{\text{FLA}}$ que inducen caídas de barraje, estrés térmico $I^2 t$ y choques torsionales~\cite{Bose2006}. En contraste, un variador de frecuencia (VFD) escalar $V/f$ con inversor IGBT regula suavemente la velocidad, añade compensación óhmica $IR$ a baja frecuencia para vencer $I_s R_s$ sin perder par de arranque y acopla un lazo PID de flujo másico $\dot{m}$~\cite{Bose2006}.
+
+En cargas ventiladoras, aerodinámicas y molienda a carga parcial ($T_L \propto \omega^2$), la potencia sigue la ley cúbica de afinidad; junto al consumo específico $e_s$ (\unit{\kilo\watt\hour\per\tonne}) y la mitigación de emisiones $\Delta\text{CO}_2\text{e}$, se cumple:
+\begin{equation}
+\frac{P_2}{P_1} = \left(\frac{f_2}{f_1}\right)^{\!3}, \quad
+e_s = \frac{E}{m_{\text{ton}}}, \quad
+\Delta\text{CO}_2\text{e} = \Delta E \cdot F_{\text{SIN}},
+\label{eq:afinidad_upme}
+\end{equation}
+donde $E$ es la energía consumida, $m_{\text{ton}}$ la masa procesada, $\Delta E$ el ahorro respecto a velocidad fija y $F_{\text{SIN}} = \qty{164.38}{\gram\per\kilo\watt\per\hour}$ el factor oficial de emisión del Sistema Interconectado Nacional (SIN) colombiano según la UPME~\cite{UPME2024}.
+
+Ante choques severos de carga, el Control Directo de Par (DTC)~\cite{Takahashi1986,Depenbrock1988,Vas1998} prescinde de PWM y sensores de eje (\emph{sensorless}), estimando en el plano estacionario $(\alpha,\beta)$ el flujo estatórico $\boldsymbol{\psi}_s = [\psi_{s\alpha},\,\psi_{s\beta}]^T$ y el par $T_{em}$:
+\begin{equation}
+\begin{aligned}
+\boldsymbol{\psi}_s(t) &= \int_{0}^{t}\!\left(\mathbf{v}_s(\tau) - R_s \mathbf{i}_s(\tau)\right) d\tau, \\
+T_{em} &= \frac{3}{2} p \left(\psi_{s\alpha} i_{s\beta} - \psi_{s\beta} i_{s\alpha}\right),
+\end{aligned}
+\label{eq:dtc_estimador}
+\end{equation}
+con $p = P/2$. Los errores de flujo y par excitan comparadores de histéresis de dos y tres niveles que, junto al sector angular $S_k \in \{1,\dots,6\}$, indexan una tabla de conmutación óptima (LUT) sobre el inversor~\cite{Takahashi1986,Vas1998}.
+
+El lazo externo de velocidad linealiza la planta mecánica en el dominio de Laplace (variable $s$, con $T_L = 0$):
+\begin{equation}
+G_p(s) = \frac{\omega_r(s)}{T_{em}(s)} = \frac{1}{J s + F},
+\label{eq:planta_mecanica}
+\end{equation}
+con inercia $J$ y fricción $F$. Al cerrar el lazo con un regulador PI, $C(s) = K_p + K_i/s$, resulta una función de segundo orden:
+\begin{equation}
+H(s) = \frac{C(s)G_p(s)}{1 + C(s)G_p(s)} = \frac{(K_p s + K_i)/J}{s^2 + \frac{F + K_p}{J}s + \frac{K_i}{J}}.
+\label{eq:lazo_cerrado_pi}
+\end{equation}
+Igualando el denominador con $s^2 + 2\zeta\omega_n s + \omega_n^2$ bajo amortiguamiento crítico ($\zeta = \num{1.0}$) para evitar sobreimpulsos mecánicos, se obtienen las ganancias~\cite{Krishnan2001}:
+\begin{equation}
+K_p = 2\zeta\omega_n J - F, \qquad K_i = J\omega_n^2.
+\label{eq:ganancias_pi}
+\end{equation}
+
+\subsection{Modelado Térmico, Vibracional y Seguridad Eléctrica Normativa}\label{subsec:termico_seguridad}
+
+La temperatura del devanado $T_w$ sobre el ambiente $T_{\text{amb}}$ se modela con una red térmica equivalente de Cauer de primer orden~\cite{Nandi2005,Thermal2025}:
+\begin{equation}
+P_{\text{pérd}} = C_{\text{th}}\frac{dT_w}{dt} + \frac{T_w - T_{\text{amb}}}{R_{\text{th}}},
+\label{eq:red_cauer}
+\end{equation}
+donde $P_{\text{pérd}}$ agrupa pérdidas Joule ($3I_s^2 R_s$), magnéticas y mecánicas, $C_{\text{th}}$ es la capacitancia térmica (\unit{\joule\per\celsius}) y $R_{\text{th}}$ la resistencia térmica convectiva (\unit{\celsius\per\watt}). El aislamiento Clase~F limita el devanado a \qty{155}{\celsius}, con alerta preventiva en \qty{105}{\celsius} según el RETIE~\cite{RETIE2024,RETIE2026}.
+
+La severidad vibratoria mecánica se evalúa por la velocidad eficaz $v_{\text{rms}}$ (\unit{\milli\meter\per\second}) sobre partes no rotatorias (\qtyrange[range-phrase={ a }]{10}{1000}{\hertz}). Las normas ISO~10816-1 e ISO~20816-3~\cite{ISO10816,ISO20816} establecen cuatro zonas: A~(máquina nueva/óptima), B~(servicio continuo admisible), C~(operación restringida con intervención programada) y D~(daño estructural inminente por desalineación, soltura o fatiga).
+
+En seguridad industrial, el RETIE (Arts.~18 y~20)~\cite{RETIE2026} impone las \emph{Cinco Reglas de Oro} para intervención sin tensión: (1)~corte efectivo/visible, (2)~bloqueo y etiquetado (LOTO), (3)~verificación de ausencia de tensión, (4)~puesta a tierra y en cortocircuito temporal, y (5)~señalización de zona. Estas reglas se articulan con NTC~2050~\cite{NTC2050} (protecciones y tierra), Resolución~5018~\cite{Res5018} (SG-SST eléctrico), OSHA~1910.144/1910.147~\cite{OSHA1910} (códigos cromáticos y LOTO), NFPA~70E~\cite{NFPA70E} (fronteras de arco y EPP) y NFPA~61~\cite{NFPA61} (prevención de explosiones por polvos agrícolas, equivalente a ATEX Zona~22).
+
+En biofísica del choque eléctrico (\qtyrange[range-phrase={ a }]{15}{100}{\hertz}), IEC~60479-1~\cite{IEC60479} divide el plano corriente--tiempo en zonas AC-1 a AC-4 mediante las fronteras $a$ (\qty{0.5}{\milli\ampere}), $b$, $c_1$ y $c_2$. Entre vértices tabulados $(t_k, i_k)$ y $(t_{k+1}, i_{k+1})$, cada frontera se interpola en escala log--log, y la energía disipada en la impedancia corporal equivalente $R_b$ resulta:
+\begin{equation}
+\begin{split}
+\log_{10} i(t) &= \log_{10} i_k \\
+&\quad + \frac{\log_{10} t - \log_{10} t_k}{\log_{10} t_{k+1} - \log_{10} t_k}\log_{10}\!\left(\frac{i_{k+1}}{i_k}\right),
+\end{split}
+\label{eq:iec60479_interp}
+\end{equation}
+\begin{equation}
+E = I^2 R_b t.
+\label{eq:energia_choque}
+\end{equation}
+
+\subsection{Inteligencia Artificial para Diagnóstico Predictivo, MHI y RUL}\label{subsec:ia_mhi_rul}
+
+El diagnóstico predictivo multivariable fusiona rasgos eléctricos, térmicos y vibratorios en un vector $\mathbf{x} \in \mathbb{R}^D$, estandarizado por $Z$-Score con media $\mu_j$ y desviación estándar $\sigma_j$~\cite{Soualhi2022}:
+\begin{equation}
+\hat{x}_j = \frac{x_j - \mu_j}{\sigma_j}, \qquad j = 1, \dots, D.
+\label{eq:zscore}
+\end{equation}
+
+El Perceptrón Multicapa (MLP) propaga $\mathbf{a}^{(0)} = \hat{\mathbf{x}}$ por $L$ capas densas con activación oculta ReLU, $f(z)=\max(0,z)$, y salida Softmax sobre $K$ clases~\cite{Soualhi2022}:
+\begin{equation}
+\begin{aligned}
+\mathbf{a}^{(l)} &= f\!\left(\mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}\right), \\
+P(y = c \mid \hat{\mathbf{x}}) &= \frac{\exp\!\left(z_c^{(L)}\right)}{\sum_{k=1}^{K}\exp\!\left(z_k^{(L)}\right)}.
+\end{aligned}
+\label{eq:mlp_softmax}
+\end{equation}
+Sus pesos $\mathbf{W}^{(l)}$ y sesgos $\mathbf{b}^{(l)}$ minimizan la entropía cruzada con regularización $L_2$ ($\lambda > 0$):
+\begin{equation}
+\mathcal{L} = -\frac{1}{M}\sum_{i=1}^{M}\sum_{c=1}^{K} y_{ic}\ln p_{ic} + \frac{\lambda}{2}\sum_{l=1}^{L}\|\mathbf{W}^{(l)}\|_F^2,
+\label{eq:entropia_cruzada}
+\end{equation}
+con $M$ muestras, etiqueta $y_{ic} \in \{0,1\}$ y probabilidad predicha $p_{ic} = P(y_i = c \mid \hat{\mathbf{x}}_i)$.
+
+Como clasificador de margen máximo, la Máquina de Vectores de Soporte (SVM) resuelve su formulación dual con penalización $C > 0$ y kernel Gaussiano RBF en esquema \emph{One-vs-Rest}~\cite{Gangsar2020}:
+\begin{equation}
+\begin{split}
+\max_{\boldsymbol{\alpha}} \;\;& \sum_{i=1}^{M}\alpha_i - \frac{1}{2}\sum_{i=1}^{M}\sum_{j=1}^{M}\alpha_i\alpha_j y_i y_j K(\mathbf{x}_i, \mathbf{x}_j), \\
+\text{s.a.} \;\;& 0 \le \alpha_i \le C, \qquad \sum_{i=1}^{M}\alpha_i y_i = 0,
+\end{split}
+\label{eq:svm_dual}
+\end{equation}
+\begin{align}
+K(\mathbf{x}_i, \mathbf{x}_j) &= \exp\!\left(-\gamma \|\mathbf{x}_i - \mathbf{x}_j\|^2\right), \label{eq:kernel_rbf} \\
+\boldsymbol{\Sigma}\mathbf{v}_k &= \lambda_k \mathbf{v}_k, \label{eq:pca_eigen}
+\end{align}
+donde $\gamma > 0$ regula la anchura del kernel y la segunda relación formula el Análisis de Componentes Principales (PCA) sobre la covarianza muestral $\boldsymbol{\Sigma}$ para verificar separabilidad en ejes $\mathbf{v}_k$.
+
+En Industria~5.0~\cite{Breque2021}, la clasificación se complementa con dos indicadores pronósticos continuos~\cite{Gao2015,Thermal2025}. El \emph{Motor Health Index} ($\text{MHI} \in [\qty{0}{\percent}, \qty{100}{\percent}]$) penaliza desviaciones térmicas ($P_{\text{th}}$), vibratorias ($P_{\text{vib}}$), de desbalance ($P_{\text{iuf}}$) y tensión ($P_V$):
+\begin{equation}
+\begin{split}
+\text{MHI} &= \operatorname{clip}_{[0,100]}\!\Big(100 - \big[P_{\text{th}}(T_w) + P_{\text{vib}}(v_{\text{rms}}) \\
+&\qquad\qquad\qquad + P_{\text{iuf}}(\text{IUF}) + P_V(\Delta V)\big]\Big).
+\end{split}
+\label{eq:mhi}
+\end{equation}
+Por último, la vida útil remanente (\emph{Remaining Useful Life}, $\text{RUL}$) acopla sobre una vida nominal $L_0$ la aceleración térmica de Arrhenius ($A_{\text{th}} \ge 1$, duplicación del envejecimiento cada \qty{10}{\celsius} sobre $T_{\text{ref}}$), la fatiga mecánica en rodamientos ($A_{\text{vib}} \ge 1$ respecto a $v_0$) y el estrés eléctrico ($A_{\text{elec}} \ge 1$)~\cite{Gao2015,Thermal2025}:
+\begin{equation}
+\begin{gathered}
+A_{\text{th}} = 2^{(T_w - T_{\text{ref}})/10}, \qquad
+A_{\text{vib}} = \left(\frac{v_{\text{rms}}}{v_0}\right)^{\!2.2}, \\
+\text{RUL} = \frac{L_0}{A_{\text{th}} \cdot A_{\text{vib}} \cdot A_{\text{elec}}},
+\end{gathered}
+\label{eq:rul}
+\end{equation}
+sustentando la programación proactiva del mantenimiento centrado en confiabilidad (RCM)~\cite{Moubray1997}.
