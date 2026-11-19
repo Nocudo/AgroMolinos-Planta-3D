@@ -884,6 +884,11 @@ func toggle_tablet() -> void:
 		var bus = get_node_or_null("/root/EventBus")
 		if bus != null and bus.has_signal("tablet_notifications_cleared"):
 			bus.tablet_notifications_cleared.emit()
+		if not _last_telemetry.is_empty():
+			_update_telemetry_ui(_last_telemetry)
+		if not _last_prod.is_empty():
+			_set_tile("prod", "%.0f kg" % float(_last_prod.get("total_grain_milled_kg", 0.0)), "%d sacos 50 kg" % int(_last_prod.get("bags_50kg_produced", 0)), "NORMAL")
+			_set_tile("truck", str(_last_prod.get("truck_cycle_phase", "ESPERA")), "%d pallets" % int(_last_prod.get("pallets_completed", 0)), "NORMAL")
 		_sync_live_plant_context()
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
