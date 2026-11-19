@@ -36,6 +36,7 @@ var _camera: Camera3D = null
 var _tracked_node: Node3D = null
 var _cached_tracked_center: Vector3 = Vector3.ZERO
 var _has_cached_center: bool = false
+var _studio_anim_player: AnimationPlayer = null
 
 func setup(spec: Dictionary, is_worker_studio: bool = false) -> void:
 	card_id = str(spec.get("id", ""))
@@ -185,9 +186,13 @@ func _setup_studio_glb_world() -> void:
 			_sub_vp.add_child(model)
 			var ap := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 			if ap != null:
+				_studio_anim_player = ap
 				GaitHelper.upgrade_animations(ap, model)
 				if ap.has_animation("idle"):
 					ap.play("idle")
+				# Pausar inicialmente mientras el viewport esté inactivo para evitar cálculos de esqueleto en CPU
+				if _sub_vp.render_target_update_mode == SubViewport.UPDATE_DISABLED:
+					ap.pause()
 	_update_camera_transform()
 
 func _setup_studio_fallback_world() -> void:
@@ -223,8 +228,16 @@ func set_rendering_active(active: bool) -> void:
 		return
 	if DisplayServer.get_name() == "headless":
 		_sub_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		if _studio_anim_player != null:
+			_studio_anim_player.pause()
 		return
 	_sub_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if active else SubViewport.UPDATE_DISABLED
+	if _studio_anim_player != null:
+		if active:
+			if not _studio_anim_player.is_playing() and _studio_anim_player.has_animation("idle"):
+				_studio_anim_player.play("idle")
+		else:
+			_studio_anim_player.pause()
 
 func set_hud_status(lines: PackedStringArray, state_txt: String, severity: String) -> void:
 	if _hud_lbl != null:

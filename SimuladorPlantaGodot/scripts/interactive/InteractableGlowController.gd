@@ -324,6 +324,9 @@ var _meshes_by_group: Dictionary = {}
 var _mesh_to_group: Dictionary = {} # mesh instance_id -> group_key
 var _group_aabbs: Dictionary = {}
 var _group_exclude_rids: Dictionary = {}
+var _cached_plat_rids: Array[RID] = []
+var _cached_plat_rids_initialized: bool = false
+var _cached_player_rid: RID = RID()
 
 var _hovered_machine_group: String = ""
 var _hovered_target_node: Node = null
@@ -1303,19 +1306,36 @@ func _is_group_occluded_by_wall(cam: Camera3D, space: PhysicsDirectSpaceState3D,
 			if not exclude.has(r):
 				exclude.append(r)
 
-	var sr := get_parent()
-	if sr != null:
-		var plat_node := sr.find_child("Geom3D715", true, false)
-		if plat_node != null:
-			_collect_self_rids(plat_node, exclude)
+	if not _cached_plat_rids_initialized:
+		_cached_plat_rids_initialized = true
+		var cur_scene = get_tree().current_scene if is_inside_tree() else get_parent()
+		if cur_scene != null:
+			var plat_node := cur_scene.find_child("Geom3D715", true, false)
+			if plat_node != null:
+				_collect_self_rids(plat_node, _cached_plat_rids)
 
-	var player := sr.find_child("PlayerOperator", true, false) if sr else null
-	if player is CollisionObject3D:
-		exclude.append((player as CollisionObject3D).get_rid())
+	for r in _cached_plat_rids:
+		if not exclude.has(r):
+			exclude.append(r)
+
+	if not _cached_player_rid.is_valid():
+		var cur_scene = get_tree().current_scene if is_inside_tree() else get_parent()
+		if cur_scene != null:
+			var player := cur_scene.get_node_or_null("PlayerOperator")
+			if player == null:
+				player = cur_scene.find_child("PlayerOperator", true, false)
+			if player is CollisionObject3D:
+				_cached_player_rid = (player as CollisionObject3D).get_rid()
+
+	if _cached_player_rid.is_valid() and not exclude.has(_cached_player_rid):
+		exclude.append(_cached_player_rid)
+
 	if is_inside_tree():
 		for wk in get_tree().get_nodes_in_group("workers"):
 			if wk is CollisionObject3D:
-				exclude.append((wk as CollisionObject3D).get_rid())
+				var wr: RID = (wk as CollisionObject3D).get_rid()
+				if not exclude.has(wr):
+					exclude.append(wr)
 
 	var blocked_hits := 0
 	var safe_box := box.grow(0.60)
