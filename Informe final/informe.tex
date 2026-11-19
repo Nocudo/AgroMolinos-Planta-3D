@@ -1,0 +1,473 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands,es-nodecimaldot,es-tabla]{babel}
+\usepackage{lmodern,microtype}
+\usepackage{amsmath,amssymb,siunitx}
+\usepackage{graphicx,booktabs,array,tabularx,makecell,multirow}
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit}
+\pgfplotsset{compat=1.18}
+\PassOptionsToPackage{hyphens}{url}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\Urlmuskip=0mu plus 2mu\relax
+\def\UrlBreaks{\do\/\do-\do_\do.\do=\do?\do&\do:}
+\graphicspath{{figuras/}}
+
+\sisetup{output-decimal-marker={.},group-separator={\,},per-mode=symbol}
+\newcommand{\estado}[1]{\textsf{#1}}
+\newcommand{\simu}{\textit{simulado}}
+\newcolumntype{R}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\renewcommand\abstractname{Resumen}
+\renewcommand\IEEEkeywordsname{Palabras clave}
+\setlength{\textfloatsep}{7pt plus 6pt minus 2pt}
+\setlength{\dbltextfloatsep}{7pt plus 8pt minus 2pt}
+\setlength{\floatsep}{6pt plus 4pt minus 2pt}
+\setlength{\dblfloatsep}{6pt plus 4pt minus 2pt}
+\setlength{\parskip}{0pt plus 2pt}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{1pt}
+\def\IEEEbibitemsep{0pt plus 1pt}
+\renewcommand{\dbltopfraction}{0.85}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\dblfloatpagefraction}{0.72}
+
+\begin{document}
+\title{Identificación de Factores de Riesgo Eléctrico y Seguridad en Máquinas Industriales: Diseño y Evaluación de un Simulador Web con Arquitectura~IoT}
+\author{\IEEEauthorblockN{Sergio Bustamante, Harrison García y Miguel Rodríguez}
+\IEEEauthorblockA{Programa de Ingeniería Electrónica, Universidad de los Llanos\\
+Villavicencio, Meta, Colombia\\
+Laboratorio de Máquinas Eléctricas\\
+Docente: Lauren Genith Isaza Domínguez}}
+\maketitle
+
+\begin{abstract}
+Este trabajo documenta la actualización y evaluación técnica de una aplicación web educativa orientada al estudio del riesgo eléctrico en máquinas industriales, desarrollada para la Práctica N.\textsuperscript{o} 1 de Máquinas Eléctricas. Frente a su primera versión, la plataforma incorpora ocho pestañas interactivas con supervisión simultánea a 2\,Hz de un motor de inducción AC (220\,V, 3\,HP), un transformador de distribución (45\,kVA) y una central hidroeléctrica (5\,MW), junto con tres visores tridimensionales concurrentes en Three.js, curvas semilogarítmicas de IEC~60479-1 en Chart.js, persistencia de operarios mediante \texttt{localStorage}, matriz combinatoria de 21 escenarios, esquema vectorial de potencia/control, código fuente C++ descargable para ESP32 y enlace bidireccional por \emph{Web Serial API} a 115\,200\,bps. Se verificó el código fuente de \texttt{index.html} y su comportamiento en navegador para recalcular las trayectorias numéricas de falla, auditar la coherencia eléctrica entre el tablero virtual y el banco físico de 0.5\,HP, y delimitar qué funciones operan por cálculo sintético y cuáles exigen validación experimental con instrumentación calibrada y paro seguro independiente.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Riesgo eléctrico, RETIE, IEC 60479-1, simulación multiactivo, gemelo 3D, ESP32, Web Serial, protección eléctrica, SG-SST.
+\end{IEEEkeywords}
+
+\section{Introducción}
+Trabajar cerca de maquinaria eléctrica energizada expone al personal a descargas por contacto, quemaduras por arco, incendios originados en sobrecargas sostenidas y fallas mecánicas progresivas. En el contexto colombiano, estas amenazas se gestionan bajo exigencias técnicas como el RETIE y la NTC~2050, articuladas con normas del sistema de gestión en seguridad y salud en el trabajo~\cite{RETIE2024,RETIE2026,NTC2050,Dec1072,Res5018}. Cuando se acompaña esa base normativa con tableros digitales y modelos visuales, el aprendizaje de las maniobras de prevención gana claridad operativa~\cite{Singh2023,Maintenance2023,EdgeCloud2022}.
+
+El archivo \texttt{index.html} analizado recibió una ampliación sustancial respecto al prototipo inicial. Aquella primera entrega animaba un único motor y mantenía estáticos al transformador, la central hidroeléctrica y los registros de sesión. La versión actual, en cambio, reorganiza la plataforma en ocho módulos con ejecución concurrente, tres escenas tridimensionales paralelas, cálculo logarítmico de curvas fisiológicas, almacenamiento en navegador y comunicación serie para ESP32.
+
+Conviene trazar desde el comienzo una frontera técnica clara. Aunque la aplicación integra código de enlace serie por USB y un programa embebido listo para descarga, los datos visibles durante una sesión ordinaria sin placa conectada nacen de ecuaciones sintéticas en JavaScript. Asimismo, el accionamiento de parada en pantalla conmuta una bandera de memoria y envía un texto por puerto serie, acción que nunca sustituye a un contactor certificado ni a un circuito cableado de paro de emergencia.
+
+\section{Objetivos y alcance verificado}
+El propósito de la práctica consiste en analizar factores de peligro eléctrico y estrategias de resguardo sobre tres sistemas representativos de conversión y transformación de energía~\cite{GuiaUnillanos2026}. En concreto, la actualización persigue: \emph{a)} supervisar en paralelo variables eléctricas, térmicas, hidráulicas y vibratorias junto con sus umbrales de alarma; \emph{b)} vincular dichos estados con modelos tridimensionales, análisis normativo RETIE y exposición fisiológica según IEC~60479-1; y \emph{c)} estructurar la etapa física mediante diagrama de conexiones, lista de materiales, código para microcontrolador y cuestionario técnico.
+
+Como evidencia directa de este informe se inspeccionaron las 3\,391 líneas de \texttt{index.html} y se capturaron las vistas renderizadas en navegador bajo condiciones normales y de falla simulada. No se incluyeron en la entrega ensayos con un ESP32 físico conectado al puerto USB ni oscilogramas cronometrados del tiempo de apertura de relé en un motor real; en consecuencia, las cifras analizadas en la sección de resultados reflejan exactamente los algoritmos implementados en el cliente web.
+
+\section{Marco normativo y fundamentos físicos}
+\subsection{Peligros eléctricos contemplados en RETIE}
+Todo análisis de seguridad industrial parte de identificar qué energía peligrosa existe, cómo puede liberarse sin control y qué barrera física u organizativa reduce su impacto~\cite{Ley1562,NFPA2027,ISO45001}. La guía de laboratorio y la pestaña normativa del programa recogen nueve categorías de peligro contempladas en la tabla de referencia del RETIE~\cite{GuiaUnillanos2026,RETIE2026}. La Tabla~\ref{tab:riesgos} sintetiza cada factor junto con sus orígenes habituales y medidas de ingeniería recomendadas.
+
+\begin{table*}[t]
+\begingroup\setlength{\tabcolsep}{3.8pt}\renewcommand{\arraystretch}{0.94}
+\caption{Síntesis normativa de los nueve factores de riesgo eléctrico incluidos en la plataforma.}
+\label{tab:riesgos}
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{} R{2.9cm} R{6.2cm} Y @{}}
+\toprule
+\textbf{Factor eléctrico} & \textbf{Orígenes técnicos habituales} & \textbf{Barreras y controles de ingeniería} \\
+\midrule
+Arcos eléctricos & Maniobra bajo carga de seccionadores, contactos sulfatados o flojos, secundario abierto de transformadores de corriente y cortocircuitos. & Envolventes resistentes al arco, cálculo de energía incidente, distancias de frontera, careta con filtro UV e indumentaria ignífuga NFPA~70E. \\
+Ausencia de electricidad & Interrupción del alimentador de red, fallo de transferencia automática o carencia de respaldo en cargas críticas. & Bancos de respaldo ininterrumpible (UPS) y grupos electrógenos con conmutación automática verificada. \\
+Contacto directo e indirecto & Proximidad a conductores vivos sin aislamiento (directo); deterioro del devanado hacia la carcasa o ruptura del conductor PE (indirecto). & Encerramientos, respeto de distancias mínimas, guantes dieléctricos ensayados, interruptores diferenciales de \SI{30}{\milli\ampere} y equipotencialización a tierra. \\
+Cortocircuito franco & Envejecimiento del esmalte aislante, condensación en tableros, impacto mecánico o perforación dieléctrica entre fases. & Disyuntores termomagnéticos de elevado poder de corte, protecciones instantáneas ANSI~50 y fusibles limitadores coordinados. \\
+Electricidad estática & Fricción continua de bandas, fluidos aislantes o sólidos dieléctricos en ausencia de descarga controlada. & Drenaje equipotencial a tierra, ajuste de humedad relativa, ionizadores y barras antiestáticas. \\
+Equipo defectuoso & Omisión de inspecciones preventivas, fatiga térmica acumulada, montaje incorrecto o golpes en traslado. & Planes de diagnóstico predictivo, verificación constructiva NTC~2050/RETIE y reemplazo oportuno de aislantes. \\
+Descargas atmosféricas & Ausencia o fallo de mantenimiento en sistemas externos de apantallamiento y supresión de transitorios. & Sistema integral contra rayos (SIPRA) con puntas captadoras, bajantes equipotenciales, DPS y suspensión de maniobras a la intemperie. \\
+Sobrecarga sostenida & Par resistente superior al nominal, subtensión persistente, contenido armónico alto o bornes mal ajustados. & Relés térmicos $I^2t$, guardamotores regulados según placa del equipo, calibre AWG adecuado y corrección del factor de potencia. \\
+Tensión de paso y contacto & Corrientes de falla drenadas por mallas de tierra insuficientes o deterioradas en subestaciones y patios. & Electrodos de baja impedancia ($R<\SI{10}{\ohm}$), anillos equipotenciales, pisos aislantes de alta resistividad y acceso restringido. \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table*}
+
+\subsection{Procedimiento seguro sin tensión y LOTO}
+Antes de intervenir cualquier devanado, caja de bornes o celda, el Artículo~18 del RETIE ordena ejecutar cinco acciones en secuencia obligatoria~\cite{RETIE2026}. Primero se efectúa el corte visible o verificable de toda fuente capaz de aportar tensión; luego se bloquean y etiquetan los órganos de maniobra (consignación LOTO). Como tercer paso se comprueba ausencia de tensión entre fases y respecto a tierra mediante un detector previamente verificado en una fuente conocida. A continuación se instalan puestas a tierra temporales en cortocircuito para derivar retornos accidentales o tensiones inducidas, y por último se delimita el perímetro de trabajo con señalización acorde al nivel de tensión~\cite{NFPA2027,Res5018}.
+
+\subsection{Activos analizados e interpolación IEC 60479-1}
+El simulador reúne tres equipos característicos de la industria y el sector eléctrico: un motor trifásico de inducción (\SI{3}{HP}, \SI{220}{\volt}), un transformador de distribución inmerso en aceite (\SI{45}{\kilo\volt\ampere}, \SI{13.2}{\kilo\volt}/\SI{220}{\volt}) y una central hidroeléctrica con turbina Francis (\SI{5}{MW}, \SI{60}{\hertz}). Cada máquina demanda vigilancia específica: estado de rodamientos y temperatura de devanados clase F/H en el motor~\cite{Singh2023,Ribeiro2022,Thermal2025}, análisis de gases disueltos (DGA) y relé Buchholz en el transformador~\cite{Transformer2023,Distribution2022}, y estabilidad de frecuencia, sincronismo y presión hidráulica en la central~\cite{Hydro2024}.
+
+Respecto al impacto sobre el organismo humano, la norma IEC~60479-1 delimita fronteras de riesgo sobre un plano logarítmico corriente--tiempo~\cite{IEC60479}. Para evaluar cualquier punto operativo $(I,t)$ entre vértices tabulados $(t_k, i_k)$ y $(t_{k+1}, i_{k+1})$ de las curvas límite $b$, $c_1$ y $c_2$, el programa aplica interpolación lineal en escala logarítmica decimal:
+\begin{equation}
+\begin{split}
+\log_{10} i(t) &= \log_{10} i_k \\
+&\quad + \frac{\log_{10} t-\log_{10} t_k}{\log_{10} t_{k+1}-\log_{10} t_k}\log_{10}\!\left(\frac{i_{k+1}}{i_k}\right).
+\end{split}
+\label{eq:iec_interp}
+\end{equation}
+Adicionalmente estima la energía térmica disipada bajo un modelo resistivo constante $R_b=\SI{1000}{\ohm}$ mediante
+\begin{equation}
+E=I^2 R_b t,\qquad I\;[\mathrm{A}],\; t\;[\mathrm{s}],
+\label{eq:energia}
+\end{equation}
+sin que ello reemplace el análisis completo de trayecto corporal o impedancia húmeda de la piel exigido por la norma.
+
+\section{Arquitectura y descripción de las ocho pestañas}
+El archivo \texttt{index.html} está organizado como una aplicación web autónoma de una sola página con estilos oscuros de tablero SCADA (\texttt{\#090d16} en fondo y \texttt{\#0f172a} en tarjetas) y dependencias externas cargadas por CDN para \emph{Chart.js} y \emph{Three.js r128} con \emph{OrbitControls}. Un selector superior gestionado por \texttt{switchTab()} alterna entre ocho módulos independientes, manteniendo redimensionamiento responsivo en gráficas y visores WebGL al cambiar de vista.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{ui_iot.png}
+\caption{Vista superior del módulo \texttt{Monitoreo IoT} (\texttt{tab-iot}). Se observan la barra global de control con enlace \texttt{ESP32 USB}, audio Web Audio y pulsador \texttt{E-STOP}, junto con las métricas y gráficas duales en vivo del motor AC y del transformador de 45\,kVA.}
+\label{fig:ui_iot}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{ui_iot_hidro.png}
+\caption{Sección inferior de \texttt{Monitoreo IoT} durante la activación del evento \texttt{Sobrevel.} en la central hidroeléctrica de 5\,MW. El gráfico registra el transitorio de rechazo de carga (\SI{1.59}{MW}, \SI{61.42}{\hertz}) y la consola \texttt{Blackbox Log} deja traza cronológica de advertencias y disparos previos.}
+\label{fig:ui_hidro}
+\end{figure*}
+
+\subsection{Módulo 1: Monitoreo IoT multiactivo (tab-iot)}
+La vista principal, ilustrada en las Figs.~\ref{fig:ui_iot} y~\ref{fig:ui_hidro}, unifica el control global en una barra superior compacta. Allí figuran la etiqueta de origen (\estado{Simulación (2 Hz)} o \estado{ESP32 Físico (115200 bps)}), el estado del relé lógico (\estado{CERRADO} o \estado{ABIERTO}) y cuatro botones estáticos: \texttt{ESP32 USB}, \texttt{Audio: ON/OFF}, \texttt{Restablecer} y \texttt{E-STOP}. Para la señalización sonora, \texttt{playBeep()} construye osciladores mediante \emph{Web Audio API} (\texttt{sawtooth}, \texttt{square}, \texttt{triangle} o \texttt{sine}) según la gravedad de la alarma, sin emplear archivos multimedia externos.
+
+Debajo operan en paralelo tres paneles de máquina con cuatro tarjetas numéricas cada uno (12 variables supervisadas) y tres gráficas \emph{Chart.js} de doble eje vertical con degradado de área, interpolación cúbica monótona (\texttt{tension: 0.45}) y ventana deslizante de 24 muestras. Un banner superior (\texttt{\#alarmBanner}) consolida fallas activas de los tres equipos, mientras la consola inferior \texttt{Blackbox Log} almacena marcas de hora locales reguladas por \texttt{logThrottled()} cada 4\,s por clave de evento. Durante la auditoría del HTML se comprobó que el texto inicial estático del logger anuncia supervisión ``a 1 Hz'', aunque el temporizador real \texttt{setInterval(simulateLoop, 500)} opera a \textbf{2\,Hz} (500\,ms).
+
+\subsection{Módulo 2: Gemelos digitales 3D simultáneos (tab-3d)}
+Como muestra la Fig.~\ref{fig:ui_3d}, esta pestaña despliega una retícula con tres escenas WebGL concurrentes generadas mediante \texttt{createSceneViewport()}, cada una provista de cámara en perspectiva, controles orbitales, rejilla espacial, botón de giro automático, vistas rápidas (\texttt{Iso}, \texttt{Frente}, \texttt{Top}) y un panel flotante (HUD) con cuatro lecturas en vivo. Para evitar consumo innecesario de GPU, \texttt{animateAll3D()} solo renderiza los cuadros cuando \texttt{tab-3d} permanece activa.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{ui_3d.png}
+\caption{Módulo \texttt{Modelos 3D} (\texttt{tab-3d}) con las tres escenas WebGL simultáneas de Three.js, sus HUD de telemetría en tiempo real, botones de cámara e inyección directa de fallas.}
+\label{fig:ui_3d}
+\end{figure*}
+
+Cada modelo vincula su geometría con las variables del estado interno \texttt{dataState}:
+\begin{itemize}\setlength{\itemsep}{1pt}\setlength{\topsep}{2pt}
+\item \textbf{Motor Inducción AC:} cilindro estatórico con 16 aletas de disipación, caja de bornes, eje con polea, ventilador de seis álabes, sondas de temperatura/vibración y hongo rojo \texttt{E-STOP} sobre pedestal. Su giro pasa de paso angular \num{0.22} (\SI{1755}{RPM} en HUD) a \num{0.11} (\SI{1420}{RPM}) bajo sobrecarga y decae por factor \num{0.9} al abrir el relé; el color de carcasa cambia en $\ge\SI{55}{\celsius}$ y $\ge\SI{75}{\celsius}$, y la vibración $\ge\SI{4.5}{mm/s}$ excita desplazamiento oscilatorio en ejes $Y/Z$.
+\item \textbf{Transformador 45\,kVA:} cuba prismática con cambio cromático térmico ($\ge\SI{78}{\celsius}$ y $\ge\SI{95}{\celsius}$), diez radiadores ONAN, tanque conservador cilíndrico, tres pasatapas de alta tensión con discos aisladores, cuatro bornes de baja tensión en cobre, microvibración por sobrecarga y esfera baliza Buchholz que parpadea en rojo ante anomalías.
+\item \textbf{Central Hidroeléctrica 5\,MW:} muro de presa, prisma de embalse cuya altura escala según $(W-65)/26$ y vira a ámbar por encima de \SI{92}{m}, tubería forzada inclinada, cámara espiral toroidal, canal de fuga con opacidad modulada por cavitación y rodete Francis de ocho álabes cuya velocidad escala proporcionalmente con $f/60$.
+\end{itemize}
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[t]{0.488\textwidth}
+\centering
+\includegraphics[width=\textwidth]{ui_info.png}
+\centerline{\footnotesize (a) Módulo \texttt{Normativa RETIE} (\texttt{tab-info}).}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.488\textwidth}
+\centering
+\includegraphics[width=\textwidth]{ui_riesgos.png}
+\centerline{\footnotesize (b) Matriz combinatoria \texttt{Riesgos} (\texttt{tab-escenarios}).}
+\end{minipage}
+\caption{Módulos normativo y de escenarios: (a) cinco reglas de oro del Art.~18 del RETIE y criterios por activo; (b) evaluador dinámico de 21 combinaciones equipo--riesgo.}
+\label{fig:ui_info_riesgos}
+\end{figure*}
+
+\subsection{Módulo 3: Normativa RETIE (tab-info)}
+Visible en la Fig.~\ref{fig:ui_info_riesgos}(a), esta pestaña reúne las cinco reglas de oro del Artículo~18 con explicación secuencial, tres tarjetas de especificaciones por máquina (aislamiento clases F/H, tolerancias de vibración, DGA, relé Buchholz, puesta a tierra $R<\SI{10}{\ohm}$ y encerramiento IP65/IP67), un bloque sobre termografía infrarroja, megóhmetro DAR/PI y equipos de protección personal según ASTM~F2413 y NFPA~70E, además de la tabla completa con los nueve peligros eléctricos resumidos previamente en la Tabla~\ref{tab:riesgos}.
+
+\subsection{Módulo 4: Registro de operarios (tab-operario)}
+Como exhibe la Fig.~\ref{fig:ui_oper_qa}(a), el módulo de personal suple una limitación de la entrega inicial: su tabla \emph{Personal Autorizado en Turno} arranca vacía (\emph{``Sin operarios registrados en este turno.''}), eliminando cualquier lista ficticia precargada. El formulario exige nombres, apellidos, edad entre 18 y 75 años, grupo sanguíneo RH y rol autorizado. Cada alta se guarda en el navegador bajo la clave \texttt{lab\_operarios\_v2} de \texttt{localStorage}, con soporte para limpiar la nómina mediante confirmación explícita o descargar un archivo CSV. Conviene precisar que \texttt{localStorage} queda restringido al navegador del usuario y carece de autenticación o respaldo centralizado en servidor.
+
+\subsection{Módulo 5: Matriz de escenarios de riesgo (tab-escenarios)}
+En la Fig.~\ref{fig:ui_info_riesgos}(b) se aprecia el selector doble \texttt{scenSystem} $\times$ \texttt{scenRisk}, respaldado por el diccionario \texttt{riskDatabase} en JavaScript. Al cruzar tres instalaciones industriales frente a siete categorías de peligro (sobrecarga, cortocircuito franco, fallo mecánico, degradación dieléctrica, calentamiento térmico y contacto directo o indirecto), la herramienta despliega 21 diagnósticos diferenciados por causas técnicas, impacto humano/operativo y salvaguardas normativas.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[t]{0.488\textwidth}
+\centering
+\includegraphics[width=\textwidth]{ui_operario.png}
+\centerline{\footnotesize (a) Registro SG-SST \texttt{Operarios} (\texttt{tab-operario}).}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.488\textwidth}
+\centering
+\includegraphics[width=\textwidth]{ui_cuestionario.png}
+\centerline{\footnotesize (b) Cuestionario integrado (\texttt{tab-cuestionario}).}
+\end{minipage}
+\caption{Módulos administrativos y documentales: (a) control de turno vacío al inicio con persistencia local y salida CSV; (b) desarrollo interactivo de las 12 preguntas de la práctica.}
+\label{fig:ui_oper_qa}
+\end{figure*}
+
+\subsection{Módulo 6: Fisiología eléctrica IEC 60479-1 (tab-fisiologia)}
+La Fig.~\ref{fig:ui_fisiologia} ilustra el simulador biofísico. Dos controles deslizantes barren corriente corporal entre \num{0.1} y \SI{1000}{\milli\ampere} y duración de choque entre \num{10} y \SI{5000}{\milli\second}, complementados por cuatro accesos rápidos de zona (\texttt{Z1..Z4}). En el panel derecho, \emph{Chart.js} grafica en ejes logarítmicos las curvas normalizadas $a$ (\SI{0.5}{\milli\ampere}), $b$, $c_1$ y $c_2$ junto con el marcador azul del punto operativo $(I,t)$. De forma simultánea, \texttt{calculatePhysioEffect()} evalúa la Ec.~\eqref{eq:iec_interp} para clasificar la exposición entre zonas \estado{AC-1} y \estado{AC-4.3}, computa la energía resistiva por la Ec.~\eqref{eq:energia} y actualiza cinco tarjetas de estado fisiológico (percepción, contracción, paro respiratorio, fibrilación ventricular y quemaduras).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{ui_fisiologia.png}
+\caption{Vista de \texttt{Fisiología IEC} (\texttt{tab-fisiologia}) mostrando la posición del punto $(25\,\mathrm{mA}, 500\,\mathrm{ms})$ en Zona~AC-3 sobre el plano logarítmico IEC~60479-1, la energía disipada calculada (\SI{0.313}{J}) y los cinco indicadores de efecto.}
+\label{fig:ui_fisiologia}
+\end{figure*}
+
+\subsection{Módulo 7: Hardware ESP32, esquema SVG y firmware (tab-hardware)}
+Las Figs.~\ref{fig:ui_hw_top} y~\ref{fig:ui_hw_svg} documentan este módulo. En la mitad superior aparecen las asignaciones GPIO de una tarjeta ESP32 de 38 pines junto con el presupuesto detallado en pesos colombianos y dólares estadounidenses (\$200.000\,COP, aprox.~\$50\,USD), manteniendo en el listado un motor fraccionario de prueba de 110\,V/220\,V. Más abajo se dibuja un diagrama vectorial SVG que separa el bloque electrónico DC (\SI{3.3}{V}/\SI{5}{V}) respecto de la etapa AC (\SI{110}{V}/\SI{220}{V}) con breaker termomagnético, bornera serie del sensor ACS712-20A, contacto normalmente abierto del relé optoacoplado y puesta a tierra $PE<\SI{10}{\ohm}$. Al pie del módulo se inserta el código fuente completo en C++ con botones para copiarlo al portapapeles o descargarlo como \texttt{firmware\_\allowbreak esp32\_\allowbreak riesgo\_\allowbreak electrico.ino}.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{ui_hardware_top.png}
+\caption{Parte superior de \texttt{Hardware} (\texttt{tab-hardware}): mapa de terminales de la placa ESP32 y presupuesto de componentes (BOM) por \$200.000\,COP.}
+\label{fig:ui_hw_top}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{ui_hardware_svg.png}
+\caption{Parte inferior de \texttt{Hardware}: diagrama vectorial SVG con separación entre adquisición DC y potencia AC, seguido del código C++ descargable para \emph{Web Serial API}.}
+\label{fig:ui_hw_svg}
+\end{figure*}
+
+\subsection{Módulo 8: Cuestionario técnico integrado (tab-cuestionario)}
+Por último, la pestaña mostrada en la Fig.~\ref{fig:ui_oper_qa}(b) incorpora en la propia interfaz web el desarrollo del cuestionario de doce ítems planteado para la práctica. Esta inclusión permite consultar definiciones legales de accidente de trabajo~\cite{Ley1562}, modelos causales de Heinrich y Bird, jerarquía de controles, normas locales e internacionales, dimensionamiento de banco de 0.5\,HP a 110\,V, costos y guía de enlace serie con el ESP32.
+
+\section{Modelos matemáticos, lógica 2\texorpdfstring{\,}{ }Hz y auditoría del hardware}
+\subsection{Dinámica numérica y protecciones a 2\texorpdfstring{\,}{ }Hz}
+En ausencia de puerto serial abierto (\texttt{isHardwareActive === false}), el bucle \texttt{simulateLoop()} actualiza cada \SI{0.5}{s} las variables de los tres equipos mediante suavizado exponencial de primer orden:
+\begin{equation}
+\begin{split}
+x[n] &= \operatorname{smoothTo}\big(x[n-1], x_{\mathrm{obj}}, \alpha\big) \\
+     &= x[n-1] + \alpha\big(x_{\mathrm{obj}} - x[n-1]\big),
+\end{split}
+\label{eq:smooth}
+\end{equation}
+con $\alpha\in[0.40, 0.65]$, superponiendo perturbación sinusoidal más ruido pseudoaleatorio uniforme en estado normal. Al dispararse el relé global (\texttt{relayClosed = false}), corriente, vibración del motor, carga y tensión secundaria del transformador, así como potencia y frecuencia de la hidroeléctrica, decaen exponencialmente conforme a la Ec.~\eqref{eq:smooth} (en lugar de saltar instantáneamente a cero en una muestra), mientras las temperaturas descienden por decrementos constantes por ciclo hasta \SI{30}{\celsius}.
+
+Todas las reglas evaluadas por \texttt{evaluateProtections()} cada \SI{500}{ms} quedan consolidadas en la Tabla~\ref{tab:umbrales}. Nótese que, respecto a la versión previa donde solo el motor disponía de lógica protectora, ahora los tres activos desencadenan alertas visuales, tonos sintetizados diferenciados y corte automático. Conviene notar también un rasgo propio del diseño del programa: la variable \texttt{relayClosed} es única para todo el tablero, de modo que el disparo por sobrevelocidad hidroeléctrica o sobretemperatura del transformador apaga simultáneamente los tres equipos simulados.
+
+\begin{table*}[t]
+\begingroup\setlength{\tabcolsep}{3.6pt}\renewcommand{\arraystretch}{0.92}
+\centering\footnotesize
+\caption{Reglas de supervisión, disparo automático y audio programadas en \texttt{evaluateProtections()} para los tres activos.}
+\label{tab:umbrales}
+\begin{tabularx}{\textwidth}{@{} R{2.3cm} R{2.9cm} R{4.1cm} R{3.9cm} Y @{}}
+\toprule
+\textbf{Activo} & \textbf{Variable} & \textbf{Umbral de alarma o advertencia} & \textbf{Condición de disparo lógico} & \textbf{Tono Web Audio} \\\midrule
+Motor AC & Tensión $V$ & $V<\SI{198}{V}$ o $V>\SI{242}{V}$ (crítica) & No dispara relé automáticamente & \SI{900}{Hz} (\texttt{sawtooth}) \\
+Motor AC & Corriente $I$ & $I>\SI{8.5}{A}$ (crítica; $>6.5\,\mathrm{A}$ en tarjeta) & $I>\SI{12.0}{A}\to$ corte térmico & \SI{950}{Hz} (\texttt{sawtooth}) \\
+Motor AC & Temp. estator $T$ & $T>\SI{80.0}{\celsius}$ (crítica; $>\SI{65}{\celsius}$ elev.) & $T>\SI{95.0}{\celsius}\to$ corte termostato & \SI{800}{Hz} (\texttt{square}) \\
+Motor AC & Vibración $v$ & $v>\SI{4.5}{mm/s}$ (advertencia) & No dispara relé automáticamente & \SI{440}{Hz} (\texttt{triangle}) \\
+Transformador & Temp. devanado & $T_{\mathrm{dev}}>\SI{88.0}{\celsius}$ (crítica) & $T_{\mathrm{dev}}>\SI{105.0}{\celsius}\to$ relé Buchholz & \SI{850}{Hz} (\texttt{square}) \\
+Transformador & Carga $L$ & $L>\SI{105.0}{\%}$ (crítica) & $L>\SI{135.0}{\%}\to$ sobrecorriente BT & \SI{920}{Hz} (\texttt{sawtooth}) \\
+Transformador & Tensión AT / BT & $V_{\mathrm{AT}}\notin[12.0,14.2]\,\mathrm{kV}$ o $V_{\mathrm{BT}}\notin[200,240]\,\mathrm{V}$ & Advertencia de regulación & \SI{520}{Hz} (\texttt{triangle}) \\
+Hidroeléctrica & Frecuencia $f$ & $|f-60.0|>\SI{0.8}{Hz}$ (crítica) & $|f-60.0|>\SI{2.5}{Hz}\to$ relé 81O/81U & \SI{980}{Hz} (\texttt{sawtooth}) \\
+Hidroeléctrica & Cota embalse $W$ & $W>\SI{94.0}{m}$ (advertencia rebose) & Sin corte automático & \SI{600}{Hz} (\texttt{triangle}) \\
+Hidroeléctrica & Caudal $Q$ & $Q<\SI{10.0}{m^3/s}$ (advertencia cavit.) & Sin corte automático & \SI{480}{Hz} (\texttt{triangle}) \\
+Global & Pulsador E-STOP & Accionado en UI o \texttt{estop:1} USB & Corte inmediato + envía \texttt{RELAY\_OFF} & \SI{1200}{Hz} (\texttt{sawtooth}) \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table*}
+
+\subsection{Medición analógica y enlace Web Serial con ESP32}
+Para una implementación física con sensor de efecto Hall ACS712-20A (sensibilidad nominal $S_0=\SI{0.100}{V/A}$ en reposo $V_{0,5\mathrm{V}}=\SI{2.5}{V}$ cuando se alimenta a \SI{5}{V})~\cite{ACS712}, la estimación eficaz sobre $N$ muestras del conversor ADC de 12 bits es
+\begin{equation}
+I_{\mathrm{RMS}}=\sqrt{\frac1N\sum_{k=1}^{N}\left(\frac{V_{\mathrm{ADC},k}-V_0}{S_{\mathrm{ADC}}}\right)^2}.
+\label{eq:rms}
+\end{equation}
+Debido a que los pines de entrada analógica del ESP32 toleran \SI{3.3}{V} como techo máximo, la pestaña de cuestionario plantea atenuar la señal del ACS712 mediante un divisor resistivo de $R_1=\SI{10}{\kilo\ohm}$ y $R_2=\SI{20}{\kilo\ohm}$, lo que entrega un factor de transferencia y una sensibilidad reducida iguales a
+\begin{equation}
+k=\frac{R_2}{R_1+R_2}=\frac23,\quad V_0=2.5k\simeq\SI{1.667}{V},
+\label{eq:div}
+\end{equation}
+\begin{equation}
+S_{\mathrm{ADC}}=kS_0\simeq\SI{0.0667}{V/A}.
+\label{eq:sens}
+\end{equation}
+Bajo referencia ideal de \SI{3.3}{V}, el paso de cuantización del ADC equivale a $3.3/4095\simeq\SI{0.806}{mV}$, es decir $\SI{0.0121}{A}$ teóricos por cuenta, valor sujeto a calibración real por no linealidad y deriva térmica del divisor.
+
+En paralelo, la pestaña \texttt{Hardware} incorpora el enlace por \emph{Web Serial API} (\texttt{115\,200 bps}) para navegadores Chromium bajo \texttt{localhost} o HTTPS. Cuando el usuario conecta el puerto mediante \texttt{toggle\-Web\-Serial()}, el cliente lee tramas JSON por línea (\texttt{\{"I":..,\allowbreak "V":..,\allowbreak "T":..,\allowbreak "vib":..,\allowbreak "relay":..,\allowbreak "estop":..\}}) para sustituir únicamente las lecturas del Motor AC, y envía órdenes \texttt{RELAY\_OFF} o \texttt{RELAY\_ON} ante disparo lógico o restablecimiento.
+
+\subsection{Auditoría crítica del firmware y coherencia del banco físico}
+La revisión detallada del sketch incluido en \texttt{index.html} (bloque \texttt{esp32\-Code\-Block}) revela cuatro puntos técnicos por corregir antes de llevar el prototipo al laboratorio real:
+\begin{enumerate}\setlength{\itemsep}{1pt}\setlength{\topsep}{2pt}
+\item \textbf{Inconsistencia entre divisor resistivo y constante de conversión:} dentro del bucle embebido, cada lectura ADC aplica la expresión \texttt{(analogRead(\allowbreak PIN\_ACS712)/4095.0)*3.3\allowbreak - 1.65} y luego divide el valor RMS entre \texttt{0.100}. Si se conecta el divisor \SI{10}{\kilo\ohm}/\SI{20}{\kilo\ohm} descrito en la pregunta 10, debe sustituirse \texttt{0.100} por \texttt{0.0667} (Ec.~\ref{eq:sens}) y ajustar $V_0\simeq\SI{1.667}{V}$ por medición en vacío; de lo contrario la corriente medida quedaría subestimada cerca de un \SI{33}{\%}.
+\item \textbf{Muestreo y variables provisionales en el sketch:} el lazo de 200 muestras con espera de \SI{250}{\micro\second} cubre aproximadamente \SI{50}{ms} (tres ciclos de \SI{60}{Hz}), lo cual es adecuado en régimen estacionario, pero no ejecuta aún lectura de registros I2C del acelerómetro MPU6050: envía el valor fijo \texttt{1.65} cuando \texttt{relayState} está activo y asigna \SI{44.5}{\celsius} como respaldo si falta la sonda DS18B20. Además, calcular velocidad vibratoria en mm/s exige filtrado pasa-altas e integración de aceleración calibrada~\cite{SensorFusion2022,AI2026}.
+\item \textbf{Diferencia de potencia entre tablero web y prototipo físico:} el tablero IoT identifica al motor como \SI{3}{HP} a \SI{220}{V}, cuya corriente nominal trifásica (suponiendo $\eta=0.85$ y $\cos\varphi=0.80$) ascendería a
+\begin{equation}
+I_N=\frac{3(746)}{\sqrt{3}(220)(0.85)(0.80)}\simeq\SI{8.64}{A},
+\label{eq:in}
+\end{equation}
+con picos de arranque del orden de \num{5}$I_N\approx\SI{43.2}{A}$ que saturan el ACS712-20A y exceden un relé de placa de \SI{10}{A}. En contraste, la pestaña \texttt{Cuestionario} dimensiona el montaje experimental para un motor fraccionario de prueba de \textbf{\SI{0.5}{HP} a \SI{110}{V}} ($I_{\mathrm{nom}}\approx 373/(110\cdot 0.78\cdot 0.85)\approx\SI{5.1}{A}$, pico $\SI{7.21}{A}$, conductor AWG~14 THHN), escala en la que dicho sensor Hall y el contacto de \SI{10}{A} resultan utilizables siempre bajo protección termomagnética aguas arriba.
+\item \textbf{Esquema web frente a seguridad cableada independiente:} en el diagrama SVG del HTML y en su firmware, la orden del hongo \texttt{E-STOP} entra por \texttt{GPIO 15} mediante interrupción por software (\texttt{isrEstop}) para abrir el relé desde \texttt{GPIO 2}. Para una máquina industrial real (Fig.~\ref{fig:hardware}), el pulsador normalmente cerrado debe cortar directamente la bobina de un contactor dimensionado a través de un relé de seguridad hardware, sin depender de que el código del ESP32 o el navegador respondan~\cite{RETIE2026,NFPA2027,ArcLens2023}.
+\end{enumerate}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[>=Latex, every node/.style={font=\scriptsize}, b/.style={draw,rounded corners,align=center,minimum height=8.5mm,minimum width=36mm,fill=green!5}]
+\node[b] (src) at (-5.4,0) {Alimentación de ensayo\\con protección aguas arriba};
+\node[b] (contact) at (0,0) {Contactor de potencia\\dimensionado al motor};
+\node[b] (motor) at (5.4,0) {Motor AC\\carcasa conectada a PE};
+
+\node[b] (hall) at (-5.4,-1.35) {ACS712-20A\\lado de medida aislado};
+\node[b] (relay) at (0,-1.35) {Relé de seguridad / E-STOP NC\\corte cableado de bobina};
+\node[b] (sense) at (5.4,-1.35) {DS18B20 sobre carcasa\\MPU6050 en apoyo};
+
+\node[b] (div) at (-5.4,-2.95) {Divisor \SI{10}{\kilo\ohm}/\SI{20}{\kilo\ohm} + filtro\\adaptación 5\,V a 3.3\,V};
+\node[b,minimum width=46mm,fill=blue!5] (esp) at (0,-2.95) {ESP32 (3.3\,V) / Web Serial\\ADC GPIO34; 1-Wire GPIO4; I2C 21/22\\Relé GPIO2; Buzzer 18 / LED 19};
+\node[b] (hmi) at (5.4,-2.95) {Interfaz Web SCADA\\Monitoreo 2\,Hz / CSV};
+
+\draw[->,very thick] (src) -- (contact);
+\draw[->,very thick] (contact) -- (motor);
+\draw[->,dashed] (src) -- (hall);
+\draw[->] (hall) -- (div);
+\draw[->] (div) -- (esp);
+\draw[->] (relay) -- (contact);
+\draw[->,dashed] (esp) -- (relay);
+\draw[->,dashed] (motor) -- (sense);
+\draw[->] (sense.south) -- ++(0,-0.32) -| ([xshift=14mm]esp.north);
+\draw[<->,dashed] (esp) -- (hmi);
+\end{tikzpicture}
+\caption{Arquitectura recomendada para llevar el montaje de la pestaña \texttt{Hardware} al laboratorio: la desconexión por emergencia actúa sobre la bobina del contactor de forma independiente al ESP32 y al navegador.}
+\label{fig:hardware}
+\end{figure*}
+
+\section{Resultados calculados del modelo a 2\texorpdfstring{\,}{ }Hz}
+\subsection{Estados iniciales: cálculo frente a medición}
+En el arranque de la aplicación (\texttt{dataState}), los valores iniciales son constantes fijas en código y no lecturas adquiridas por ADC: motor con $I=\SI{4.2}{A}$, $V=\SI{219.5}{V}$, $T=\SI{45.2}{\celsius}$ y $v=\SI{1.8}{mm/s}$; transformador con $T_{\mathrm{dev}}=\SI{62.1}{\celsius}$, carga \SI{68}{\%}, $V_{\mathrm{AT}}=\SI{13.2}{kV}$ y $V_{\mathrm{BT}}=\SI{220.4}{V}$; central hidroeléctrica con cota \SI{84.5}{m}, caudal \SI{18.2}{m^3/s}, potencia \SI{4.82}{MW} y frecuencia \SI{60.02}{Hz}. Antes de abrir cualquier pestaña, \texttt{seedChartHistory()} rellena 12 puntos históricos sintéticos modulados con senos y cosenos cada \SI{0.5}{s}. Por consiguiente, todo dato presentado en las gráficas mientras \texttt{ESP32 USB} no esté enlazado constituye una señal sintética determinista o cuasiperiódica.
+
+\subsection{Sobrecarga y calentamiento del motor AC a 2\texorpdfstring{\,}{ }Hz}
+Con la nueva frecuencia de refresco de \SI{2}{Hz} ($\Delta t=\SI{0.5}{s}$), al activar \texttt{triggerFault('sobrecarga')} desde $I_0\approx\SI{4.2}{A}$ y manteniendo el relé cerrado, la corriente evoluciona según
+\begin{equation}
+I[n]=\min(14.8,\; 4.2+0.42n)\ \mathrm{A},\qquad t_n=0.5n\ [\mathrm{s}].
+\label{eq:sobrecarga}
+\end{equation}
+El umbral de alarma crítica ($I>\SI{8.5}{A}$) se cruza en la iteración $n=11$ ($t=\SI{5.5}{s}$, $I[11]=\SI{8.82}{A}$), mientras el disparo lógico del relé ($I>\SI{12.0}{A}$) ocurre en $n=19$ ($t=\SI{9.5}{s}$, $I[19]=\SI{12.18}{A}$). A partir de $n=20$ ($t=\SI{10.0}{s}$), el filtro \texttt{smoothTo(curr, 0, 0.65)} produce una cola exponencial $I[n]=I[19]\cdot 0.35^{n-19}$ ($\SI{4.26}{A}\to\SI{1.49}{A}\to\SI{0.52}{A}$) visible en la Fig.~\ref{fig:corriente} y resumida en la Tabla~\ref{tab:overload}. Por su parte, el calentamiento aislado (\texttt{calor}) avanza a $\SI{0.62}{\celsius}$ por paso:
+\begin{equation}
+T[n]=\min(106,\; 45.2+0.62n)\ [^\circ\mathrm{C}],\qquad t_n=0.5n\ [\mathrm{s}],
+\label{eq:calor}
+\end{equation}
+superando la alarma de \SI{80}{\celsius} en $n=57$ ($t=\SI{28.5}{s}$, $\SI{80.54}{\celsius}$) y produciendo en esta versión el \textbf{disparo automático por termostato} ($T>\SI{95}{\celsius}$) en $n=81$ ($t=\SI{40.5}{s}$, $\SI{95.42}{\celsius}$), como ilustra la Fig.~\ref{fig:temp}. Este avance respecto a la versión previa evita que el estator simulado continúe calentándose indefinidamente sin corte de potencia.
+
+\begin{table}[t]
+\centering\scriptsize
+\caption{Trayectoria numérica exacta de sobrecarga en el algoritmo actual a 2\,Hz ($\Delta t=0.5$\,s).}
+\label{tab:overload}
+\begin{tabular}{ccccc}
+\toprule
+$n$ & $t$ (s) & $I[n]$ (A) & Estado & Relé lógico\\\midrule
+0 & 0.0 & 4.20 & Normal & Cerrado\\
+6 & 3.0 & 6.72 & Sobrecarga (KPI) & Cerrado\\
+11 & 5.5 & 8.82 & Crítico ($>8.5\,\mathrm{A}$) & Cerrado\\
+19 & 9.5 & 12.18 & Disparo ($>12.0\,\mathrm{A}$) & Abierto\\
+20 & 10.0 & 4.26 & Paro (decaim. $0.35^1$) & Abierto\\
+22 & 11.0 & 0.52 & Paro (decaim. $0.35^3$) & Abierto\\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth,height=4.0cm,grid=major,grid style={gray!15},xlabel={Tiempo simulado (s)},ylabel={Corriente sintética (A)},xmin=0,xmax=12,ymin=0,ymax=14.5,xtick={0,2,4,6,8,10,12},legend style={font=\tiny,at={(0.02,0.98)},anchor=north west},tick label style={font=\scriptsize},label style={font=\scriptsize}]
+\addplot[blue,thick,mark=*] coordinates {(0,4.2)(1,5.04)(2,5.88)(3,6.72)(4,7.56)(5,8.4)(5.5,8.82)(7,10.08)(8.5,11.34)(9.5,12.18)(10,4.26)(10.5,1.49)(11,0.52)(12,0.06)};
+\addlegendentry{Trayectoria 2\,Hz}
+\addplot[orange,dashed] coordinates {(0,8.5)(12,8.5)};
+\addlegendentry{Alarma $I>8.5$\,A}
+\addplot[red,dashed] coordinates {(0,12)(12,12)};
+\addlegendentry{Disparo $I>12$\,A}
+\end{axis}
+\end{tikzpicture}
+\caption{Secuencia calculada para sobrecarga del motor a 2\,Hz con incremento de \SI{0.42}{A}/paso y caída exponencial tras apertura del relé en $t=\SI{9.5}{s}$.}
+\label{fig:corriente}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth,height=3.9cm,grid=major,grid style={gray!15},xlabel={Tiempo simulado (s)},ylabel={Temp. estator ($^\circ$C)},xmin=0,xmax=45,ymin=40,ymax=105,xtick={0,10,20,30,40},legend style={font=\tiny,at={(0.02,0.98)},anchor=north west},tick label style={font=\scriptsize},label style={font=\scriptsize}]
+\addplot[thick,red!70!black,mark=*,mark size=1.3pt] coordinates {(0,45.2)(5,51.4)(10,57.6)(15,63.8)(20,70.0)(25,76.2)(28.5,80.54)(35,88.6)(40.5,95.42)(45,93.17)};
+\addlegendentry{Modelo calentamiento}
+\addplot[orange,dashed] coordinates {(0,80)(45,80)};
+\addlegendentry{Alarma $80\,^\circ$C}
+\addplot[red,dotted,thick] coordinates {(0,95)(45,95)};
+\addlegendentry{Disparo $95\,^\circ$C}
+\end{axis}
+\end{tikzpicture}
+\caption{Respuesta térmica programada ($+0.62\,^\circ\mathrm{C}$ cada \SI{0.5}{s}): alcanza alarma crítica a los \SI{28.5}{s} y disparo por termostato a los \SI{40.5}{s}.}
+\label{fig:temp}
+\end{figure}
+
+\subsection{Transformador, hidroeléctrica y cobertura frente a la guía}
+Con idéntico periodo de muestreo (\SI{500}{ms}), la falla \texttt{transfo\_\allowbreak sobrecarga} eleva la carga $L$ a pasos de \SI{+2.25}{\%} desde \SI{68}{\%}, cruzando la alarma crítica ($>105\%$) en $n=17$ (\SI{8.5}{s}, \SI{106.25}{\%}) y disparando ($>135\%$) en $n=30$ (\SI{15.0}{s}, \SI{135.5}{\%}). En la central hidroeléctrica, el evento \texttt{hidro\_\allowbreak rechazo} suma \SI{+0.28}{Hz} por iteración desde \SI{60.02}{Hz}: a los \SI{1.5}{s} ($n=3$) alcanza exactamente $\SI{60.86}{Hz}$ —registro visible de forma directa en la consola \texttt{Blackbox Log} de la Fig.~\ref{fig:ui_hidro}— y dispara la protección 81O/81U al superar \SI{62.5}{Hz} en $n=9$ (\SI{4.5}{s}, \SI{62.54}{Hz}). La Tabla~\ref{tab:cumplimiento} actualiza la auditoría funcional frente a los seis pasos de la guía~\cite{GuiaUnillanos2026}.
+
+\begin{table*}[t]
+\begingroup\setlength{\tabcolsep}{3.8pt}\renewcommand{\arraystretch}{0.92}
+\centering\footnotesize
+\caption{Evaluación de cumplimiento de \texttt{index.html} frente a los pasos 1--6 de la guía docente.}
+\label{tab:cumplimiento}
+\begin{tabularx}{\textwidth}{@{} c R{4.6cm} Y R{4.1cm} @{}}
+\toprule
+\textbf{Paso} & \textbf{Exigencia de la guía} & \textbf{Implementación constatada en código y UI} & \textbf{Alcance real} \\\midrule
+1 & Información normativa, monitoreo de tres equipos y registro de operarios & 5 Reglas de Oro, 9 peligros RETIE, 3 paneles 2\,Hz simultáneos, tabla vacía inicial, \texttt{localStorage} y CSV & Cumplido en software web (sin base de datos en servidor) \\
+2--3 & Selección de sistema y riesgo; causas, consecuencias y mitigación & Matriz combinatoria \texttt{riskDatabase} de $3\times 7$ escenarios con actualización instantánea & Cumplido en interfaz web \\
+4 & Análisis corriente--tiempo de efectos fisiológicos & Curvas log-log IEC~60479-1 en \emph{Chart.js}, interpolación logarítmica, $E=I^2Rt$ y 5 indicadores & Cumplido como modelo didáctico \\
+5 & Alertas visuales/sonoras y bitácora de eventos & Banner global multiactivo, tonos \emph{Web Audio API} diferenciados y \texttt{Blackbox Log} con \texttt{logThrottled} & Cumplido para los tres activos en simulación \\
+6 & Prototipo con motor, sensores y paro de emergencia & 3 modelos WebGL simultáneos, esquema SVG, BOM, sketch \texttt{.ino} y soporte \emph{Web Serial API} & Listo en software; pendiente ensayo físico con ESP32 conectado \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table*}
+
+\section{Pruebas funcionales reproducibles y cuestionario}
+\subsection{Verificación sobre navegador e inspecciones}
+La Tabla~\ref{tab:tests} sintetiza ocho verificaciones reproducibles sobre \texttt{index.html} para contrastar la respuesta esperada en pantalla frente al código fuente JavaScript. En las capturas de interfaz se comprobó el funcionamiento fluido de las gráficas a 2\,Hz, la visualización simultánea de los tres gemelos 3D, la evaluación log-log en el punto operativo $(25\,\mathrm{mA}, 500\,\mathrm{ms})$ y la activación del disparo 81O/81U ante rechazo de carga en la turbina Francis.
+
+\begin{table*}[t]
+\begingroup\setlength{\tabcolsep}{3.8pt}\renewcommand{\arraystretch}{0.92}
+\centering\footnotesize
+\caption{Matriz de comprobación funcional sobre la versión actualizada de \texttt{index.html}.}
+\label{tab:tests}
+\begin{tabularx}{\textwidth}{@{} c R{5.8cm} Y R{3.1cm} @{}}
+\toprule
+\textbf{Caso} & \textbf{Estímulo / condición en la interfaz} & \textbf{Comportamiento observado / código} & \textbf{Estado / evidencia} \\\midrule
+T1 & Carga inicial en \texttt{tab-iot} sin puerto USB & Tres activos simulados a 2\,Hz con 24 muestras & Verificado (Fig.~\ref{fig:ui_iot}) \\
+T2 & Disparo \texttt{sobrecarga} en Motor ($I_0=4.2\,\mathrm{A}$) & Alarma en \SI{5.5}{s} (\SI{8.82}{A}); corte relé en \SI{9.5}{s} (\SI{12.18}{A}) & Verificado en código \\
+T3 & Activación \texttt{calor} en Motor ($T_0=\SI{45.2}{\celsius}$) & Alarma $>80\,^\circ\mathrm{C}$ a \SI{28.5}{s}; corte $>95\,^\circ\mathrm{C}$ a \SI{40.5}{s} & Verificado en código \\
+T4 & Inyección \texttt{Sobrevel.} en Hidroeléctrica & Frecuencia cruza \SI{60.86}{Hz}; corte relé 81O/81U $>62.5\,\mathrm{Hz}$ & Verificado (Fig.~\ref{fig:ui_hidro}) \\
+T5 & Apertura de pestaña \texttt{Modelos 3D} & Render WebGL paralelo con HUD y parada al disparar & Verificado (Fig.~\ref{fig:ui_3d}) \\
+T6 & Ingreso en \texttt{Operarios} y recarga de página & Inicia vacía; guarda altas en \texttt{lab\_operarios\_v2} y exporta CSV & Verificado (Fig.~\ref{fig:ui_oper_qa}a) \\
+T7 & Preset \texttt{Z3 · 25 mA} (\SI{500}{ms}) en \texttt{Fisiología IEC} & Zona AC-3 entre curvas $b$ y $c_1$, $E\approx\SI{0.313}{J}$ & Verificado (Fig.~\ref{fig:ui_fisiologia}) \\
+T8 & Botón \texttt{ESP32 USB} sin hardware conectado & Exige navegador Chromium y puerto serial 115\,200\,bps & Implementado; prueba física pendiente \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table*}
+
+\subsection{Síntesis del cuestionario de laboratorio (preguntas 1 a 12)}
+Las doce preguntas exigidas por la guía quedaron integradas en \texttt{tab-cuestionario} (Fig.~\ref{fig:ui_oper_qa}b) y se resumen a continuación con criterio propio y verificación frente al marco normativo:
+\begin{enumerate}\setlength{\itemsep}{1pt}\setlength{\topsep}{2pt}
+\item \textbf{Accidente industrial:} hecho súbito e imprevisto asociado al trabajo que provoca lesión corporal, daño funcional o afectación material en máquinas e instalaciones~\cite{Ley1562}.
+\item \textbf{Causas principales:} convergen prácticas inseguras (omitir bloqueo LOTO, intervenir partes energizadas, prescindir de EPP) y condiciones deficientes (aislamientos envejecidos, tierras interrumpidas, bornes flojos).
+\item \textbf{Consecuencias:} en personas incluyen fibrilación ventricular, paro respiratorio y quemaduras por arco; en planta generan destrucción de devanados, paradas imprevistas, incendios y sanciones.
+\item \textbf{Prevención:} sigue la jerarquía de eliminación, barreras técnicas (electrodo $R<\SI{10}{\ohm}$, diferenciales de \SI{30}{mA}, relés térmicos), disciplina LOTO y uso de EPP certificado.
+\item \textbf{Seguridad industrial:} disciplina técnica y organizacional orientada a identificar peligros eléctricos y mecánicos para resguardar tanto al personal como a la infraestructura productiva.
+\item \textbf{Normativa aplicable:} en Colombia rigen el RETIE, la NTC~2050, el Decreto~1072 de 2015 y la Resolución~5018 de 2019; a nivel internacional destacan IEC~60479-1, NFPA~70E, ISO~20816-3 e ISO~45001~\cite{RETIE2026,NTC2050,Dec1072,Res5018,IEC60479,NFPA2027,ISO20816,ISO45001}.
+\item \textbf{Evolución del enfoque:} la industria pasó de acciones correctivas tras el siniestro hacia monitoreo continuo de condición, análisis multifuente y mantenimiento predictivo~\cite{Maintenance2023,Fog2025}.
+\item \textbf{Implicaciones del incumplimiento:} acarrea multas administrativas, responsabilidad civil por perjuicios, eventuales procesos penales ante lesiones graves e incremento de la accidentabilidad.
+\item \textbf{Esquema eléctrico y electrónico:} plasmado en la Fig.~\ref{fig:ui_hw_svg} para la separación DC/AC en la aplicación, y complementado por la Fig.~\ref{fig:hardware} con paro cableado independiente de la lógica del microcontrolador.
+\item \textbf{Cálculos:} para el motor de banco de \SI{0.5}{HP} a \SI{110}{V} ($\eta=0.78$, $\cos\varphi=0.85$) resulta $I_{\mathrm{nom}}\approx\SI{5.1}{A}$ con pico $\SI{7.21}{A}$ (AWG~14 THHN), mientras el divisor \SI{10}{\kilo\ohm}/\SI{20}{\kilo\ohm} escala el ACS712 a $S_{\mathrm{ADC}}\approx\SI{0.0667}{V/A}$ (Ecs.~\ref{eq:rms}--\ref{eq:sens}); para un motor trifásico de \SI{3}{HP} a \SI{220}{V}, la Ec.~\eqref{eq:in} arroja $\approx\SI{8.64}{A}$ y exige protecciones de mayor capacidad.
+\item \textbf{Costos:} el presupuesto base de componentes listado en la Fig.~\ref{fig:ui_hw_top} suma \$200.000\,COP (aprox.\ \$50\,USD), sin incluir contactor industrial, relé de seguridad certificado ni instrumentos de calibración.
+\item \textbf{Implementación:} el entorno web completo, los algoritmos 2\,Hz, la interfaz USB Web Serial y el código \texttt{.ino} están operativos en \texttt{index.html}; resta cargar el firmware ajustado en una placa física, medir la respuesta real de sensores y certificar el corte seguro en banco.
+\end{enumerate}
+
+\section{Discusión y validación física pendiente}
+La literatura sobre mantenimiento predictivo y gemelos digitales recalca que la visualización 3D adquiere validez diagnóstica únicamente cuando las entradas proceden de sensores caracterizados con trazabilidad y calibración~\cite{Singh2023,Adamou2024,Maritime2024,Review2023}. La evolución de la interfaz analizada cierra brechas funcionales de software importantes: ahora supervisa simultáneamente tres máquinas, interpola fronteras IEC~60479-1 en escala logarítmica, ofrece persistencia local real y expone un canal serie USB estándar.
+
+Al mismo tiempo, una evaluación honesta exige señalar que la plataforma sigue careciendo de historial de larga duración en servidor y que el código embebido para ESP32 requiere completar la adquisición I2C del MPU6050 y alinear la constante de sensibilidad (\SI{66.7}{mV/A} si se usa divisor resistivo) antes de validar lecturas físicas. En la práctica presencial siguiente deberán tomarse mediciones contrastadas frente a pinza amperimétrica y termómetro patrón, además de comprobar el corte por emergencia directamente sobre el circuito de bobina del contactor.
+
+\section{Conclusiones}
+\begin{enumerate}\setlength{\itemsep}{1pt}\setlength{\topsep}{2pt}
+\item La interfaz actualizada unifica ocho pestañas funcionales en \texttt{index.html} e implementa supervisión simultánea a \SI{2}{Hz} de un motor AC, un transformador y una central hidroeléctrica, acompañada por tres modelos WebGL paralelos y gráficas duales de 24 muestras.
+\item El simulador incorpora avances verificables frente a la entrega previa: interpolación log-log sobre curvas $a$, $b$, $c_1$ y $c_2$ de IEC~60479-1, registro de operarios inicialmente vacío persistido en \texttt{localStorage}, matriz combinatoria de 21 escenarios y comunicación bidireccional \emph{Web Serial API}.
+\item El recálculo del algoritmo actual ubica la alarma de sobrecarga en \SI{5.5}{s} (\SI{8.82}{A}) y el disparo eléctrico en \SI{9.5}{s} (\SI{12.18}{A}), mientras el calentamiento dispara a \SI{95.42}{\celsius} en \SI{40.5}{s} y la hidroeléctrica registra desincronismo a \SI{60.86}{Hz} en \SI{1.5}{s}.
+\item Llevar el prototipo de \$200.000\,COP a pruebas reales exige ajustar el factor del divisor en el código C++, implementar la lectura I2C del acelerómetro, verificar la capacidad del relé frente al motor de ensayo (\SI{0.5}{HP} vs.\ \SI{3}{HP}) e independizar por cable el hongo \texttt{E-STOP}.
+\end{enumerate}
+
+\section*{Agradecimientos}
+A la Universidad de los Llanos y a la docente Lauren Genith Isaza Domínguez por su orientación académica en el laboratorio.
+
+\IEEEtriggeratref{22}
+\bibliographystyle{IEEEtran}
+\bibliography{referencias_maquinas}
+\end{document}
