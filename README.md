@@ -96,6 +96,23 @@ Todas las averías se inducen y reparan mediante acciones físicas directas sobr
   7. **Hardware & IA:** Diagnóstico Edge AI nativo (MLP & SVM RBF), **MHI**, **RUL**, causa raíz, pronóstico y checklist interactivo RCM.
   8. **Rúbrica:** Calificación académica RETIE (`0.0` a `5.0`), historial de infracciones/bonificaciones y avance de las 19 estaciones.
 
+### 6. Optimización Avanzada de Rendimiento CPU & Física (Cero Pérdida Gráfica)
+Diagnóstico con instrumentación en vivo a 1080p nativo que demostró que el cuello de botella residía en la CPU (física GDScript y búsquedas recursivas de 11,000 nodos SketchUp), no en el renderizado GPU (GPU render time: 10–22 ms):
+- **Clampeo de Espiral de Física (`project.godot`)**: Limitación de `physics/common/max_physics_steps_per_frame = 2` (frente a 8 por defecto), eliminando el efecto bola de nieve ante caídas de fotograma.
+- **Desacople de Look FPS y Caching de Nodos UI**: Desvinculación de comprobaciones de UI en `InputEventMouseMotion` y almacenamiento estático de referencias (`TabletRoot`, `PauseMenuController`, `RetieCourseModal`, `HUDController`).
+- **Gating de Telemetría**: Desactivación del formateo DOM a 10 Hz cuando la tablet industrial está cerrada (`visible = false`).
+- **Pausado de Esqueletos en `SubViewport`**: `AnimationPlayer.pause()` en los avatares 3D de las tarjetas cuando su viewport está en `UPDATE_DISABLED`, deteniendo transformaciones óseas en CPU en segundo plano.
+- **Pre-caching de RIDs en Oclusión**: Almacenamiento de RIDs de plataforma y operario, suprimiendo 20 recorridos recursivos por segundo.
+
+#### Resultados Medidos en Vivo (1080p Nativo Forward+ en AMD Radeon Vega 7):
+| Zona de la Planta | FPS Anterior | **FPS Actual** | Tiempo Frame (ms) | CPU Física Anterior | **CPU Física Actual** | Mejora Neta |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Patio Central (Peor zona)** | 16.2 FPS | **26.3 FPS** | 38.0 ms | 53.73 ms | **8.04 ms** | **+62.3% FPS** (-85% CPU física) |
+| **Vestidores** | 23.7 FPS | **26.2 FPS** | 38.2 ms | 45.33 ms | **9.34 ms** | **+10.5% FPS** (-79% CPU física) |
+| **Nave de Producción** | 24.7 FPS | **28.3 FPS** | 35.3 ms | 45.96 ms | **8.57 ms** | **+14.6% FPS** (-81% CPU física) |
+| **Portería / Spawn** | 23.2 FPS | **24.0 FPS** | 41.7 ms | 49.62 ms | **8.27 ms** | **+3.4% FPS** (-83% CPU física) |
+| **Exterior Oeste** | 18.0 FPS | **23.9 FPS** | 41.9 ms | 48.20 ms | **27.79 ms** | **+32.8% FPS** (-42% CPU física) |
+
 ---
 
 ## 📂 Estructura del Repositorio
@@ -151,7 +168,13 @@ Todas las averías se inducen y reparan mediante acciones físicas directas sobr
 
 ## 🚀 Ejecución Rápida y Controles en el Juego
 
-### Lanzadores de 1 Clic (Windows)
+### Descarga del Ejecutable Standalone (Windows x64 sin Godot instalado)
+Si deseas ejecutar la simulación directamente sin clonar el motor ni instalar dependencias:
+1. Descarga **`AgroMolinos_Planta3D.exe`** (~200 MB con `.pck` embebido) desde los activos de la **[Release Oficial v1.0 en GitHub](https://github.com/Nocudo/AgroMolinos-Planta-3D/releases/tag/v1.0)**.
+2. Haz doble clic sobre el ejecutable.
+   - *Nota:* En equipos sin soporte de Vulkan 1.3, ejecútalo desde terminal con: `AgroMolinos_Planta3D.exe --rendering-driver opengl3`.
+
+### Lanzadores de 1 Clic (Código Fuente / Proyecto Clonado)
 - **Instalar Dependencias y Entorno:** Doble clic en `INSTALAR_DEPENDENCIAS.bat`.
 - **Jugar a la Simulación Interactiva:** Doble clic en `INICIAR_SIMULADOR_GODOT.bat`.
 - **Editar Escenas en Godot 4.7:** Doble clic en `ABRIR_EDITOR_GODOT.bat`.

@@ -398,3 +398,51 @@ Este comando valida:
 8. Validación de las fórmulas de optimización energética ($\text{kWh/ton}$) y evaluación académica.
 9. Cumplimiento de la regla de no-creación procedural de modelos 3D.
 10. Código de salida `0` automático para aprobación de QA.
+
+---
+
+## 14. Protocolo de Optimización de Rendimiento CPU & Física (Zero-Quality-Loss)
+
+Cuando se detecten caídas de fotogramas en plantas complejas con modelos CAD importados (>10,000 nodos), **nunca degradar la calidad gráfica** (no reducir resolución 1080p nativa, no desactivar sombras 4K, no comprimir texturas ni eliminar geometrías). El protocolo obligatorio es:
+
+### 14.1 Diagnóstico de Tiempos GPU vs CPU
+Medir con `RenderingServer.viewport_set_measure_render_time` y `Performance.get_monitor`:
+- Si el tiempo de render GPU es bajo ($10–22\text{ ms}$) y el tiempo de proceso CPU es alto ($> 40\text{ ms}$), el cuello de botella es 100% de CPU.
+- Inspeccionar `TIME_PHYSICS_PROCESS`: Si supera los $35\text{ ms}$, Godot está en una espiral de sub-ticks de física.
+
+### 14.2 Clampeo de Sub-Ticks de Física
+En `project.godot`:
+```ini
+[physics]
+common/max_physics_steps_per_frame=2
+```
+Evita que hitches temporales fuercen hasta 8 ticks acumulados de física por fotograma.
+
+### 14.3 Prohibición de `find_child` en Bucles Frecuentes
+- **Regla estricta:** Queda estrictamente prohibido invocar `find_child(..., true, false)` o `get_tree().root.find_child` dentro de:
+  - Manejadores de entrada continua como `_input()` o `_unhandled_input()` (especialmente con `InputEventMouseMotion`).
+  - Bucles por fotograma `_process()` o `_physics_process()`.
+  - Rutinas de refresco de telemetría a alta frecuencia ($> 1\text{ Hz}$).
+- **Patrón obligatorio de Caching:**
+  ```gdscript
+  var _cached_node: Node = null
+
+  func _get_node() -> Node:
+      if not is_instance_valid(_cached_node):
+          if not is_inside_tree() or get_tree() == null:
+              return null
+          _cached_node = get_tree().root.find_child("TargetNode", true, false)
+      return _cached_node
+  ```
+
+### 14.4 Gating de Interfaces y SubViewports
+- Toda interfaz compleja (como la Tablet Industrial SCADA) debe implementar comprobación temprana:
+  ```gdscript
+  if not visible:
+      return
+  ```
+  Actualizar solo buffers numéricos esenciales en segundo plano y diferir la manipulación de nodos de control y formateo de texto hasta que la ventana se haga visible.
+- Cuando un `SubViewport` pase a `render_target_update_mode = SubViewport.UPDATE_DISABLED`, si contiene modelos con esqueleto, se debe pausar explícitamente su `AnimationPlayer` (`ap.pause()`), ya que el cálculo de matrices de huesos se realiza en CPU independientemente de si la GPU renderiza el viewport.
+
+### 14.5 Pre-caching de RIDs en Oclusión y Raycasts
+En filtros de exclusión para raycasts de oclusión (`direct_space_state.intersect_ray`), nunca recorrer recursivamente mallas estructurales en cada ciclo. Almacenar los `RID` estáticos en un `Array[RID]` durante la inicialización.

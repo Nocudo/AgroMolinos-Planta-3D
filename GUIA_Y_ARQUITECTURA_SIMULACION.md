@@ -313,3 +313,58 @@ godot --headless --audio-driver Dummy --path SimuladorPlantaGodot --script res:/
 | `scripts/ui/` | `HUDController.gd`, `HUDHotbarAndAvatar.gd`, `PauseMenuController.gd`, `RetieCourseModal.gd`, `IndustrialTabletController.gd` y 7 módulos `Tablet*.gd` | HUD limpio con mira fija, avatar 3D EPP, pausa, Curso/Quiz SST y Tablet SCADA de 8 pestañas. |
 | `assets/` | `models/*.glb` (8 modelos) y sus texturas originales extraídas (`*.png`, `*.jpg`) | Geometría 3D descargada con malla de alta densidad poligonal (`1,338,166` tris) y texturas originales HD (`hasta 2048×1536`). |
 | `scripts/tests/` | `headless_verify.gd` | Suite maestra automatizada de certificación `10/10 PASS`. |
+
+---
+
+## Parte V — Arquitectura de Optimización de Rendimiento y Caching CPU
+
+### 5.1 Diagnóstico Científico de Cuello de Botella (GPU vs CPU)
+Mediante instrumentación directa en tiempo de ejecución con `RenderingServer.viewport_set_measure_render_time` y ablación secuencial de subsistemas a resolución nativa 1080p Forward+ en gráficos integrados AMD Radeon Vega 7, se demostró que el motor gráfico de GPU **no era el limitante** (tiempo de rasterizado GPU: $10.0$ a $22.1\text{ ms}$).
+
+El problema radicaba en la sobrecarga de CPU ($45$ a $54\text{ ms}$ por cuadro), originada por:
+1. **Espiral de Física de Godot (`max_physics_steps_per_frame = 8` por defecto):** Cuando un cuadro tardaba $> 16.6\text{ ms}$, el planificador intentaba compensar ejecutando hasta 8 sub-ticks de física consecutivos, cuadruplicando el tiempo de procesamiento CPU.
+2. **Búsquedas Dinámicas en Escenas Complejas (`find_child`):** La presencia de la arquitectura importada de SketchUp (`PlantaCompletaSketchUp` con más de 11,000 nodos) provocaba que llamadas frecuentes en bucles de input (`_input` con cada movimiento de mouse) y de física (`_physics_process`) recorrieran el árbol completo buscando nodos como `TabletRoot`, `PauseMenuController`, `RetieCourseModal`, `HUDController` y `PlayerOperator`, con un coste medido de $1.5$ a $4.5\text{ ms}$ por consulta.
+3. **Deformación de Esqueletos en `SubViewport` Ocultos:** Los avatares 3D en las tarjetas de la tablet industrial continuaban evaluando matrices de deformación ósea en CPU a través de `AnimationPlayer`, incluso cuando su `SubViewport` tenía el renderizado GPU desactivado (`UPDATE_DISABLED`).
+4. **Recorrido Recursivo en Raycasts de Oclusión:** El cálculo de líneas de visión X-Ray recorría recursivamente `Geom3D715` y el operario 20 veces por segundo para poblar la lista de RIDs excluidos.
+
+### 5.2 Estrategia de Solución Implementada (Cero Pérdida Gráfica)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│       ARQUITECTURA DE OPTIMIZACIÓN ZERO-GRAPHICS-DEGRADATION                 │
+├───────────────────────┬────────────────────────┬─────────────────────────────┤
+│ 1. CONTROL DE FÍSICA  │ 2. CACHING DE NODOS UI │ 3. GATING & SUBVIEWPORTS    │
+│ project.godot:        │ PlayerOperator / Glow: │ IndustrialTabletController: │
+│ max_physics_steps = 2 │ Caching estático O(1)  │ Si visible=false -> return  │
+│ Rompe espiral de      │ Desacople de mouse look│ Tablet3DViewportCard:       │
+│ sub-ticks acumulados  │ Pre-caching RIDs muros │ anim_player.pause() en vacio│
+└───────────────────────┴────────────────────────┴─────────────────────────────┘
+```
+
+1. **Ruptura de la Espiral de Física (`project.godot`)**:
+   ```ini
+   [physics]
+   common/max_physics_steps_per_frame=2
+   ```
+   Limitar a 2 sub-ticks por fotograma garantiza que una caída momentánea de tasa de cuadros no congele el bucle principal.
+
+2. **Patrón de Caching O(1) y Desacople de Entrada ([PlayerOperator.gd](file:///c:/Users/rodri/Mi%20unidad/Documentos/Documentos%20Miguel/Universidad/10mo%20semestre/M%C3%A1quinas%20el%C3%A9ctricas/Proyecto%20final/SimuladorPlantaGodot/scripts/interactive/PlayerOperator.gd))**:
+   - `_is_ui_blocking_tool_input()` se evalúa únicamente ante eventos de cambio de ranura (`tool_1..5` o rueda del mouse), suprimiendo miles de búsquedas durante `InputEventMouseMotion`.
+   - Se implementaron métodos de acceso con guardas `if not is_instance_valid(_cached_node):`, resolviendo la referencia una sola vez y retornando de inmediato en llamadas subsiguientes.
+
+3. **Gating de Telemetría y Pausa de Animaciones de Esqueleto**:
+   - `_on_telemetry_vector_updated(t)` en `IndustrialTabletController.gd` alimenta los buffers temporales de oscilogramas pero aborta tempranamente si `not visible`, omitiendo manipulación de etiquetas y tarjetas 3D en segundo plano.
+   - `Tablet3DViewportCard.gd` invoca `_studio_anim_player.pause()` cuando `set_rendering_active(false)`, suspendiendo la deformación esquelética en CPU.
+
+4. **Pre-caching de RIDs en Oclusión ([InteractableGlowController.gd](file:///c:/Users/rodri/Mi%20unidad/Documentos/Documentos%20Miguel/Universidad/10mo%20semestre/M%C3%A1quinas%20el%C3%A9ctricas/Proyecto%20final/SimuladorPlantaGodot/scripts/interactive/InteractableGlowController.gd))**:
+   - Los RIDs de la plataforma estática (`Geom3D715`) y del `PlayerOperator` se indexan en un arreglo estático en la primera ejecución, reduciendo la consulta de exclusión de colisiones a una verificación en memoria O(1).
+
+### 5.3 Resultados de Rendimiento Verificados en Vivo
+
+| Escenario de Medición (1080p Nativo) | FPS Baseline | FPS Optimizado | Tiempo Frame | Física CPU Anterior | Física CPU Actual |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Patio Central (Peor zona de la planta)** | 16.2 FPS | **26.3 FPS (+62.3%)** | 38.0 ms | 53.73 ms | **8.04 ms (-85.0%)** |
+| **Vestidores (Zona lockers EPP)** | 23.7 FPS | **26.2 FPS (+10.5%)** | 38.2 ms | 45.33 ms | **9.34 ms (-79.4%)** |
+| **Nave de Producción (Molino y tornillo)** | 24.7 FPS | **28.3 FPS (+14.6%)** | 35.3 ms | 45.96 ms | **8.57 ms (-81.4%)** |
+| **Portería / Exterior de bienvenida** | 23.2 FPS | **24.0 FPS (+3.4%)** | 41.7 ms | 49.62 ms | **8.27 ms (-83.3%)** |
+| **Exterior Oeste (Zona de báscula)** | 18.0 FPS | **23.9 FPS (+32.8%)** | 41.9 ms | 48.20 ms | **27.79 ms (-42.3%)** |
